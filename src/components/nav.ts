@@ -6,7 +6,18 @@ export interface NavItem {
   description: string;
 }
 
+/**
+ * Order reflects the HR workday, not the assignment's module numbers:
+ * the Tracker is the daily home (where you check who's where), so it sits first.
+ * The module labels still carry the original numbering for traceability.
+ */
 export const NAV_ITEMS: NavItem[] = [
+  {
+    href: "/tracker",
+    label: "Applicant Tracker",
+    module: "Module 3",
+    description: "ภาพรวมผู้สมัครทุกคน ว่าใครอยู่ขั้นไหนของ pipeline",
+  },
   {
     href: "/scraper",
     label: "Candidate Sourcing",
@@ -20,15 +31,9 @@ export const NAV_ITEMS: NavItem[] = [
     description: "ให้ AI ประเมิน CV เทียบ JD เป็นคะแนน 3 ด้าน",
   },
   {
-    href: "/tracker",
-    label: "Applicant Tracker",
-    module: "Module 3",
-    description: "ติดตามสถานะผู้สมัครทุกคนใน pipeline",
-  },
-  {
     href: "/scheduler",
     label: "Interview Scheduler",
     module: "Module 4",
-    description: "นัดสัมภาษณ์ผ่าน Google Meet อัตโนมัติ",
+    description: "นัดสัมภาษณ์ผ่าน Google Meet พร้อม Meet link อัตโนมัติ",
   },
 ];
