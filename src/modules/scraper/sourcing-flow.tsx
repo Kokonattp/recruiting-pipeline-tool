@@ -1,0 +1,325 @@
+"use client";
+
+import { useState } from "react";
+import { SOURCE_LABELS, SOURCES, type Source } from "@/lib/types";
+import { generateQueryPlan, runScrapeAndRank, type ActionResult } from "./actions";
+import type { QueryPlan, RankResult } from "./types";
+
+/** Default sources to search — the public ones that work without login are pre-checked. */
+const DEFAULT_SOURCES: Source[] = ["WEB", "JOBSDB", "JOBTHAI"];
+
+type Step = "jd" | "plan" | "shortlist";
+
+/**
+ * Module 1 sourcing wizard. One client container owns the whole flow state
+ * (JD → query plan → shortlist), so there's a single source of truth and no
+ * prop-drilling. Each async step calls a Server Action and surfaces errors inline.
+ */
+export function SourcingFlow() {
+  const [step, setStep] = useState<Step>("jd");
+  const [jdText, setJdText] = useState("");
+  const [sources, setSources] = useState<Source[]>(DEFAULT_SOURCES);
+  const [plan, setPlan] = useState<QueryPlan | null>(null);
+  const [result, setResult] = useState<RankResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function toggleSource(s: Source) {
+    setSources((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  }
+
+  function unwrap<T>(r: ActionResult<T>): T | null {
+    if (r.ok) {
+      setError(null);
+      return r.data;
+    }
+    setError(r.error);
+    return null;
+  }
+
+  async function onGeneratePlan() {
+    setBusy(true);
+    const r = await generateQueryPlan({ jdText, sources });
+    const data = unwrap(r);
+    setBusy(false);
+    if (data) {
+      setPlan(data);
+      setStep("plan");
+    }
+  }
+
+  async function onRunScrape() {
+    if (!plan) return;
+    setBusy(true);
+    const r = await runScrapeAndRank({ jdText, plan });
+    const data = unwrap(r);
+    setBusy(false);
+    if (data) {
+      setResult(data);
+      setStep("shortlist");
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <StepIndicator current={step} />
+      {error && (
+        <div className="rounded-[var(--radius-card)] border border-[var(--danger)] bg-danger-soft px-4 py-3 text-sm text-ink">
+          {error}
+        </div>
+      )}
+
+      {step === "jd" && (
+        <JdStep
+          jdText={jdText}
+          onJd={setJdText}
+          sources={sources}
+          onToggle={toggleSource}
+          busy={busy}
+          onNext={onGeneratePlan}
+        />
+      )}
+
+      {step === "plan" && plan && (
+        <PlanStep
+          plan={plan}
+          busy={busy}
+          onBack={() => setStep("jd")}
+          onRun={onRunScrape}
+        />
+      )}
+
+      {step === "shortlist" && result && (
+        <ShortlistStep result={result} onBack={() => setStep("plan")} />
+      )}
+    </div>
+  );
+}
+
+// ── steps ───────────────────────────────────────────────────────────────
+
+function StepIndicator({ current }: { current: Step }) {
+  const steps: { id: Step; label: string }[] = [
+    { id: "jd", label: "1 · Job Description" },
+    { id: "plan", label: "2 · คำค้นหา (AI)" },
+    { id: "shortlist", label: "3 · ผลลัพธ์ & อนุมัติ" },
+  ];
+  const order: Step[] = ["jd", "plan", "shortlist"];
+  return (
+    <ol className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      {steps.map((s) => {
+        const done = order.indexOf(current) > order.indexOf(s.id);
+        const active = current === s.id;
+        return (
+          <li
+            key={s.id}
+            className={
+              active ? "font-semibold text-ink" : done ? "text-ink-2" : "text-ink-3"
+            }
+          >
+            {s.label}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function JdStep({
+  jdText,
+  onJd,
+  sources,
+  onToggle,
+  busy,
+  onNext,
+}: {
+  jdText: string;
+  onJd: (v: string) => void;
+  sources: Source[];
+  onToggle: (s: Source) => void;
+  busy: boolean;
+  onNext: () => void;
+}) {
+  // sources that require a logged-in session aren't wired yet — disable to avoid confusion
+  const sessionGated: Source[] = ["LINKEDIN", "FACEBOOK"];
+  return (
+    <div className="space-y-5">
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink">Job Description</label>
+        <textarea
+          value={jdText}
+          onChange={(e) => onJd(e.target.value)}
+          rows={8}
+          placeholder="วางรายละเอียดตำแหน่งที่ต้องการหา เช่น Senior AI Workflow & Automation Engineer — ทักษะ, ประสบการณ์, สิ่งที่ต้องมี…"
+          className="w-full rounded-[var(--radius-card)] border border-border bg-bg p-3 text-sm text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none"
+        />
+      </div>
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-ink">ค้นหาจากแหล่ง</legend>
+        <div className="flex flex-wrap gap-2">
+          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL").map((s) => {
+            const gated = sessionGated.includes(s);
+            const on = sources.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                disabled={gated}
+                onClick={() => onToggle(s)}
+                title={gated ? "ต้องล็อกอิน session — ยังไม่รองรับในเดโม" : undefined}
+                className={[
+                  "rounded-[var(--radius-card)] border px-3 py-1.5 text-sm font-medium transition-colors",
+                  gated
+                    ? "cursor-not-allowed border-border text-ink-3 opacity-50"
+                    : on
+                      ? "border-primary bg-primary-soft text-ink"
+                      : "border-border text-ink-2 hover:bg-surface-2",
+                ].join(" ")}
+              >
+                {SOURCE_LABELS[s]}
+                {gated && " 🔒"}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <button
+        type="button"
+        disabled={busy || jdText.trim().length < 20 || sources.length === 0}
+        onClick={onNext}
+        className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+      >
+        {busy ? "AI กำลังสร้างคำค้นหา…" : "สร้างคำค้นหาด้วย AI →"}
+      </button>
+    </div>
+  );
+}
+
+function PlanStep({
+  plan,
+  busy,
+  onBack,
+  onRun,
+}: {
+  plan: QueryPlan;
+  busy: boolean;
+  onBack: () => void;
+  onRun: () => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+        <p className="text-sm text-ink-2">{plan.roleSummary}</p>
+        {plan.mustHaveSkills.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {plan.mustHaveSkills.map((s) => (
+              <span key={s} className="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-ink-2">
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        {plan.queries.map((q, i) => (
+          <div key={i} className="rounded-[var(--radius-card)] border border-border bg-bg p-3">
+            <div className="flex items-center gap-2">
+              <span className="rounded-md border border-border px-1.5 py-0.5 text-[11px] font-medium text-ink-2">
+                {SOURCE_LABELS[q.source]}
+              </span>
+              <code className="text-sm text-ink">{q.query}</code>
+            </div>
+            <p className="mt-1 text-xs text-ink-3">{q.rationale}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
+        >
+          ← แก้ JD
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onRun}
+          className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+        >
+          {busy ? "กำลังค้นหา & จัดอันดับ…" : "เริ่มค้นหาผู้สมัคร →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ShortlistStep({ result, onBack }: { result: RankResult; onBack: () => void }) {
+  if (result.shortlist.length === 0) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-ink-2">ไม่พบผู้สมัครที่เข้าเกณฑ์จากรอบนี้ ลองปรับ JD หรือเพิ่มแหล่งค้นหา</p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
+        >
+          ← กลับ
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-ink-2">
+        AI จัดอันดับ {result.shortlist.length} ผู้สมัคร — ตรวจแล้วเลือกอนุมัติเข้า Tracker
+      </p>
+      <div className="space-y-3">
+        {result.shortlist.map((c, i) => (
+          <article key={i} className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-ink">{c.name}</h3>
+                <p className="text-xs text-ink-2">{c.headline}</p>
+              </div>
+              <span className="shrink-0 rounded-md bg-primary-soft px-2 py-1 text-sm font-semibold tabular-nums text-ink">
+                {c.fitScore}
+                <span className="text-xs font-normal text-ink-3">/100</span>
+              </span>
+            </div>
+            {c.reasons.length > 0 && (
+              <ul className="mt-2 list-inside list-disc text-xs text-ink-2">
+                {c.reasons.map((r, j) => (
+                  <li key={j}>{r}</li>
+                ))}
+              </ul>
+            )}
+            {c.concerns.length > 0 && (
+              <p className="mt-1.5 text-xs text-[var(--warning)]">ต้องเช็ค: {c.concerns.join(" · ")}</p>
+            )}
+          </article>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
+        >
+          ← กลับ
+        </button>
+        <button
+          type="button"
+          className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90"
+        >
+          อนุมัติทั้งหมดเข้า Tracker
+        </button>
+      </div>
+    </div>
+  );
+}

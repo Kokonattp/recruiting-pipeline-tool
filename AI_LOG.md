@@ -50,4 +50,20 @@ _(จะเติมเมื่อทำ Module 2)_
 
 ## Prompt iterations (Module 1 — query gen + ranking)
 
-_(จะเติมเมื่อทำ Module 1)_
+Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
+
+**1. planQueries (JD → search query ต่อแหล่ง):** key insight — แต่ละ platform ค้นหาคนละแบบ ถ้าใช้ query เดียวยิงทุกที่จะได้ผลห่วย. เลย prompt ให้ Claude tailor query ต่อ source โดยใส่ตัวอย่างวิธีค้นของแต่ละที่ลงใน system (LinkedIn boolean / JobsDB keyword ไทย / Google site:). ให้คืน `rationale` ต่อ query ด้วย → โปร่งใส HR เห็นว่าทำไมค้นแบบนี้.
+
+**2. rankCandidates (raw → normalize + rank):** prompt เน้น "อย่าแต่งประสบการณ์ที่ไม่มีในข้อมูล" (กัน hallucination), ให้ `fitScore` 0-100 + `reasons` (จุดแข็ง) + `concerns` (สิ่งที่ต้องเช็คตอนโทร) → HR ได้ recommendation ที่มีเหตุผล ไม่ใช่ raw noise. สั่ง drop entry ที่ข้อมูลน้อยเกินประเมิน.
+
+ทั้ง 2 จุดใช้ tool-use + zod validate (helper `lib/claude.structured()`) บังคับ JSON เป๊ะ.
+
+---
+
+## Decisions อื่น (UX/tooling)
+
+- **Font: เปลี่ยนเป็น Prompt** (Google Fonts, มีทั้ง Thai+Latin ในตัวเดียว) — ตาม impeccable product register "one family is often right", เลี่ยงผสม 2 ฟอนต์.
+- **ตัด landing page ทิ้ง** — HR tool เปิดมาเข้า Tracker เลย (เหมือน Linear/Notion). จัด nav เรียงตาม workday flow (Tracker=home บนสุด).
+- **Empty state เป็น onboarding** — โชว์ pipeline เปล่า + 2 วิธีเอา candidate เข้า (AI sourcing / manual) ไม่ใช่กล่องว่าง และ**ไม่มี mock candidate**.
+- **State management: ไม่ใช้ Redux/RTK** — Next.js Server Component + Server Action + useState (local) พอ, RTK จะ over-engineer.
+- **แบ่งงาน scraper service ให้ sub-agent ทำขนาน** — เพราะเป็น service แยกสมบูรณ์ (Playwright+Docker) ไม่แตะ design system, contract ชัด (RawCandidate/SearchQuery) → คุม consistency ได้. ส่วน UI ทำเองเพื่อรักษาสไตล์ให้เป็นเอกภาพ.
