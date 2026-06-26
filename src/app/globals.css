@@ -1,26 +1,146 @@
 @import "tailwindcss";
 
+/*
+  Design tokens — Recruiting Pipeline Tool
+  Per PRODUCT.md: professional, precise, trustworthy. bg carries no mood; the ink +
+  one functional accent do. Colors are semantic (stage / score / status), never decoration.
+  OKLCH throughout. Two themes via [data-theme]; defaults follow prefers-color-scheme.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* surfaces */
+  --bg: oklch(1 0 0); /* pure white — read hundreds of rows without fatigue */
+  --surface: oklch(0.985 0.002 250); /* cards / raised */
+  --surface-2: oklch(0.965 0.003 250); /* sunken / column bg */
+  --border: oklch(0.9 0.004 250);
+  --border-strong: oklch(0.82 0.006 250);
+
+  /* ink (text) — high contrast, WCAG AA */
+  --ink: oklch(0.22 0.01 260); /* body */
+  --ink-2: oklch(0.44 0.012 260); /* secondary */
+  --ink-3: oklch(0.58 0.012 260); /* muted / hints (still ≥4.5:1 on bg) */
+
+  /* brand — deep slate-indigo, calm + authoritative (not navy-template) */
+  --primary: oklch(0.46 0.11 264);
+  --primary-ink: oklch(0.99 0 0); /* text on primary */
+  --primary-soft: oklch(0.95 0.03 264); /* tinted bg for selected/hover */
+
+  /* functional accent — crimson, reserved for reject / destructive / urgent only */
+  --danger: oklch(0.55 0.2 25);
+  --danger-soft: oklch(0.95 0.04 25);
+
+  /* status semantics */
+  --success: oklch(0.58 0.13 150);
+  --success-soft: oklch(0.95 0.04 150);
+  --warning: oklch(0.7 0.13 75);
+  --warning-soft: oklch(0.96 0.05 75);
+
+  /* score scale (0-10): low → high, used by score chips */
+  --score-low: oklch(0.55 0.2 25); /* 0-4  red */
+  --score-mid: oklch(0.7 0.13 75); /* 5-7  amber */
+  --score-high: oklch(0.58 0.13 150); /* 8-10 green */
+
+  --radius: 0.625rem;
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 260 / 0.06), 0 2px 8px oklch(0.2 0.02 260 / 0.04);
 }
 
+[data-theme="dark"] {
+  --bg: oklch(0.17 0.008 260); /* near-black, faint cool tint */
+  --surface: oklch(0.21 0.009 260);
+  --surface-2: oklch(0.24 0.01 260);
+  --border: oklch(0.3 0.012 260);
+  --border-strong: oklch(0.4 0.014 260);
+
+  --ink: oklch(0.95 0.005 260);
+  --ink-2: oklch(0.78 0.008 260);
+  --ink-3: oklch(0.64 0.01 260);
+
+  --primary: oklch(0.7 0.12 264);
+  --primary-ink: oklch(0.17 0.01 260);
+  --primary-soft: oklch(0.3 0.05 264);
+
+  --danger: oklch(0.68 0.18 25);
+  --danger-soft: oklch(0.32 0.07 25);
+  --success: oklch(0.72 0.13 150);
+  --success-soft: oklch(0.3 0.06 150);
+  --warning: oklch(0.78 0.13 75);
+  --warning-soft: oklch(0.33 0.06 75);
+
+  --score-low: oklch(0.68 0.18 25);
+  --score-mid: oklch(0.78 0.13 75);
+  --score-high: oklch(0.72 0.13 150);
+
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 8px oklch(0 0 0 / 0.25);
+}
+
+/* Honor OS preference when the user hasn't explicitly chosen a theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.17 0.008 260);
+    --surface: oklch(0.21 0.009 260);
+    --surface-2: oklch(0.24 0.01 260);
+    --border: oklch(0.3 0.012 260);
+    --border-strong: oklch(0.4 0.014 260);
+    --ink: oklch(0.95 0.005 260);
+    --ink-2: oklch(0.78 0.008 260);
+    --ink-3: oklch(0.64 0.01 260);
+    --primary: oklch(0.7 0.12 264);
+    --primary-ink: oklch(0.17 0.01 260);
+    --primary-soft: oklch(0.3 0.05 264);
+    --danger: oklch(0.68 0.18 25);
+    --danger-soft: oklch(0.32 0.07 25);
+    --success: oklch(0.72 0.13 150);
+    --success-soft: oklch(0.3 0.06 150);
+    --warning: oklch(0.78 0.13 75);
+    --warning-soft: oklch(0.33 0.06 75);
+    --score-low: oklch(0.68 0.18 25);
+    --score-mid: oklch(0.78 0.13 75);
+    --score-high: oklch(0.72 0.13 150);
+    --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 8px oklch(0 0 0 / 0.25);
+  }
+}
+
+/* Expose tokens to Tailwind utilities (bg-bg, text-ink, border-border, …). */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-soft: var(--primary-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --radius-card: var(--radius);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Respect reduced motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
