@@ -1,25 +1,34 @@
-import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/empty-state";
 import { NAV_ITEMS } from "@/components/nav";
 import { getApplications } from "@/modules/tracker/queries";
 import { TrackerBoard } from "@/modules/tracker/tracker-board";
+import { TrackerOnboarding } from "@/modules/tracker/tracker-onboarding";
 
 export const metadata = { title: "Applicant Tracker" };
 
 const meta = NAV_ITEMS.find((i) => i.href === "/tracker")!;
 
+const addButton = (
+  <button
+    type="button"
+    className="inline-flex h-9 items-center rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+  >
+    เพิ่มผู้สมัครเอง
+  </button>
+);
+
 export default async function TrackerPage() {
   const applications = await getApplications();
+  const hasData = applications.length > 0;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       <PageHeader
         module={meta.module}
         title="Applicant Tracker"
         description={meta.description}
         actions={
-          applications.length > 0 ? (
+          hasData ? (
             <button
               type="button"
               className="h-9 rounded-[var(--radius-card)] bg-primary px-4 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90"
@@ -30,28 +39,10 @@ export default async function TrackerPage() {
         }
       />
 
-      {applications.length === 0 ? (
-        <EmptyState
-          title="ยังไม่มีผู้สมัครในระบบ"
-          description="ผู้สมัครจะเข้ามาเมื่อทีม Sourcing ดูดข้อมูลจากแหล่งงาน หรือเพิ่มเองด้วยมือ จากนั้นจะเห็นทุกคนเรียงตามขั้นของ pipeline และลากย้ายขั้นได้"
-        >
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Link
-              href="/scraper"
-              className="h-9 rounded-[var(--radius-card)] bg-primary px-4 text-sm font-medium leading-9 text-primary-ink transition-opacity hover:opacity-90"
-            >
-              ไปหน้า Sourcing
-            </Link>
-            <button
-              type="button"
-              className="h-9 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-            >
-              เพิ่มผู้สมัครด้วยมือ
-            </button>
-          </div>
-        </EmptyState>
-      ) : (
+      {hasData ? (
         <TrackerBoard initial={applications} />
+      ) : (
+        <TrackerOnboarding onAddManually={addButton} />
       )}
     </div>
   );
