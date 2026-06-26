@@ -26,8 +26,8 @@ function client(): Anthropic {
 interface StructuredOptions<T> {
   /** System prompt — the role/instructions. */
   system: string;
-  /** User content — the actual task input (JD, CV text, etc.). */
-  user: string;
+  /** User content — plain text, or content blocks (e.g. a PDF document + text). */
+  user: string | Anthropic.ContentBlockParam[];
   /** Name of the synthetic tool the model must call. */
   toolName: string;
   /** Human description of what the tool captures. */
@@ -74,4 +74,18 @@ export async function structured<T>(opts: StructuredOptions<T>): Promise<T> {
 
   // zod re-validates the model output before any caller trusts it.
   return opts.validate.parse(toolUse.input);
+}
+
+/** Build a PDF document content block from base64 — Claude reads PDFs natively,
+ *  which is more robust than parsing them ourselves. */
+export function pdfBlock(base64: string): Anthropic.ContentBlockParam {
+  return {
+    type: "document",
+    source: { type: "base64", media_type: "application/pdf", data: base64 },
+  };
+}
+
+/** Plain text content block. */
+export function textBlock(text: string): Anthropic.ContentBlockParam {
+  return { type: "text", text };
 }
