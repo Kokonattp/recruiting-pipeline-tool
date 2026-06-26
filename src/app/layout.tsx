@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Sans_Thai } from "next/font/google";
+import { Prompt, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-// Thai is a first-class citizen (PRODUCT.md) — pair Geist (Latin) with Plex Sans Thai.
-const plexThai = IBM_Plex_Sans_Thai({
-  variable: "--font-thai",
-  subsets: ["thai"],
-  weight: ["400", "500", "600"],
+// Prompt carries both Thai and Latin in one family — per impeccable's product register,
+// one well-tuned sans for headings, labels, body and data beats pairing two.
+const prompt = Prompt({
+  variable: "--font-sans",
+  subsets: ["thai", "latin"],
+  weight: ["400", "500", "600", "700"],
 });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="th"
-      className={`${geistSans.variable} ${geistMono.variable} ${plexThai.variable} h-full`}
+      className={`${prompt.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
       <head>
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-full">
         <div className="flex min-h-screen">
           <Sidebar />
-          <main className="flex-1 overflow-x-hidden px-8 py-8">{children}</main>
+          <main className="flex-1 overflow-x-hidden px-8 py-7">{children}</main>
         </div>
       </body>
     </html>
