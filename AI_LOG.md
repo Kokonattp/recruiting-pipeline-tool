@@ -38,6 +38,8 @@
 
 **decision สี:** palette script สุ่มได้ crimson (hue 20°). **ไม่ใช้ตรงๆ** — แดงสื่อ urgency เกินไปสำหรับ tool ที่ HR จ้องทั้งวัน. เขียน scene sentence → เลือก **bg ขาวบริสุทธิ์ + ink เข้ม เป็นหลัก, เก็บ crimson ไว้เป็น accent เฉพาะ reject/urgent** (สีมีความหมาย ไม่ใช่ตกแต่ง). + รองรับ **dark theme**.
 
+**เลือก impeccable เป็น design system:** เพราะ register ของงานเป็น *product* (tool ที่ HR ใช้ทำงานทุกวัน) — แนวสะอาด/แน่น/พรีเมียมแบบ Linear ตรงกับ personality "มืออาชีพ แม่นยำ น่าเชื่อถือ" ใน PRODUCT.md และเลี่ยง AI-slop ได้ (impeccable มี hook ตรวจให้อัตโนมัติ).
+
 ---
 
 ## Prompt iterations (Module 2 — Resume Screener)
