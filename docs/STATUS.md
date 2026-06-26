@@ -31,6 +31,37 @@
 6. **Deploy:** Vercel + Cloud Run (`gcloud run deploy` ใน scraper/) + ใส่ env บน Vercel
 7. **Demo video ~3 นาที** + อัปเดต README ใส่ live URL
 
+## 🚀 Deploy: 1 repo → 2 service แยก (สำคัญ — เคยงงจุดนี้)
+
+repo เดียวแต่ deploy 2 ที่ เพราะแต่ละเจ้า build จาก **คนละโฟลเดอร์**:
+
+```
+recruiting-tool/  (1 repo)
+├── src/ + package.json (root)  → Vercel มองตรงนี้ (Next.js)
+└── scraper/                    → Cloud Run มองตรงนี้ (Docker)
+                                  (อิสระ 100%: มี Dockerfile/package.json/tsconfig เอง,
+                                   ไม่ import จาก src/ เลย — verify แล้ว)
+```
+
+**Web app → Vercel:**
+- New Project → import repo → Root Directory = `/` (default) → ใส่ env ทั้งหมด → Deploy
+
+**Scraper → Google Cloud Run:**
+```bash
+cd scraper                    # เข้าโฟลเดอร์ scraper ก่อน
+gcloud run deploy recruiting-scraper \
+  --source .                  # "." = แค่โฟลเดอร์ scraper, ไม่เห็น src/
+  --region asia-southeast1 \
+  --allow-unauthenticated \
+  --set-env-vars SCRAPER_INGEST_SECRET=<secret ที่ตั้ง>
+```
+Cloud Run คืน URL → เอาไปใส่ใน Vercel env `SCRAPER_SERVICE_URL=https://...run.app`
+
+**2 ส่วนคุยกันผ่าน HTTP (ไม่ใช่ import โค้ด):**
+- Web → Scraper: `fetch(SCRAPER_SERVICE_URL + "/scrape")`
+- Scraper → Web: `fetch(APP_URL + "/api/scrape-ingest")`
+- auth: `SCRAPER_INGEST_SECRET` ต้องตั้งให้ **ตรงกันทั้ง 2 ฝั่ง**
+
 ## 🔑 ENV ที่ต้องการ (ผู้ใช้จะเอามาทีเดียว)
 
 ```
