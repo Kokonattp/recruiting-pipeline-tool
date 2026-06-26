@@ -15,7 +15,8 @@ COPY sources ./sources
 RUN npm run build
 
 ENV NODE_ENV=production
-# PORT can be overridden by the platform (Railway/Render inject their own).
+# PORT is overridden by the platform — Google Cloud Run injects its own $PORT,
+# which server.ts reads via process.env.PORT.
 ENV PORT=4000
 EXPOSE 4000
 

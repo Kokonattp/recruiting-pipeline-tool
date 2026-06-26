@@ -11,7 +11,7 @@
 │  • หน้าจอ HR + 4 module       │ ─────► │  • Playwright headless        │
 │  • Server Actions / API       │ ◄───── │  • POST /scrape  → push DB    │
 │  • เรียก Claude + Google API  │ ingest │  • session cookie = secret    │
-│  Git → Vercel (URL จริง)      │        │  Deploy: Railway / Render     │
+│  Git → Vercel (URL จริง)      │        │  Deploy: Google Cloud Run     │
 └──────────────┬───────────────┘        └──────────────────────────────┘
                │ supabase-js
                ▼
@@ -119,7 +119,7 @@ design token เป็น CSS variable (OKLCH) สอง set: `:root` (light) + 
 
 ### Scraper service — ความจริงของแต่ละแหล่ง (honest)
 
-อยู่ใน `scraper/` (service แยก Playwright+Docker, deploy Railway). source แบบ pluggable (1 ไฟล์/แหล่ง) ถ้าตัวไหนพัง try/catch แยกไม่ล้มทั้ง request.
+อยู่ใน `scraper/` (service แยก Playwright+Docker, deploy Google Cloud Run). source แบบ pluggable (1 ไฟล์/แหล่ง) ถ้าตัวไหนพัง try/catch แยกไม่ล้มทั้ง request.
 
 | Source | สถานะ | หมายเหตุ |
 |--------|-------|----------|
@@ -138,4 +138,4 @@ design token เป็น CSS variable (OKLCH) สอง set: `:root` (light) + 
 | README.md (setup + architecture decision) | บังคับ | `/README.md` |
 | Demo video ~3 นาที ครบ 4 module | บังคับ | อัดท้ายงาน |
 | AI Log (.md บันทึกการทำงานกับ AI) | bonus | `/AI_LOG.md` |
-| Live URL (free tier) | bonus | Vercel + Railway + Supabase |
+| Live URL (free tier) | bonus | Vercel + Cloud Run + Supabase |

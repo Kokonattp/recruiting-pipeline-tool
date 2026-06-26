@@ -3,7 +3,7 @@
 A standalone Playwright + Express service that scrapes candidate / job listings
 from public job sites. It is **completely separate** from the Next.js app: own
 `package.json`, own `tsconfig.json`, deployed as its own Docker container
-(Railway / Render). The Next.js app calls `POST /scrape`, then ranks the raw
+(Google Cloud Run). The Next.js app calls `POST /scrape`, then ranks the raw
 results with Claude.
 
 ## Contract
@@ -105,19 +105,24 @@ curl -X POST http://localhost:4000/scrape \
   }'
 ```
 
-## Deploy to Railway
+## Deploy to Google Cloud Run
 
-1. Push this repo to GitHub.
-2. In Railway, **New Project → Deploy from GitHub repo**.
-3. Set the **Root Directory** to `scraper/` (Settings → Build) so Railway uses
-   this folder's `Dockerfile`. Railway auto-detects the Dockerfile and builds it.
-4. Add the env var `SCRAPER_INGEST_SECRET` (Variables tab). Railway injects
-   `PORT` automatically — the server reads it.
-5. Deploy. Railway gives you a public URL; point the Next.js app's scraper URL at
-   `https://<your-app>.up.railway.app`.
+Cloud Run runs the container, injects its own `$PORT` (the server reads it), and
+scales to zero when idle. Use the same Google account as the Calendar API (Module 4).
 
-Render is equivalent: **New → Web Service**, root dir `scraper/`, Docker runtime,
-add `SCRAPER_INGEST_SECRET`, and Render supplies `PORT`.
+From the `scraper/` folder:
+
+```bash
+gcloud run deploy recruiting-scraper \
+  --source . \
+  --region asia-southeast1 \
+  --allow-unauthenticated \
+  --set-env-vars SCRAPER_INGEST_SECRET=your-secret-here
+```
+
+Cloud Run builds the `Dockerfile`, deploys it, and prints a public URL. Point the
+Next.js app's `SCRAPER_SERVICE_URL` at that URL. (`--allow-unauthenticated` is fine
+because the `/scrape` endpoint is already protected by `SCRAPER_INGEST_SECRET`.)
 
 ## Architecture
 

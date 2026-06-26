@@ -21,7 +21,8 @@
 ## รอบที่ 3 — Scraper รันที่ไหน
 
 **ปัญหา technical:** Playwright รันบน Vercel serverless ไม่ได้ (browser หนัก + เกิน timeout).
-**วิวัฒนาการ decision:** local CLI → (สุดท้าย) **Docker service บน cloud** (Railway/Render) มี HTTP endpoint. session cookie LinkedIn/FB เก็บเป็น secret บน cloud (เข้ารหัส) ไม่ commit.
+**วิวัฒนาการ decision:** local CLI → Docker service บน cloud มี HTTP endpoint. session cookie LinkedIn/FB เก็บเป็น secret บน cloud (เข้ารหัส) ไม่ commit.
+**host (อัปเดต):** เลือก **Google Cloud Run** (จากตอนแรกคิด Railway) — เหตุผล: ทำ Module 4 ต้องใช้ Google Cloud account อยู่แล้ว → ใช้ account เดียวคุมทั้ง Calendar API + scraper, free tier เยอะ, scale-to-zero ไม่เปลืองตอนไม่ใช้. Dockerfile อ่าน `$PORT` ที่ Cloud Run inject ได้เลย.
 
 ## รอบที่ 4 — Data layer: ทิ้ง Prisma
 

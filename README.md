@@ -26,7 +26,7 @@
 ## Architecture (สรุป)
 
 ```
-WEB APP (Next.js → Vercel)  ──HTTP──►  SCRAPER SERVICE (Playwright+Docker → Railway)
+WEB APP (Next.js → Vercel)  ──HTTP──►  SCRAPER SERVICE (Playwright+Docker → Cloud Run)
         │ supabase-js
         ▼
 SUPABASE (Postgres + Storage + Auth)
@@ -71,7 +71,7 @@ npm run dev
 
 ## Scraper service (Module 1)
 
-อยู่ใน `scraper/` — เป็น service แยก (Playwright + Docker) เพราะ headless browser รันบน Vercel serverless ไม่ได้. deploy บน Railway/Render. ดูวิธีรันใน `scraper/README.md`.
+อยู่ใน `scraper/` — เป็น service แยก (Playwright + Docker) เพราะ headless browser รันบน Vercel serverless ไม่ได้. deploy บน **Google Cloud Run** (ใช้ Google account เดียวกับ Calendar API ใน Module 4). ดูวิธีรันใน `scraper/README.md`.
 
 ## โครงสร้างโปรเจกต์
 
