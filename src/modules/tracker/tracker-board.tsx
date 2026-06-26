@@ -21,6 +21,7 @@ import {
 import { BoardView } from "./board-view";
 import { ListView } from "./list-view";
 import { CandidateCard } from "./candidate-card";
+import { updateStage } from "./actions";
 import { EMPTY_FILTERS, type TrackerFilters, type TrackerView } from "./view-types";
 
 interface TrackerBoardProps {
@@ -77,10 +78,16 @@ export function TrackerBoard({ initial }: TrackerBoardProps) {
     const overStage = e.over?.id as Stage | undefined;
     if (!overStage) return;
     const id = String(e.active.id);
-    setApps((prev) =>
-      prev.map((a) => (a.id === id && a.stage !== overStage ? { ...a, stage: overStage } : a)),
-    );
-    // TODO(phase B): await updateStage(id, overStage) — persist to Supabase
+    const prevStage = apps.find((a) => a.id === id)?.stage;
+    if (!prevStage || prevStage === overStage) return;
+
+    // Optimistic move, then persist. Roll back if the write fails.
+    setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage: overStage } : a)));
+    updateStage({ applicationId: id, stage: overStage }).then((r) => {
+      if (!r.ok) {
+        setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage: prevStage } : a)));
+      }
+    });
   }
 
   return (
