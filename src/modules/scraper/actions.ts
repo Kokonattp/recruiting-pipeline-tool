@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { supabaseAdmin } from "@/lib/supabase";
 import { SOURCES, type Source } from "@/lib/types";
 import { planQueries, rankCandidates } from "./ai";
 import type { QueryPlan, RankResult, RawCandidate } from "./types";
@@ -69,15 +71,45 @@ export async function runScrapeAndRank(input: {
 }
 
 /**
- * Step 3: HR approves selected candidates → persist into candidates + applications
- * (review_status APPROVED, stage APPLIED). This is the human-in-the-loop gate.
+ * Step 3: HR approves selected candidates → persist into candidates (APPROVED) +
+ * applications (stage APPLIED) for the given job. This is the human-in-the-loop gate:
+ * nothing enters the Tracker until HR reviews and approves.
  */
-export async function approveCandidates(_input: {
+export async function approveCandidates(input: {
   jobId: string;
   selected: RankResult["shortlist"];
 }): Promise<ActionResult<{ inserted: number }>> {
-  // TODO(linking phase): supabaseAdmin().from("candidates").insert(...) + applications insert.
-  return { ok: false, error: "ยังไม่ได้เชื่อม Supabase — จะ persist ได้หลังลิงก์ DB" };
+  if (!input.jobId) return { ok: false, error: "ไม่พบตำแหน่งงาน (jobId)" };
+  if (input.selected.length === 0) return { ok: false, error: "ยังไม่ได้เลือกผู้สมัคร" };
+
+  const db = supabaseAdmin();
+  let inserted = 0;
+
+  for (const c of input.selected) {
+    const { data: cand, error: e1 } = await db
+      .from("candidates")
+      .insert({
+        name: c.name,
+        email: c.email,
+        source: c.source,
+        source_url: c.sourceUrl,
+        headline: c.headline,
+        normalized: { fitScore: c.fitScore, reasons: c.reasons, concerns: c.concerns },
+        review_status: "APPROVED",
+      })
+      .select("id")
+      .single();
+    if (e1 || !cand) return { ok: false, error: e1?.message ?? "insert candidate ล้มเหลว" };
+
+    const { error: e2 } = await db
+      .from("applications")
+      .insert({ candidate_id: (cand as { id: string }).id, job_id: input.jobId, stage: "APPLIED" });
+    if (e2) return { ok: false, error: e2.message };
+    inserted++;
+  }
+
+  revalidatePath("/tracker");
+  return { ok: true, data: { inserted } };
 }
 
 function aiError(e: unknown): string {
