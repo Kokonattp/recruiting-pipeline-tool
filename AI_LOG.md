@@ -44,9 +44,15 @@
 
 ## Prompt iterations (Module 2 — Resume Screener)
 
-> หัวใจของ AI Integration. จะบันทึก prompt แต่ละเวอร์ชัน + ทำไมต้องแก้ + edge case ที่เจอ เมื่อเริ่มลงมือ Module 2.
+หัวใจของ AI Integration. prompt อยู่ใน `src/modules/screener/ai.ts`. หลักการที่ใส่ลง system prompt:
 
-_(จะเติมเมื่อทำ Module 2)_
+1. **score 3 แกนแยกกัน + มี rubric ชัด** (8-10 strong / 5-7 partial / 0-4 weak) — กันไม่ให้ AI ยุบทุกอย่างเป็น "vibe score" เดียว.
+2. **reasoning ต้องอ้างหลักฐานจาก CV จริง** "Never invent experience the CV doesn't show" — กัน hallucination / คะแนนเฟ้อ.
+3. **cultureFit สั่งให้ conservative** บอกตรงๆ ถ้าหลักฐานน้อย — เพราะ culture เดาจาก CV ยาก ไม่ควรมั่ว.
+4. **prescreenQuestions เจาะ "gap/risk"** ไม่ใช่คำถาม generic ("เล่าตัวเอง") — ให้ตรงกับสิ่งที่ recruiter ต้องถามจริงตอนโทร.
+5. output ผ่าน **tool-use schema + zod** (`SCREENING_TOOL_SCHEMA` คู่กับ `ScreeningSchema`) บังคับ JSON เป๊ะ ผูก 1:1 กับตาราง `screening_results`.
+
+**PDF:** ตัดสินใจไม่ parse PDF เองด้วย pdf-parse (v2 ESM API ยุ่ง เสี่ยงพัง) — จะใช้ **Claude document input (base64)** ตอนลิงก์ key แทน robust กว่า. ตอนนี้รองรับ paste text ก่อน.
 
 ## Prompt iterations (Module 1 — query gen + ranking)
 
