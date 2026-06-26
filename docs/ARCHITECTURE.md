@@ -117,6 +117,19 @@ design token เป็น CSS variable (OKLCH) สอง set: `:root` (light) + 
 - **Module 1:** Claude แปลง JD → search query ต่อแหล่ง, และ normalize+rank candidate พร้อมเหตุผล
 - ทุก AI output ผ่าน zod validate ก่อนเข้า DB → กัน hallucination พังระบบ
 
+### Scraper service — ความจริงของแต่ละแหล่ง (honest)
+
+อยู่ใน `scraper/` (service แยก Playwright+Docker, deploy Railway). source แบบ pluggable (1 ไฟล์/แหล่ง) ถ้าตัวไหนพัง try/catch แยกไม่ล้มทั้ง request.
+
+| Source | สถานะ | หมายเหตุ |
+|--------|-------|----------|
+| WEB | ✅ ใช้ได้ | ใช้ **Bing** (Google บล็อก headless หนัก) |
+| JOBSDB / JOBTHAI | ✅ ใช้ได้ | เป็น public job board → ได้ job posting เป็น lead (ฝั่ง public ไม่ใช่ open CV database) |
+| LINKEDIN / FACEBOOK | ⏸ stub | ต้อง login session + ผิด ToS — return [] + log (ออกแบบ pluggable เพิ่มทีหลังได้) |
+| JOBBKK | ⏸ stub | candidate search ต้อง employer login |
+
+> ความจริงของ anti-bot: เว็บเปลี่ยน markup/rate-limit/CAPTCHA ได้ — selector เป็น best-effort. การแยก source + try/catch + timeout คือ design ที่รับมือกับความจริงนี้.
+
 ## 7. Deliverables (จากโจทย์ — เช็กให้ครบ)
 
 | ส่ง | สถานะ | ที่อยู่ |
