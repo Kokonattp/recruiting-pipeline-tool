@@ -1,19 +1,26 @@
+import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { toApplicationWithRelations } from "@/lib/mappers";
 import type { ApplicationWithRelations } from "@/lib/types";
 
 /**
- * Data access for the Applicant Tracker.
- *
- * Returns real rows from Supabase. Until the database is wired (env keys + schema),
- * this returns an empty list so the UI renders its empty state — we never fabricate
- * candidates. Phase B replaces the body with a Supabase query; the UI doesn't change.
+ * Data access for the Applicant Tracker. Returns real applications from Supabase,
+ * joined with their candidate, job, and latest screening. When Supabase isn't
+ * configured yet (no env), returns an empty list so the UI shows its onboarding
+ * state instead of crashing — we never fabricate candidates.
  */
 export async function getApplications(): Promise<ApplicationWithRelations[]> {
-  // TODO(phase B): query Supabase, e.g.
-  //   const db = supabaseAdmin();
-  //   const { data } = await db
-  //     .from("applications")
-  //     .select("*, candidate:candidates(*), job:job_descriptions(id,title), screening:screening_results(*)")
-  //     .order("applied_at", { ascending: false });
-  //   return data.map(rowToApplication);
-  return [];
+  if (!isSupabaseConfigured()) return [];
+
+  const { data, error } = await supabaseAdmin()
+    .from("applications")
+    .select(
+      "*, candidate:candidates(*), job:job_descriptions(id,title), screening:screening_results(*)",
+    )
+    .order("applied_at", { ascending: false });
+
+  if (error) {
+    console.error("getApplications failed:", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => toApplicationWithRelations(r as Record<string, unknown>));
 }
