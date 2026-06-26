@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { NAV_ITEMS } from "@/components/nav";
 
+export const metadata = { title: "Resume Screener" };
+
 const meta = NAV_ITEMS.find((i) => i.href === "/screener")!;
 
 export default function ScreenerPage() {

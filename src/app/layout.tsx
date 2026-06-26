@@ -13,8 +13,15 @@ const plexThai = IBM_Plex_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Recruiting Pipeline Tool",
-  description: "เครื่องมือช่วยทีม HR จัดการกระบวนการสรรหาบุคลากรครบวงจร",
+  title: {
+    default: "Recruiting Pipeline Tool",
+    template: "%s · Recruiting Pipeline",
+  },
+  description:
+    "เครื่องมือช่วยทีม HR จัดการกระบวนการสรรหาบุคลากรครบวงจร — sourcing, screening, tracking, scheduling ในที่เดียว",
+  applicationName: "Recruiting Pipeline Tool",
+  authors: [{ name: "Recruiting Pipeline" }],
+  keywords: ["recruiting", "ATS", "HR", "AI screening", "applicant tracker"],
 };
 
 // Runs before paint to apply the saved theme — prevents a light/dark flash.

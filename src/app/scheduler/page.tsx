@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { NAV_ITEMS } from "@/components/nav";
 
+export const metadata = { title: "Interview Scheduler" };
+
 const meta = NAV_ITEMS.find((i) => i.href === "/scheduler")!;
 
 export default function SchedulerPage() {
