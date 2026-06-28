@@ -1,4 +1,4 @@
-import { structured, CLAUDE_MODEL } from "@/lib/claude";
+import { structured, pdfBlock, textBlock, CLAUDE_MODEL } from "@/lib/claude";
 import { ScreeningSchema, SCREENING_TOOL_SCHEMA, type Screening } from "./types";
 
 /**
@@ -13,8 +13,17 @@ import { ScreeningSchema, SCREENING_TOOL_SCHEMA, type Screening } from "./types"
  */
 export async function screenResume(
   jdText: string,
-  cvText: string,
+  cv: { text: string } | { pdfBase64: string },
 ): Promise<{ screening: Screening; model: string }> {
+  // CV arrives as pasted text or an uploaded PDF (read natively by Claude).
+  const user =
+    "text" in cv
+      ? `JOB DESCRIPTION:\n"""${jdText}"""\n\nCANDIDATE CV:\n"""${cv.text}"""`
+      : [
+          textBlock(`JOB DESCRIPTION:\n"""${jdText}"""\n\nThe candidate's CV is the attached PDF.`),
+          pdfBlock(cv.pdfBase64),
+        ];
+
   const screening = await structured<Screening>({
     system: [
       "You are an experienced technical recruiter screening a CV against a specific role.",
@@ -26,7 +35,7 @@ export async function screenResume(
       "strengths: specific things worth highlighting to the panel. prescreenQuestions: target the GAPS/risks a recruiter should probe on the first call (not generic questions).",
       "summary: 2-3 sentences a busy HR + hiring manager can read before the interview.",
     ].join("\n"),
-    user: `JOB DESCRIPTION:\n"""${jdText}"""\n\nCANDIDATE CV:\n"""${cvText}"""`,
+    user,
     toolName: "submit_screening",
     toolDescription: "Submit the structured 3-axis screening assessment for this candidate.",
     inputSchema: SCREENING_TOOL_SCHEMA as unknown as Record<string, unknown>,

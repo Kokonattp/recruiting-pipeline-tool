@@ -15,12 +15,18 @@ import type { Screening } from "./types";
  * + linking to an application is wired in the linking phase.
  */
 
-const ScreenInput = z.object({
-  jdText: z.string().min(20, "เลือกหรือวาง Job Description ก่อน"),
-  cvText: z.string().min(40, "วางข้อความ CV อย่างน้อย 40 ตัวอักษร"),
-  /** when set, the result is saved against this application */
-  applicationId: z.string().optional(),
-});
+const ScreenInput = z
+  .object({
+    jdText: z.string().min(20, "เลือกหรือวาง Job Description ก่อน"),
+    cvText: z.string().optional(),
+    cvPdfBase64: z.string().optional(),
+    /** when set, the result is saved against this application */
+    applicationId: z.string().optional(),
+  })
+  .refine(
+    (v) => (v.cvText && v.cvText.trim().length >= 40) || !!v.cvPdfBase64,
+    { message: "วางข้อความ CV (≥40 ตัวอักษร) หรืออัปโหลด PDF", path: ["cvText"] },
+  );
 
 export type ScreenResult =
   | { ok: true; screening: Screening; model: string }
@@ -28,7 +34,8 @@ export type ScreenResult =
 
 export async function runScreening(input: {
   jdText: string;
-  cvText: string;
+  cvText?: string;
+  cvPdfBase64?: string;
   applicationId?: string;
 }): Promise<ScreenResult> {
   const parsed = ScreenInput.safeParse(input);
@@ -36,7 +43,10 @@ export async function runScreening(input: {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
   }
   try {
-    const { screening, model } = await screenResume(parsed.data.jdText, parsed.data.cvText);
+    const cv = parsed.data.cvPdfBase64
+      ? { pdfBase64: parsed.data.cvPdfBase64 }
+      : { text: parsed.data.cvText ?? "" };
+    const { screening, model } = await screenResume(parsed.data.jdText, cv);
 
     // Persist only when tied to an application (upsert: one screening per application).
     if (parsed.data.applicationId) {
