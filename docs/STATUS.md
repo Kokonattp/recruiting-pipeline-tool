@@ -2,9 +2,11 @@
 
 > อัปเดตล่าสุด: 27 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · 25 commits · build ผ่าน
 
-## ความคืบหน้า ~75%
+## ความคืบหน้า ~90% (อัปเดต)
 
-โค้ดครบทั้ง 4 module + scraper service + wiring DB เสร็จ build ผ่าน — **เหลือแค่เสียบ ENV + deploy + demo video**.
+โค้ดครบ + feature เพิ่มตามภาพ idea เสร็จหมด build ผ่าน — **เหลือแค่เสียบ ENV + deploy + demo video** (ทำเองไม่ได้ ต้องการ key/การกระทำผู้ใช้).
+
+**เพิ่มล่าสุด:** JD Generator (keyword→JD), Search Query Pack, Tracker stat bar + add-candidate modal + LOGA accents (ขอบการ์ดหนา/pill คะแนน/count สี), Screener PDF upload + JD picker, Scheduler Google OAuth + Calendar/Meet จริง + stage sync + cancel, CLAUDE.md/TODO.md.
 
 ## ✅ เสร็จแล้ว
 

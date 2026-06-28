@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import type { JobDescription } from "@/lib/types";
 import { JDGenerator } from "@/modules/jobs/jd-generator";
 import { SourcingFlow } from "./sourcing-flow";
+import { CsvImport } from "./csv-import";
 
-type Tab = "generate" | "source";
+type Tab = "generate" | "source" | "csv";
 
 /**
  * Module 1 has two jobs: create a role (JD Generator) and find candidates for it
@@ -24,6 +25,7 @@ export function SourcingPage({ jobs }: { jobs: JobDescription[] }) {
           [
             ["generate", "1 · สร้างตำแหน่ง (JD)"],
             ["source", "2 · ค้นหาผู้สมัคร"],
+            ["csv", "3 · นำเข้า CSV"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -41,16 +43,16 @@ export function SourcingPage({ jobs }: { jobs: JobDescription[] }) {
         ))}
       </div>
 
-      {tab === "generate" ? (
+      {tab === "generate" && (
         <JDGenerator
           onSaved={() => {
             router.refresh(); // reload server data so the new JD appears in the source tab
             setTab("source");
           }}
         />
-      ) : (
-        <SourcingFlow jobs={jobs} />
       )}
+      {tab === "source" && <SourcingFlow jobs={jobs} />}
+      {tab === "csv" && <CsvImport jobs={jobs} />}
     </div>
   );
 }
