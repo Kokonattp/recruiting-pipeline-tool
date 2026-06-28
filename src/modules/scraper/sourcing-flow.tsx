@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { SOURCE_LABELS, SOURCES, type Source } from "@/lib/types";
-import { generateQueryPlan, runScrapeAndRank, type ActionResult } from "./actions";
+import { SOURCE_LABELS, SOURCES, type JobDescription, type Source } from "@/lib/types";
+import {
+  approveCandidates,
+  generateQueryPlan,
+  runScrapeAndRank,
+  type ActionResult,
+} from "./actions";
 import type { QueryPlan, RankResult } from "./types";
 
 /** Default sources to search — the public ones that work without login are pre-checked. */
@@ -12,12 +17,14 @@ type Step = "jd" | "plan" | "shortlist";
 
 /**
  * Module 1 sourcing wizard. One client container owns the whole flow state
- * (JD → query plan → shortlist), so there's a single source of truth and no
+ * (JD → query plan → shortlist → approve), so there's a single source of truth and no
  * prop-drilling. Each async step calls a Server Action and surfaces errors inline.
+ * `jobs` lets HR pick a saved JD (so approved candidates attach to a real job).
  */
-export function SourcingFlow() {
+export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   const [step, setStep] = useState<Step>("jd");
-  const [jdText, setJdText] = useState("");
+  const [jobId, setJobId] = useState<string>(jobs[0]?.id ?? "");
+  const [jdText, setJdText] = useState(jobs[0]?.rawText ?? "");
   const [sources, setSources] = useState<Source[]>(DEFAULT_SOURCES);
   const [plan, setPlan] = useState<QueryPlan | null>(null);
   const [result, setResult] = useState<RankResult | null>(null);
@@ -60,6 +67,19 @@ export function SourcingFlow() {
     }
   }
 
+  async function onApprove(selected: RankResult["shortlist"]): Promise<string | null> {
+    if (!jobId) return "เลือกตำแหน่ง (JD) ที่บันทึกไว้ก่อนอนุมัติ";
+    const r = await approveCandidates({ jobId, selected });
+    if (r.ok) return null;
+    return r.error;
+  }
+
+  function onPickJob(id: string) {
+    setJobId(id);
+    const job = jobs.find((j) => j.id === id);
+    if (job) setJdText(job.rawText);
+  }
+
   return (
     <div className="space-y-6">
       <StepIndicator current={step} />
@@ -71,6 +91,9 @@ export function SourcingFlow() {
 
       {step === "jd" && (
         <JdStep
+          jobs={jobs}
+          jobId={jobId}
+          onPickJob={onPickJob}
           jdText={jdText}
           onJd={setJdText}
           sources={sources}
@@ -90,7 +113,7 @@ export function SourcingFlow() {
       )}
 
       {step === "shortlist" && result && (
-        <ShortlistStep result={result} onBack={() => setStep("plan")} />
+        <ShortlistStep result={result} onBack={() => setStep("plan")} onApprove={onApprove} />
       )}
     </div>
   );
@@ -126,6 +149,9 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 function JdStep({
+  jobs,
+  jobId,
+  onPickJob,
   jdText,
   onJd,
   sources,
@@ -133,6 +159,9 @@ function JdStep({
   busy,
   onNext,
 }: {
+  jobs: JobDescription[];
+  jobId: string;
+  onPickJob: (id: string) => void;
   jdText: string;
   onJd: (v: string) => void;
   sources: Source[];
@@ -144,6 +173,22 @@ function JdStep({
   const sessionGated: Source[] = ["LINKEDIN", "FACEBOOK"];
   return (
     <div className="space-y-5">
+      {jobs.length > 0 && (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-ink">เลือกตำแหน่งที่บันทึกไว้</label>
+          <select
+            value={jobId}
+            onChange={(e) => onPickJob(e.target.value)}
+            className="h-10 w-full max-w-md rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+          >
+            {jobs.map((j) => (
+              <option key={j.id} value={j.id}>{j.title}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-ink-3">หรือสร้างตำแหน่งใหม่ด้วย JD Generator ด้านบน แล้วแก้ข้อความด้านล่างได้</p>
+        </div>
+      )}
+
       <div>
         <label className="mb-1.5 block text-sm font-medium text-ink">Job Description</label>
         <textarea
@@ -258,7 +303,15 @@ function PlanStep({
   );
 }
 
-function ShortlistStep({ result, onBack }: { result: RankResult; onBack: () => void }) {
+function ShortlistStep({
+  result,
+  onBack,
+  onApprove,
+}: {
+  result: RankResult;
+  onBack: () => void;
+  onApprove: (selected: RankResult["shortlist"]) => Promise<string | null>;
+}) {
   if (result.shortlist.length === 0) {
     return (
       <div className="space-y-4">
@@ -272,6 +325,31 @@ function ShortlistStep({ result, onBack }: { result: RankResult; onBack: () => v
         </button>
       </div>
     );
+  }
+
+  return <ShortlistBody result={result} onBack={onBack} onApprove={onApprove} />;
+}
+
+function ShortlistBody({
+  result,
+  onBack,
+  onApprove,
+}: {
+  result: RankResult;
+  onBack: () => void;
+  onApprove: (selected: RankResult["shortlist"]) => Promise<string | null>;
+}) {
+  const [approving, setApproving] = useState(false);
+  const [approved, setApproved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function doApprove() {
+    setApproving(true);
+    setErr(null);
+    const error = await onApprove(result.shortlist);
+    setApproving(false);
+    if (error) setErr(error);
+    else setApproved(true);
   }
 
   return (
@@ -305,21 +383,30 @@ function ShortlistStep({ result, onBack }: { result: RankResult; onBack: () => v
           </article>
         ))}
       </div>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
-        >
-          ← กลับ
-        </button>
-        <button
-          type="button"
-          className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90"
-        >
-          อนุมัติทั้งหมดเข้า Tracker
-        </button>
-      </div>
+      {err && <p className="text-sm text-[var(--danger)]">{err}</p>}
+      {approved ? (
+        <div className="rounded-[var(--radius-card)] border border-[var(--success)] bg-success-soft px-4 py-3 text-sm text-ink">
+          ✓ อนุมัติเข้า Tracker แล้ว — ไปดูที่หน้า Applicant Tracker ได้เลย
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
+          >
+            ← กลับ
+          </button>
+          <button
+            type="button"
+            disabled={approving}
+            onClick={doApprove}
+            className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            {approving ? "กำลังอนุมัติ…" : "อนุมัติทั้งหมดเข้า Tracker"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,6 +22,25 @@ export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
+/**
+ * Alternative intake: HR uploads a CSV of candidates (e.g. exported from a job board).
+ * We parse rows into RawCandidate, then reuse the same AI ranking as scraping — so CSV
+ * and scrape converge on one reviewed shortlist. No external service needed (works even
+ * when scraping is blocked).
+ */
+export async function importCsvAndRank(input: {
+  jdText: string;
+  rows: RawCandidate[];
+}): Promise<ActionResult<RankResult>> {
+  if (input.rows.length === 0) return { ok: false, error: "ไฟล์ CSV ว่างหรืออ่านไม่ได้" };
+  try {
+    const ranked = await rankCandidates(input.jdText, input.rows);
+    return { ok: true, data: ranked };
+  } catch (e) {
+    return { ok: false, error: aiError(e) };
+  }
+}
+
 /** Step 1: JD → AI search-query plan (one query per source). */
 export async function generateQueryPlan(input: {
   jdText: string;
