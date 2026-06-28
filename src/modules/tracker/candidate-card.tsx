@@ -20,7 +20,7 @@ export function CandidateCard({ application, dragHandle }: CandidateCardProps) {
   const { candidate, screening, appliedAt } = application;
 
   return (
-    <article className="group rounded-[var(--radius-card)] border border-border bg-bg p-3 shadow-[var(--shadow-card)] transition-colors hover:border-border-strong">
+    <article className="group rounded-[var(--radius-card)] border-2 border-border-strong bg-bg p-3 transition-colors hover:border-primary">
       <div className="flex items-start gap-2.5">
         <span
           aria-hidden

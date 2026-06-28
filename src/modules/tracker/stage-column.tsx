@@ -15,14 +15,18 @@ export function StageColumn({ stage, applications }: StageColumnProps) {
 
   return (
     <section className="flex w-72 shrink-0 flex-col">
+      {/* LOGA-style header: stage color as a leading bar + bold title + accent count */}
       <header className="mb-2 flex items-center gap-2 px-1">
         <span
           aria-hidden
-          className="h-2 w-2 rounded-full"
-          style={{ background: `oklch(0.62 0.16 ${hue})` }}
+          className="h-4 w-1 rounded-full"
+          style={{ background: `oklch(0.6 0.18 ${hue})` }}
         />
-        <h2 className="text-sm font-semibold text-ink">{STAGE_LABELS[stage]}</h2>
-        <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium tabular-nums text-ink-2">
+        <h2 className="text-sm font-bold text-ink">{STAGE_LABELS[stage]}</h2>
+        <span
+          className="ml-auto text-sm font-bold tabular-nums"
+          style={{ color: `oklch(0.6 0.18 ${hue})` }}
+        >
           {applications.length}
         </span>
       </header>
