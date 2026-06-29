@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ApplicationWithRelations, Interview } from "@/lib/types";
 import { findConflicts, type Conflict } from "./conflict";
-import { createInterview, cancelInterview, getGoogleAuthUrl } from "./actions";
+import { createInterview, cancelInterview, rescheduleInterview, getGoogleAuthUrl } from "./actions";
 
 /**
  * Interview Scheduler. HR connects Google once, picks a candidate + time + duration;
@@ -166,45 +166,92 @@ function AgendaList({ interviews }: { interviews: Interview[] }) {
   return (
     <ul className="space-y-2">
       {upcoming.map((iv) => (
-        <li
-          key={iv.id}
-          className="flex items-center justify-between rounded-[var(--radius-card)] border border-border bg-surface p-3"
-        >
-          <div>
-            <div className="text-sm font-medium text-ink">
-              {new Date(iv.scheduledAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}
-            </div>
-            <div className="text-xs text-ink-3">{iv.durationMin} นาที · {iv.status}</div>
-          </div>
-          <div className="flex items-center gap-3">
-            {iv.meetLink && (
-              <a href={iv.meetLink} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline">
-                เข้า Meet
-              </a>
-            )}
-            <CancelButton id={iv.id} eventId={iv.googleEventId} />
-          </div>
-        </li>
+        <InterviewRow key={iv.id} iv={iv} />
       ))}
     </ul>
   );
 }
 
-function CancelButton({ id, eventId }: { id: string; eventId: string | null }) {
+function InterviewRow({ iv }: { iv: Interview }) {
   const [busy, setBusy] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
+  const [newAt, setNewAt] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function cancel() {
+    setBusy(true);
+    await cancelInterview(iv.id, iv.googleEventId);
+    setBusy(false);
+  }
+
+  async function saveReschedule() {
+    setBusy(true);
+    setError(null);
+    const r = await rescheduleInterview(
+      { interviewId: iv.id, startsAt: new Date(newAt).toISOString(), durationMin: iv.durationMin },
+      iv.googleEventId,
+    );
+    setBusy(false);
+    if (r.ok) {
+      setRescheduling(false);
+      setNewAt("");
+    } else setError(r.error);
+  }
+
   return (
-    <button
-      type="button"
-      disabled={busy}
-      onClick={async () => {
-        setBusy(true);
-        await cancelInterview(id, eventId);
-        setBusy(false);
-      }}
-      className="text-xs text-ink-3 hover:text-[var(--danger)]"
-    >
-      {busy ? "…" : "ยกเลิก"}
-    </button>
+    <li className="rounded-[var(--radius-card)] border border-border bg-surface p-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-medium text-ink">
+            {new Date(iv.scheduledAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}
+          </div>
+          <div className="text-xs text-ink-3">{iv.durationMin} นาที · {iv.status}</div>
+        </div>
+        <div className="flex items-center gap-3">
+          {iv.meetLink && (
+            <a href={iv.meetLink} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline">
+              เข้า Meet
+            </a>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setRescheduling((v) => !v)}
+            className="text-xs text-ink-3 hover:text-ink-2 disabled:opacity-40"
+          >
+            เลื่อน
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={cancel}
+            className="text-xs text-ink-3 hover:text-[var(--danger)] disabled:opacity-40"
+          >
+            {busy ? "…" : "ยกเลิก"}
+          </button>
+        </div>
+      </div>
+
+      {rescheduling && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <input
+            type="datetime-local"
+            value={newAt}
+            onChange={(e) => setNewAt(e.target.value)}
+            className="h-9 flex-1 rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+          />
+          <button
+            type="button"
+            disabled={busy || !newAt}
+            onClick={saveReschedule}
+            className="h-9 rounded-[var(--radius-card)] bg-primary px-3 text-sm font-medium text-primary-ink hover:opacity-90 disabled:opacity-40"
+          >
+            {busy ? "กำลังเลื่อน…" : "ยืนยันเวลาใหม่"}
+          </button>
+          {error && <span className="w-full text-xs text-[var(--danger)]">{error}</span>}
+        </div>
+      )}
+    </li>
   );
 }
 

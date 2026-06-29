@@ -134,6 +134,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Print: isolate the screening report (Save as PDF) — hide chrome, force light ink. */
+@media print {
+  body * { visibility: hidden; }
+  #screening-report,
+  #screening-report * { visibility: visible; }
+  #screening-report {
+    position: absolute;
+    inset: 0;
+    padding: 1.5rem;
+    color: #111;
+  }
+  .no-print { display: none !important; }
+}
+
 /* Respect reduced motion globally. */
 @media (prefers-reduced-motion: reduce) {
   *,

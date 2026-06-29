@@ -88,6 +88,25 @@ export async function createCalendarEvent(input: CreateEventInput): Promise<Crea
   return { eventId: event.id ?? "", meetLink, htmlLink: event.htmlLink ?? null };
 }
 
+/** Move an existing event to a new start time / duration. Keeps the same Meet link. */
+export async function rescheduleCalendarEvent(
+  refreshToken: string,
+  eventId: string,
+  startsAt: Date,
+  durationMin: number,
+): Promise<void> {
+  const end = new Date(startsAt.getTime() + durationMin * 60_000);
+  await calendarFor(refreshToken).events.patch({
+    calendarId: "primary",
+    eventId,
+    sendUpdates: "all",
+    requestBody: {
+      start: { dateTime: startsAt.toISOString() },
+      end: { dateTime: end.toISOString() },
+    },
+  });
+}
+
 /** Cancel (delete) a previously created event. */
 export async function cancelCalendarEvent(refreshToken: string, eventId: string): Promise<void> {
   await calendarFor(refreshToken).events.delete({

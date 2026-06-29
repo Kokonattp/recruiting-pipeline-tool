@@ -1,3 +1,5 @@
+"use client";
+
 import { scoreBand } from "@/lib/types";
 import type { Screening } from "./types";
 
@@ -27,10 +29,36 @@ function Axis({ label, score, reason }: { label: string; score: number; reason: 
   );
 }
 
-/** Full screening result: 3 axes + strengths + prescreen questions + panel summary. */
-export function ScoreCard({ screening }: { screening: Screening }) {
+/** Full screening result: 3 axes + strengths + prescreen questions + panel summary.
+ *  `candidateName`/`jobTitle` head the printable report; "พิมพ์ / บันทึก PDF" opens the
+ *  browser print dialog (Save as PDF) — no extra dependency, prints just the report. */
+export function ScoreCard({
+  screening,
+  candidateName,
+  jobTitle,
+}: {
+  screening: Screening;
+  candidateName?: string;
+  jobTitle?: string;
+}) {
   return (
-    <div className="space-y-5">
+    <div id="screening-report" className="space-y-5">
+      <div className="flex items-start justify-between gap-3 print:mb-2">
+        <div>
+          <h3 className="text-lg font-semibold text-ink">
+            รายงานผลคัดกรอง{candidateName ? `: ${candidateName}` : ""}
+          </h3>
+          {jobTitle && <p className="text-xs text-ink-3">ตำแหน่ง: {jobTitle}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="no-print shrink-0 rounded-[var(--radius-card)] border border-border px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-surface-2"
+        >
+          ⤓ พิมพ์ / บันทึก PDF
+        </button>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Axis label="Skills Fit" score={screening.skillsFit} reason={screening.reasoning.skills} />
         <Axis label="Experience Fit" score={screening.expFit} reason={screening.reasoning.experience} />

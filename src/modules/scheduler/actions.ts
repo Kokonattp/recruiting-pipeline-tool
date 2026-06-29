@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getAuthUrl, createCalendarEvent, cancelCalendarEvent } from "@/lib/google";
+import { getAuthUrl, createCalendarEvent, cancelCalendarEvent, rescheduleCalendarEvent } from "@/lib/google";
 
 /**
  * Scheduler actions: connect Google, create an interview (real Calendar event + Meet
@@ -80,6 +80,41 @@ export async function createInterview(input: z.input<typeof CreateInput>): Promi
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "สร้างนัดไม่สำเร็จ" };
+  }
+}
+
+const RescheduleInput = z.object({
+  interviewId: z.string().min(1),
+  startsAt: z.string().min(1, "เลือกวันเวลาใหม่"),
+  durationMin: z.number().int().positive(),
+});
+
+/** Move an interview to a new time: patch the Google event + update the row, mark RESCHEDULED. */
+export async function rescheduleInterview(
+  input: z.input<typeof RescheduleInput>,
+  googleEventId: string | null,
+): Promise<SchedResult> {
+  const parsed = RescheduleInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const { interviewId, startsAt, durationMin } = parsed.data;
+
+  const jar = await cookies();
+  const refreshToken = jar.get("google_refresh_token")?.value;
+
+  try {
+    if (refreshToken && googleEventId) {
+      await rescheduleCalendarEvent(refreshToken, googleEventId, new Date(startsAt), durationMin);
+    }
+    const { error } = await supabaseAdmin()
+      .from("interviews")
+      .update({ scheduled_at: startsAt, duration_min: durationMin, status: "RESCHEDULED" })
+      .eq("id", interviewId);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/scheduler");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "เลื่อนนัดไม่สำเร็จ" };
   }
 }
 

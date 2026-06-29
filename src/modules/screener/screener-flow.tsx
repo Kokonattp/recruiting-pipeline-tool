@@ -139,7 +139,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
 
       {result && (
         <div className="border-t border-border pt-6">
-          <ScoreCard screening={result} />
+          <ScoreCard screening={result} jobTitle={jobs.find((j) => j.id === jobId)?.title} />
         </div>
       )}
     </div>
