@@ -44,6 +44,30 @@ export async function addCandidate(input: z.input<typeof AddInput>): Promise<Res
   return { ok: true };
 }
 
+const EditInput = z.object({
+  candidateId: z.string().min(1),
+  name: z.string().min(1, "กรอกชื่อผู้สมัคร"),
+  email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  source: z.enum(SOURCES as [Source, ...Source[]]),
+});
+
+/** Update a candidate's editable fields (name / email / phone / source). */
+export async function editCandidate(input: z.input<typeof EditInput>): Promise<Result> {
+  const parsed = EditInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const { candidateId, name, email, phone, source } = parsed.data;
+
+  const { error } = await supabaseAdmin()
+    .from("candidates")
+    .update({ name, email: email || null, phone: phone || null, source })
+    .eq("id", candidateId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/tracker");
+  return { ok: true };
+}
+
 const StageInput = z.object({
   applicationId: z.string().min(1),
   stage: z.enum(STAGES as [Stage, ...Stage[]]),

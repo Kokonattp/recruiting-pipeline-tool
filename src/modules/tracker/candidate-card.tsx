@@ -2,6 +2,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import type { ApplicationWithRelations } from "@/lib/types";
 import { ScoreChip } from "@/components/ui/score-chip";
 import { SourcePill } from "@/components/ui/source-pill";
+import { CandidateActions } from "./candidate-actions";
 
 /** Initials for the avatar — handles Thai (no spaces) and Latin names. */
 function initials(name: string): string {
@@ -34,6 +35,7 @@ export function CandidateCard({ application, dragHandle }: CandidateCardProps) {
             <p className="truncate text-xs text-ink-2">{candidate.headline}</p>
           )}
         </div>
+        <CandidateActions candidate={candidate} />
         {dragHandle}
       </div>
 
