@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { JobDescription } from "@/lib/types";
 import { runScreening } from "./actions";
 import { ScoreCard } from "./score-card";
-import type { Screening } from "./types";
+import type { Screening, Recommendation } from "./types";
 
 /**
  * Resume Screener container. HR picks a saved JD (or pastes one), provides a CV as
@@ -18,6 +18,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [result, setResult] = useState<Screening | null>(null);
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -46,7 +47,10 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
       cvPdfBase64: pdfBase64 ?? undefined,
     });
     setBusy(false);
-    if (r.ok) setResult(r.screening);
+    if (r.ok) {
+      setResult(r.screening);
+      setRecommendation(r.recommendation);
+    }
     else setError(r.error);
   }
 
@@ -139,7 +143,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
 
       {result && (
         <div className="border-t border-border pt-6">
-          <ScoreCard screening={result} jobTitle={jobs.find((j) => j.id === jobId)?.title} />
+          <ScoreCard screening={result} recommendation={recommendation ?? "CONSIDER"} jobTitle={jobs.find((j) => j.id === jobId)?.title} />
         </div>
       )}
     </div>

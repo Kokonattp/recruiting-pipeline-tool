@@ -5,7 +5,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { extractPdfText } from "@/lib/pdf";
 import { screenResume } from "./ai";
-import type { Screening } from "./types";
+import type { Screening, Recommendation } from "./types";
 
 /**
  * Server Action for the Resume Screener.
@@ -30,7 +30,7 @@ const ScreenInput = z
   );
 
 export type ScreenResult =
-  | { ok: true; screening: Screening; model: string }
+  | { ok: true; screening: Screening; recommendation: Recommendation; model: string }
   | { ok: false; error: string };
 
 export async function runScreening(input: {
@@ -55,7 +55,7 @@ export async function runScreening(input: {
     } else {
       cv = { text: parsed.data.cvText ?? "" };
     }
-    const { screening, model } = await screenResume(parsed.data.jdText, cv);
+    const { screening, recommendation, model } = await screenResume(parsed.data.jdText, cv);
 
     // Persist only when tied to an application (upsert: one screening per application).
     if (parsed.data.applicationId) {
@@ -69,7 +69,7 @@ export async function runScreening(input: {
             culture_fit: screening.cultureFit,
             reasoning: screening.reasoning,
             confidence: screening.confidence,
-            recommendation: screening.recommendation,
+            recommendation,
             strengths: screening.strengths,
             prescreen_questions: screening.prescreenQuestions,
             summary: screening.summary,
@@ -81,7 +81,7 @@ export async function runScreening(input: {
       revalidatePath("/tracker");
     }
 
-    return { ok: true, screening, model };
+    return { ok: true, screening, recommendation, model };
   } catch (e) {
     if (e instanceof Error && e.message.includes("ANTHROPIC_API_KEY")) {
       return { ok: false, error: "ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY" };

@@ -1,7 +1,7 @@
 "use client";
 
 import { scoreBand } from "@/lib/types";
-import type { Screening } from "./types";
+import type { Screening, Recommendation } from "./types";
 
 const BAND_BG: Record<"low" | "mid" | "high", string> = {
   low: "bg-[var(--score-low)]",
@@ -60,10 +60,12 @@ function Axis({ label, score, reason }: { label: string; score: number; reason: 
  *  browser print dialog (Save as PDF) — no extra dependency, prints just the report. */
 export function ScoreCard({
   screening,
+  recommendation,
   candidateName,
   jobTitle,
 }: {
   screening: Screening;
+  recommendation: Recommendation;
   candidateName?: string;
   jobTitle?: string;
 }) {
@@ -76,7 +78,7 @@ export function ScoreCard({
           </h3>
           {jobTitle && <p className="text-xs text-ink-3">ตำแหน่ง: {jobTitle}</p>}
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <RecommendationPill value={screening.recommendation} />
+            <RecommendationPill value={recommendation} />
             <ConfidencePill value={screening.confidence} />
           </div>
         </div>

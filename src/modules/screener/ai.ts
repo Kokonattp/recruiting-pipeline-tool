@@ -1,5 +1,11 @@
 import { structured, pdfBlock, textBlock, SCREENING_MODEL } from "@/lib/claude";
-import { ScreeningSchema, SCREENING_TOOL_SCHEMA, type Screening } from "./types";
+import {
+  ScreeningSchema,
+  SCREENING_TOOL_SCHEMA,
+  deriveRecommendation,
+  type Screening,
+  type Recommendation,
+} from "./types";
 
 /**
  * Screen a CV against a Job Description. Returns a structured 3-axis assessment.
@@ -14,7 +20,7 @@ import { ScreeningSchema, SCREENING_TOOL_SCHEMA, type Screening } from "./types"
 export async function screenResume(
   jdText: string,
   cv: { text: string } | { pdfBase64: string },
-): Promise<{ screening: Screening; model: string }> {
+): Promise<{ screening: Screening; recommendation: Recommendation; model: string }> {
   // CV arrives as pasted text or an uploaded PDF (read natively by Claude).
   const user =
     "text" in cv
@@ -53,8 +59,6 @@ export async function screenResume(
       "- NEVER invent experience the CV doesn't show. Absence of evidence lowers the score, not raises it.",
       "- confidence = HIGH only if the CV is detailed enough to judge all three axes; LOW if it's thin,",
       "  vague, or in a format that hides detail. A low-confidence high score is worse than an honest 'unsure'.",
-      "- recommendation is a BAND for sorting, never an automatic gate: STRONG (clear interview),",
-      "  CONSIDER (a human should look — borderline or low confidence), WEAK (likely not a fit).",
       "- strengths: specific things to highlight. prescreenQuestions: probe the GAPS/risks you found",
       "  (not generic 'tell me about yourself'). summary: 2-3 sentences for a busy HR + hiring manager.",
     ].join("\n"),
@@ -67,5 +71,7 @@ export async function screenResume(
     temperature: 0, // deterministic: same CV → same score, not a dice roll (see types.ts)
   });
 
-  return { screening, model: SCREENING_MODEL };
+  // Band is OUR fixed rule on top of the (deterministic) scores — not a second LLM guess.
+  const recommendation = deriveRecommendation(screening, screening.confidence);
+  return { screening, recommendation, model: SCREENING_MODEL };
 }
