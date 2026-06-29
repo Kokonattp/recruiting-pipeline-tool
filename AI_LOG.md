@@ -100,3 +100,33 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 3. data ที่ได้พร้อมส่งต่อให้ Claude `rankCandidates()` normalize+rank ต่อทันที.
 
 **ข้อจำกัดที่ซื่อสัตย์:** ผลขึ้นกับ markup ของ Bing/JobsDB ณ วันรัน (selector อาจเปลี่ยน) + อาจโดน rate-limit ถ้ายิงถี่. design เลือกให้ "block = คืน [] ไม่ใช่ throw" จึงทนต่อความเปราะตรงนี้ได้ระดับหนึ่ง. LinkedIn/FB/JobBKK เป็น stub โดยตั้งใจ (ToS/auth) — ระบุชัดทั้งใน code comment และ README ไม่แกล้งทำว่า scrape ได้.
+
+---
+
+## รอบที่ 7 — ปิดช่องโหว่ requirement + feature เสริม (29 มิ.ย. 2026)
+
+ตรวจ requirement เทียบ PDF ทีละบรรทัด เจอ 2 จุดที่ "เกือบครบ" แต่ขาดตามตัวอักษรโจทย์ → ปิดให้ครบ:
+
+1. **Tracker edit candidate** — โจทย์เขียน "เพิ่ม/**แก้ไข**/ลบ" แต่มีแค่ add+delete. เพิ่ม `editCandidate` (zod, pattern เดียวกับ add) + **รวม add/edit dialog เป็น `CandidateForm` ตัวเดียว** (mode add|edit) แทนการเขียนฟอร์มซ้ำ — กัน duplication ตามกฎ code quality.
+2. **Scheduler reschedule** — โจทย์เขียน "**เปลี่ยน**/ยกเลิกนัด" แต่มีแค่ cancel. เพิ่ม `rescheduleInterview` (patch Google event + status RESCHEDULED) + inline datetime UI.
+
+**Feature เสริม (ตอบ "ทำเพิ่มถ้ามีเวลา"):**
+- **Report PDF** (Module 2): เลือก **print-to-PDF ของ browser** แทนไลบรารี PDF (เช่น react-pdf). เหตุผล: zero dependency, ได้ผลลัพธ์เป็น vector คมชัด + ไทยไม่เพี้ยน (ปัญหาคลาสสิกของ pdf lib กับ font ไทย). ทำด้วย print CSS isolate `#screening-report` เท่านั้น.
+- **JD แก้ก่อนบันทึก** (Module 1): เดิม AI ร่าง JD แล้ว save ตรง ๆ — เพิ่มโหมดแก้ทุก field (list ใช้ textarea บรรทัดละข้อ parse กลับเป็น array). human-in-the-loop: AI ร่าง คนตัดสินใจ.
+
+## รอบที่ 8 — JD → hiring poster ด้วย GPT Image (ตัดสินใจที่ถกเยอะ)
+
+**โจทย์จากผู้ใช้:** อยากได้ feature "สร้าง JD แล้ว generate รูปประกาศ" แบบ poster ที่เห็น (dark + gold).
+
+**ถกทางเลือก 3 แบบ** (เขียน trade-off ให้ผู้ใช้เลือก ไม่ตัดสินเอง):
+- A) HTML/React poster — ข้อความ (โดยเฉพาะไทย) **คมชัดเป๊ะ** เพราะเป็น DOM จริง, ไม่ต้อง key, แต่ภาพ "วาด" สู้ generative ไม่ได้.
+- B) GPT Image ทั้งใบ — ภาพสวย cinematic แต่ **ข้อความในรูปเพี้ยน โดยเฉพาะภาษาไทย** (ข้อจำกัดจริงของ image model ทุกตัว).
+- C) ผสม — GPT Image ทำพื้นหลัง + HTML วางข้อความทับ (สวย+คม แต่ซับซ้อนสุด).
+
+**ผู้ใช้เลือก B (GPT Image ทั้งใบ).** เคารพการตัดสินใจ แต่**ไม่ซ่อนข้อจำกัด** — จัดการด้วย:
+1. prompt สั่ง "minimal text, do NOT fill with paragraphs" + ใช้ภาษาอังกฤษบนรูป → ลดโอกาสตัวมั่ว.
+2. **ใส่ caveat ใต้รูปใน UI ตรง ๆ**: "ข้อความบน AI image อาจไม่ถูกต้อง (โดยเฉพาะไทย) — ยึด JD ที่บันทึกเป็นหลัก". ไม่ปล่อยให้ HR เข้าใจผิดว่ารูปคือเอกสารทางการ.
+
+**decision เชิงสถาปัตยกรรม:** แยก `lib/openai.ts` ออกจาก `lib/claude.ts` (คนละ provider/key) ใช้ `fetch` ตรง ไม่ลง SDK เพิ่ม. `OPENAI_API_KEY` เป็น **optional** — ไม่ใส่ feature อื่นยังทำงานครบ.
+
+**บทเรียน:** generative image ≠ ทดแทน layout เสมอ. สำหรับเอกสารที่ข้อความสำคัญ ("ต้องอ่านออก") HTML มักเหนือกว่า image model — แต่เมื่อผู้ใช้ต้องการ "ภาพหวือหวา" จริง หน้าที่เราคือทำให้ได้ + ติดป้ายข้อจำกัดให้ชัด ไม่ใช่ขัดใจหรือแกล้งว่าไม่มีปัญหา.
