@@ -35,17 +35,32 @@ function ConfidencePill({ value }: { value: keyof typeof CONF_LABEL }) {
   );
 }
 
-/** One axis: label, big score, reasoning, and a 0-10 bar colored by band. */
+// Per-axis band → label + color token. The badge lets HR scan which axis is the
+// candidate's strength vs weakness without reading the numbers.
+const AXIS_BADGE: Record<"low" | "mid" | "high", { label: string; color: string }> = {
+  high: { label: "ตรงมาก", color: "var(--score-high)" },
+  mid: { label: "พอใช้", color: "var(--score-mid)" },
+  low: { label: "อ่อน", color: "var(--score-low)" },
+};
+
+/** One axis: label + a band badge, a big band-colored score, a 0-10 bar, and reasoning. */
 function Axis({ label, score, reason }: { label: string; score: number; reason: string }) {
   const band = scoreBand(score);
+  const badge = AXIS_BADGE[band];
   return (
     <div className="rounded-[var(--radius-card)] border border-border bg-bg p-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-medium text-ink">{label}</h4>
-        <span className="text-lg font-semibold tabular-nums text-ink">
-          {score}
-          <span className="text-xs font-normal text-ink-3">/10</span>
+        <span
+          className="rounded-full px-2 py-0.5 text-[11px] font-bold"
+          style={{ background: `color-mix(in oklch, ${badge.color} 14%, transparent)`, color: badge.color }}
+        >
+          {badge.label}
         </span>
+      </div>
+      <div className="mt-1.5 flex items-baseline gap-1">
+        <span className="text-2xl font-bold tabular-nums" style={{ color: badge.color }}>{score}</span>
+        <span className="text-xs font-normal text-ink-3">/10</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
         <div className={`h-full rounded-full ${BAND_BG[band]}`} style={{ width: `${score * 10}%` }} />
