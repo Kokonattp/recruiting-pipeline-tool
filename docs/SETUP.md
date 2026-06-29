@@ -37,6 +37,8 @@
 
 ## STEP 3 — Google Login (Supabase Auth) 🔐
 
+> 📖 ละเอียดทั้ง Login + Calendar รวมในไฟล์เดียว: **[`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md)**
+
 ทำให้ทั้งแอปต้อง login ด้วย Google ก่อนเข้า. โค้ดพร้อม (middleware + /login).
 
 ### A. เปิด Google provider ใน Supabase
