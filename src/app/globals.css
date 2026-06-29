@@ -17,7 +17,8 @@
   --surface: oklch(0.99 0.004 100); /* cards — faint warm tint toward the brand */
   --surface-2: oklch(0.97 0.006 100); /* sunken / column bg */
   --border: oklch(0.88 0.01 100);
-  --border-strong: oklch(0.2 0.01 100); /* near-black — LOGA thick borders */
+  --border-strong: oklch(0.2 0.01 100); /* near-black — strong input/divider edge */
+  --loga-edge: oklch(0.16 0.01 100); /* LOGA card border + hard shadow (black in light) */
 
   /* ink (text) — high contrast, WCAG AA */
   --ink: oklch(0.18 0.008 100); /* near-black body */
@@ -59,7 +60,8 @@
   --surface: oklch(0.21 0.008 100);
   --surface-2: oklch(0.25 0.01 100);
   --border: oklch(0.32 0.012 100);
-  --border-strong: oklch(0.86 0.17 95); /* yellow edge pops on dark (LOGA) */
+  --border-strong: oklch(0.55 0.014 100); /* bright neutral edge (readable on dark) */
+  --loga-edge: oklch(0.7 0.014 100); /* LOGA card edge — light gray pops on near-black */
 
   --ink: oklch(0.96 0.01 100);
   --ink-2: oklch(0.78 0.012 100);
@@ -93,7 +95,8 @@
     --surface: oklch(0.21 0.008 100);
     --surface-2: oklch(0.25 0.01 100);
     --border: oklch(0.32 0.012 100);
-    --border-strong: oklch(0.86 0.17 95);
+    --border-strong: oklch(0.55 0.014 100);
+    --loga-edge: oklch(0.7 0.014 100);
     --ink: oklch(0.96 0.01 100);
     --ink-2: oklch(0.78 0.012 100);
     --ink-3: oklch(0.62 0.012 100);
@@ -166,8 +169,8 @@ body {
    so the boldness stays meaningful. Inputs/rows keep the quiet 1px border. */
 .loga-card {
   border-width: 2px;
-  border-color: var(--border-strong);
-  box-shadow: 4px 4px 0 0 var(--border-strong);
+  border-color: var(--loga-edge);
+  box-shadow: 4px 4px 0 0 var(--loga-edge);
   transition: box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1),
               transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
               border-color 0.18s ease;
@@ -180,6 +183,16 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .loga-card { transition: border-color 0.18s ease; }
   .loga-card:hover { transform: none; }
+}
+
+/* Disabled primary (yellow) buttons: a faded-yellow tile reads as broken/unreadable,
+   especially on dark. Force a clear muted state so "can't click yet" is obvious. */
+button:disabled.bg-primary,
+button[disabled].bg-primary {
+  background: var(--surface-2) !important;
+  color: var(--ink-3) !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
 }
 
 /* Respect reduced motion globally. */

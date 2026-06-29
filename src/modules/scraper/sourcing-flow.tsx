@@ -218,12 +218,12 @@ function JdStep({
                 onClick={() => onToggle(s)}
                 title={gated ? "ต้องล็อกอิน session — ยังไม่รองรับในเดโม" : undefined}
                 className={[
-                  "rounded-[var(--radius-card)] border px-3 py-1.5 text-sm font-medium transition-colors",
+                  "rounded-[var(--radius-card)] border px-3 py-1.5 text-sm font-semibold transition-colors",
                   gated
                     ? "cursor-not-allowed border-border text-ink-3 opacity-50"
                     : on
-                      ? "border-primary bg-primary-soft text-ink"
-                      : "border-border text-ink-2 hover:bg-surface-2",
+                      ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-ink)]"
+                      : "border-border-strong text-ink-2 hover:bg-surface-2",
                 ].join(" ")}
               >
                 {SOURCE_LABELS[s]}
