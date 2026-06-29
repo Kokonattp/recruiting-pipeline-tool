@@ -48,7 +48,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Run on everything except static assets, image optimizer, favicon, and the
-  // Google-Calendar OAuth callback (Module 4, its own flow).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|api/google).*)"],
+  // Run on everything except: static assets, image optimizer, favicon, the
+  // Google-Calendar OAuth callback (Module 4), and the scraper-ingest API
+  // (machine-to-machine, authenticated by a shared secret — not a user session).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|api/google|api/scrape-ingest).*)"],
 };
