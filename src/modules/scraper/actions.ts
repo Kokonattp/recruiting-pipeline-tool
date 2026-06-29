@@ -5,6 +5,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { SOURCES, type Source } from "@/lib/types";
 import { planQueries, rankCandidates } from "./ai";
+import { webSearchCandidates } from "@/lib/web-search";
 import type { QueryPlan, RankResult, RawCandidate } from "./types";
 
 /**
@@ -59,33 +60,71 @@ export async function generateQueryPlan(input: {
 }
 
 /**
- * Step 2: trigger the external scraper service with the plan, then rank what it returns.
- * The scraper runs Playwright in a separate Docker service (env SCRAPER_SERVICE_URL).
+ * One-click sourcing: fan out to every available source in PARALLEL, merge the raw
+ * results, then rank once. Sources are independent — the scraper service (Playwright,
+ * may be unconfigured/down) and Claude web search (always available with an API key)
+ * run together; whichever returns results contributes. A source failing is logged in
+ * `sources` and skipped, never failing the whole request. Returns the ranked shortlist
+ * plus a per-source tally so HR can see where candidates came from.
  */
-export async function runScrapeAndRank(input: {
+export async function runSourcing(input: {
   jdText: string;
   plan: QueryPlan;
-}): Promise<ActionResult<RankResult>> {
-  const serviceUrl = process.env.SCRAPER_SERVICE_URL;
-  if (!serviceUrl) {
-    return { ok: false, error: "ยังไม่ได้ตั้งค่า SCRAPER_SERVICE_URL (scraper service)" };
-  }
-  try {
+}): Promise<ActionResult<{ result: RankResult; sources: { name: string; found: number; ok: boolean }[] }>> {
+  const sources: { name: string; found: number; ok: boolean }[] = [];
+
+  // Kick off both intake paths at once.
+  const scrapePromise: Promise<RawCandidate[]> = (async () => {
+    const serviceUrl = process.env.SCRAPER_SERVICE_URL;
+    if (!serviceUrl) throw new Error("scraper not configured");
     const res = await fetch(`${serviceUrl}/scrape`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        secret: process.env.SCRAPER_INGEST_SECRET,
-        queries: input.plan.queries,
-      }),
+      body: JSON.stringify({ secret: process.env.SCRAPER_INGEST_SECRET, queries: input.plan.queries }),
     });
-    if (!res.ok) return { ok: false, error: `scraper service error (${res.status})` };
-    const raw = (await res.json()) as { candidates: RawCandidate[] };
+    if (!res.ok) throw new Error(`scraper ${res.status}`);
+    return ((await res.json()) as { candidates: RawCandidate[] }).candidates;
+  })();
 
-    const ranked = await rankCandidates(input.jdText, raw.candidates);
-    return { ok: true, data: ranked };
+  const webPromise: Promise<RawCandidate[]> = (async () => {
+    const found = await webSearchCandidates(input.jdText);
+    return found.map((c) => ({
+      source: "WEB" as const,
+      sourceUrl: c.sourceUrl,
+      name: c.name,
+      headline: c.headline,
+      snippet: c.snippet,
+    }));
+  })();
+
+  const [scrapeRes, webRes] = await Promise.allSettled([scrapePromise, webPromise]);
+
+  const raw: RawCandidate[] = [];
+  if (scrapeRes.status === "fulfilled") {
+    raw.push(...scrapeRes.value);
+    sources.push({ name: "Scraper (เว็บไซต์งาน)", found: scrapeRes.value.length, ok: true });
+  } else {
+    sources.push({ name: "Scraper (เว็บไซต์งาน)", found: 0, ok: false });
+  }
+  if (webRes.status === "fulfilled") {
+    raw.push(...webRes.value);
+    sources.push({ name: "AI Web Search", found: webRes.value.length, ok: true });
+  } else {
+    sources.push({ name: "AI Web Search", found: 0, ok: false });
+  }
+
+  if (raw.length === 0) {
+    const why = sources.every((s) => !s.ok)
+      ? "ทุกแหล่งค้นไม่สำเร็จ (ตรวจ ANTHROPIC_API_KEY / SCRAPER_SERVICE_URL)"
+      : "ไม่พบผู้สมัครจากคำค้นนี้ ลองปรับ JD หรือคำค้น";
+    return { ok: false, error: why };
+  }
+
+  try {
+    const result = await rankCandidates(input.jdText, raw);
+    return { ok: true, data: { result, sources } };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "เรียก scraper ไม่สำเร็จ" };
+    return { ok: false, error: aiError(e) };
   }
 }
 

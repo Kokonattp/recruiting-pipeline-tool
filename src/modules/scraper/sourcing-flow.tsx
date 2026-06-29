@@ -5,9 +5,11 @@ import { SOURCE_LABELS, SOURCES, type JobDescription, type Source } from "@/lib/
 import {
   approveCandidates,
   generateQueryPlan,
-  runScrapeAndRank,
+  runSourcing,
   type ActionResult,
 } from "./actions";
+
+type SourceTally = { name: string; found: number; ok: boolean }[];
 import type { QueryPlan, RankResult } from "./types";
 
 /** Default sources to search — the public ones that work without login are pre-checked. */
@@ -28,6 +30,7 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   const [sources, setSources] = useState<Source[]>(DEFAULT_SOURCES);
   const [plan, setPlan] = useState<QueryPlan | null>(null);
   const [result, setResult] = useState<RankResult | null>(null);
+  const [tally, setTally] = useState<SourceTally>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,11 +61,12 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   async function onRunScrape() {
     if (!plan) return;
     setBusy(true);
-    const r = await runScrapeAndRank({ jdText, plan });
+    const r = await runSourcing({ jdText, plan });
     const data = unwrap(r);
     setBusy(false);
     if (data) {
-      setResult(data);
+      setResult(data.result);
+      setTally(data.sources);
       setStep("shortlist");
     }
   }
@@ -113,7 +117,7 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
       )}
 
       {step === "shortlist" && result && (
-        <ShortlistStep result={result} onBack={() => setStep("plan")} onApprove={onApprove} />
+        <ShortlistStep result={result} tally={tally} onBack={() => setStep("plan")} onApprove={onApprove} />
       )}
     </div>
   );
@@ -296,25 +300,31 @@ function PlanStep({
           onClick={onRun}
           className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          {busy ? "กำลังค้นหา & จัดอันดับ…" : "เริ่มค้นหาผู้สมัคร →"}
+          {busy ? "กำลังค้นหาทุกแหล่ง & จัดอันดับ…" : "เริ่มค้นหาผู้สมัคร →"}
         </button>
       </div>
+      <p className="text-xs text-ink-3">
+        คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน (เว็บไซต์งาน + AI web search) แล้วให้ AI จัดอันดับรวมให้
+      </p>
     </div>
   );
 }
 
 function ShortlistStep({
   result,
+  tally,
   onBack,
   onApprove,
 }: {
   result: RankResult;
+  tally: SourceTally;
   onBack: () => void;
   onApprove: (selected: RankResult["shortlist"]) => Promise<string | null>;
 }) {
   if (result.shortlist.length === 0) {
     return (
       <div className="space-y-4">
+        <SourceTallyBar tally={tally} />
         <p className="text-sm text-ink-2">ไม่พบผู้สมัครที่เข้าเกณฑ์จากรอบนี้ ลองปรับ JD หรือเพิ่มแหล่งค้นหา</p>
         <button
           type="button"
@@ -327,7 +337,40 @@ function ShortlistStep({
     );
   }
 
-  return <ShortlistBody result={result} onBack={onBack} onApprove={onApprove} />;
+  return (
+    <div className="space-y-4">
+      <SourceTallyBar tally={tally} />
+      <ShortlistBody result={result} onBack={onBack} onApprove={onApprove} />
+    </div>
+  );
+}
+
+/** Shows where the merged shortlist came from — each source + how many it returned. */
+function SourceTallyBar({ tally }: { tally: SourceTally }) {
+  if (tally.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs font-medium text-ink-3">ค้นจาก:</span>
+      {tally.map((s) => (
+        <span
+          key={s.name}
+          className={[
+            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+            s.ok ? "border-border bg-surface text-ink-2" : "border-border bg-surface-2 text-ink-3",
+          ].join(" ")}
+          title={s.ok ? `พบ ${s.found} รายการ` : "แหล่งนี้ไม่พร้อมใช้งาน"}
+        >
+          <span
+            aria-hidden
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: s.ok ? "var(--success)" : "var(--border-strong)" }}
+          />
+          {s.name}
+          <span className="font-bold tabular-nums">{s.found}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function ShortlistBody({
