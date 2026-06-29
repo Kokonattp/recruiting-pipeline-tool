@@ -1,4 +1,4 @@
-import { structured, pdfBlock, textBlock, CLAUDE_MODEL } from "@/lib/claude";
+import { structured, pdfBlock, textBlock, SCREENING_MODEL } from "@/lib/claude";
 import { ScreeningSchema, SCREENING_TOOL_SCHEMA, type Screening } from "./types";
 
 /**
@@ -40,7 +40,8 @@ export async function screenResume(
     toolDescription: "Submit the structured 3-axis screening assessment for this candidate.",
     inputSchema: SCREENING_TOOL_SCHEMA as unknown as Record<string, unknown>,
     validate: ScreeningSchema,
+    model: SCREENING_MODEL, // cheap, bounded task — Haiku over Opus
   });
 
-  return { screening, model: CLAUDE_MODEL };
+  return { screening, model: SCREENING_MODEL };
 }

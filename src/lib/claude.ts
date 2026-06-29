@@ -11,7 +11,15 @@ import { z } from "zod";
  * shapes breaking the database write.
  */
 
+/** Default model — used where reasoning depth matters (JD gen, query plan, ranking). */
 export const CLAUDE_MODEL = "claude-opus-4-8";
+
+/**
+ * Model for high-volume, well-scoped extraction like resume screening. Haiku is far
+ * cheaper than Opus and the screening task is bounded by a strict tool schema, so the
+ * quality trade-off is small while the per-CV cost drops by an order of magnitude.
+ */
+export const SCREENING_MODEL = "claude-haiku-4-5-20251001";
 
 let _client: Anthropic | null = null;
 function client(): Anthropic {
@@ -37,6 +45,8 @@ interface StructuredOptions<T> {
   /** zod schema used to validate + type the result after the model responds. */
   validate: z.ZodType<T>;
   maxTokens?: number;
+  /** Override the model (defaults to CLAUDE_MODEL). e.g. SCREENING_MODEL for cheap, bounded tasks. */
+  model?: string;
 }
 
 /**
@@ -46,7 +56,7 @@ interface StructuredOptions<T> {
  */
 export async function structured<T>(opts: StructuredOptions<T>): Promise<T> {
   const response = await client().messages.create({
-    model: CLAUDE_MODEL,
+    model: opts.model ?? CLAUDE_MODEL,
     max_tokens: opts.maxTokens ?? 16000,
     thinking: { type: "adaptive" },
     system: opts.system,

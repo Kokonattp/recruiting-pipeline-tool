@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
+import { extractPdfText } from "@/lib/pdf";
 import { screenResume } from "./ai";
 import type { Screening } from "./types";
 
@@ -43,9 +44,17 @@ export async function runScreening(input: {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
   }
   try {
-    const cv = parsed.data.cvPdfBase64
-      ? { pdfBase64: parsed.data.cvPdfBase64 }
-      : { text: parsed.data.cvText ?? "" };
+    // Token optimization: if a PDF was uploaded, try to pull its text out server-side
+    // first and send only that (cheap). Fall back to Claude's native PDF reading
+    // (image+text, pricier but OCR-capable) only when extraction finds no real text —
+    // i.e. a scanned/image CV.
+    let cv: { text: string } | { pdfBase64: string };
+    if (parsed.data.cvPdfBase64) {
+      const extracted = await extractPdfText(parsed.data.cvPdfBase64);
+      cv = extracted ? { text: extracted } : { pdfBase64: parsed.data.cvPdfBase64 };
+    } else {
+      cv = { text: parsed.data.cvText ?? "" };
+    }
     const { screening, model } = await screenResume(parsed.data.jdText, cv);
 
     // Persist only when tied to an application (upsert: one screening per application).
