@@ -11,8 +11,13 @@ import { z } from "zod";
  * shapes breaking the database write.
  */
 
-/** Default model — used where reasoning depth matters (JD gen, query plan, ranking). */
+/** Default model — reserved for the hardest judgment: ranking candidates + web-search
+ *  sourcing, where comparing many people and grounding on live results benefits most. */
 export const CLAUDE_MODEL = "claude-opus-4-8";
+
+/** Mid model for well-scoped generation that doesn't need Opus depth: writing a JD,
+ *  drafting per-source search queries. Sonnet ~1/5 the cost of Opus, plenty for these. */
+export const CONTENT_MODEL = "claude-sonnet-4-6";
 
 /**
  * Model for resume screening (Module 2). Sonnet 4.6 over Haiku: screening is a

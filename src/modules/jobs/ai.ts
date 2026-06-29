@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { structured } from "@/lib/claude";
+import { structured, CONTENT_MODEL } from "@/lib/claude";
 
 /**
  * JD Generator (Module 1, step 1). HR types a few keywords (title, skills, years);
@@ -51,5 +51,6 @@ export async function generateJD(input: {
       },
     },
     validate: GeneratedJDSchema,
+    model: CONTENT_MODEL, // writing a JD doesn't need Opus
   });
 }

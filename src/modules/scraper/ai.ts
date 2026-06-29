@@ -1,4 +1,4 @@
-import { structured } from "@/lib/claude";
+import { structured, CONTENT_MODEL } from "@/lib/claude";
 import {
   QueryPlanSchema,
   RankResultSchema,
@@ -56,6 +56,7 @@ export async function planQueries(
       },
     },
     validate: QueryPlanSchema,
+    model: CONTENT_MODEL, // drafting search queries doesn't need Opus
   });
 }
 

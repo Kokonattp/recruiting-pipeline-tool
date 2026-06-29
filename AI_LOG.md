@@ -232,3 +232,20 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 **ตัดสิน:** เก็บ band ไว้ในฐานะ UX helper (HR เห็น 🟢 เข้าใจเร็วกว่าเลข) แต่**ไม่เคลมว่าเป็นจุดเด่นเชิงเทคนิค**. คำที่ถูกต้องเวลาพูด/เขียน README: "กันคะแนนแกว่งด้วย temp 0 + anchored rubric + confidence-gated band" ไม่ใช่ "คิดค้น band system".
 
 **บทเรียน (meta):** ระวัง overclaim ของตัวเอง. ผู้ใช้ที่จับได้ว่า "อันนี้แทบไม่ต่าง" ช่วยให้ไม่ไปพูดเกินจริงตอน demo — ซึ่งถ้ากรรมการจับได้เองจะเสียความน่าเชื่อถือมากกว่าการยอมรับขอบเขตของงานตั้งแต่แรก.
+
+## รอบที่ 13 — เลือก model ตามความยากของงาน (ผู้ใช้ทักว่า Opus เปลือง)
+
+**ผู้ใช้ทัก:** "ใช้ Opus หมดเลยไม่เปลืองไปใช้ไหม?" → ถูก. เดิม Opus ทำทุกงาน AI = แพงเกินจำเป็นสำหรับงานที่ไม่ต้องใช้ Opus.
+
+**ตัดสิน — แบ่ง 3 ชั้นตามความยาก:**
+| งาน | model | เหตุผล |
+|-----|-------|--------|
+| Rank candidates, AI web search | **Opus 4.8** | judgment ยากสุด (เทียบหลายคน / ค้น+สังเคราะห์เว็บสด) |
+| JD Generator, Search query | **Sonnet 4.6** | generation well-scoped — ไม่ต้อง Opus, ถูกกว่า ~5 เท่า |
+| Screen CV | **Sonnet 4.6** | judgment แต่ bounded ด้วย rubric+temp0 (รอบ 10) |
+
+**ไม่ใช้ Haiku สำหรับ judgment เลย** — Haiku เหมาะ extract/classify ตรง ๆ ไม่เหมาะ "ให้คะแนนคน". ส่วน image (poster) ทำ model id ตั้งผ่าน env `OPENAI_IMAGE_MODEL` (default gpt-image-1) — ถ้า OpenAI ออกรุ่นใหม่ไม่ต้องแก้โค้ด.
+
+**ทำไมสำคัญกับตำแหน่ง:** AI Workflow Engineer ต้องคุม **cost ของ pipeline** ไม่ใช่จับ Opus ยัดทุกที่. การ map "ความยากงาน → model tier" คือ skill ตรงตำแหน่ง. ผู้ใช้ช่วยจับจุดนี้ได้ดี.
+
+**หมายเหตุ provider:** ทั้งระบบผูกกับ Claude (tool-use + structured output). เปลี่ยนไป GPT = รื้อ integration ใหม่หมด เสี่ยงสูงตอนใกล้ส่ง — ไม่ทำ. (Codex/GPT ใช้เป็นเครื่องมือ *เขียนโค้ด* ได้ คนละเรื่องกับ model ในตัวระบบ.)
