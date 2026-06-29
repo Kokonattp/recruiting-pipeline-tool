@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./nav";
 import { ThemeToggle } from "./theme-toggle";
+import { signOut } from "@/app/login/actions";
 
-export function Sidebar() {
+export function Sidebar({ userEmail }: { userEmail?: string | null }) {
   const pathname = usePathname();
 
   return (
@@ -58,8 +59,34 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-5 py-4 text-xs text-ink-3">
-        <p>Senior AI Workflow &amp; Automation Engineer</p>
+      <div className="mt-auto border-t border-border px-3 py-3">
+        {userEmail ? (
+          <div className="flex items-center gap-2 rounded-[var(--radius-card)] px-2 py-1.5">
+            <span
+              aria-hidden
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary"
+            >
+              {userEmail[0]?.toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-xs text-ink-2" title={userEmail}>
+              {userEmail}
+            </span>
+            <form action={signOut}>
+              <button
+                type="submit"
+                aria-label="ออกจากระบบ"
+                className="rounded p-1 text-ink-3 hover:bg-surface-2 hover:text-[var(--danger)]"
+                title="ออกจากระบบ"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                </svg>
+              </button>
+            </form>
+          </div>
+        ) : (
+          <p className="px-2 text-xs text-ink-3">Senior AI Workflow &amp; Automation Engineer</p>
+        )}
       </div>
     </aside>
   );

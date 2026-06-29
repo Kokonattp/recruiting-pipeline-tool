@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Prompt, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
+import { getCurrentUser } from "@/lib/auth";
 
 // Prompt carries both Thai and Latin in one family — per impeccable's product register,
 // one well-tuned sans for headings, labels, body and data beats pairing two.
@@ -27,7 +28,11 @@ export const metadata: Metadata = {
 // Runs before paint to apply the saved theme — prevents a light/dark flash.
 const themeInit = `(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Auth gate is enforced by middleware; here we just decide chrome. Signed-out users
+  // only ever see /login (which renders its own full-screen layout, no sidebar).
+  const user = await getCurrentUser().catch(() => null);
+
   return (
     <html
       lang="th"
@@ -38,10 +43,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-full">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 overflow-x-hidden px-8 py-7">{children}</main>
-        </div>
+        {user ? (
+          <div className="flex min-h-screen">
+            <Sidebar userEmail={user.email} />
+            <main className="flex-1 overflow-x-hidden px-8 py-7">{children}</main>
+          </div>
+        ) : (
+          children
+        )}
       </body>
     </html>
   );
