@@ -88,7 +88,7 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
       </button>
 
       {jd && (
-        <div className="space-y-3 rounded-[var(--radius-card)] border border-border bg-surface p-4">
+        <div className="loga-card space-y-3 rounded-[var(--radius-card)] border bg-surface p-4">
           <div className="flex items-start justify-between gap-3">
             <p className="text-xs text-ink-3">
               {editing ? "แก้ไขก่อนบันทึก — AI ร่างให้ HR ปรับได้ทุกช่อง" : "ตรวจทาน JD ที่ AI ร่าง ก่อนบันทึก"}

@@ -259,7 +259,7 @@ function PlanStep({
 }) {
   return (
     <div className="space-y-5">
-      <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+      <div className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
         <p className="text-sm text-ink-2">{plan.roleSummary}</p>
         {plan.mustHaveSkills.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -402,7 +402,7 @@ function ShortlistBody({
       </p>
       <div className="space-y-3">
         {result.shortlist.map((c, i) => (
-          <article key={i} className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+          <article key={i} className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-ink">{c.name}</h3>

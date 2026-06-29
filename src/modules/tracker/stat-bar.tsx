@@ -36,7 +36,7 @@ export function StatBar({ applications }: { applications: ApplicationWithRelatio
       {stats.map((s) => (
         <div
           key={s.label}
-          className="rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3 transition-shadow hover:shadow-[var(--shadow-card)]"
+          className="loga-card rounded-[var(--radius-card)] border bg-surface px-4 py-3"
         >
           <div className="flex items-center gap-2">
             <span

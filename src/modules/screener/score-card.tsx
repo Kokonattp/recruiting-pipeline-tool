@@ -48,7 +48,7 @@ function Axis({ label, score, reason }: { label: string; score: number; reason: 
   const band = scoreBand(score);
   const badge = AXIS_BADGE[band];
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-bg p-4">
+    <div className="loga-card rounded-[var(--radius-card)] border bg-bg p-4">
       <div className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-medium text-ink">{label}</h4>
         <span
@@ -112,7 +112,7 @@ export function ScoreCard({
         <Axis label="Culture Fit" score={screening.cultureFit} reason={screening.reasoning.culture} />
       </div>
 
-      <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+      <div className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
         <h4 className="text-sm font-medium text-ink">สรุปสำหรับทีมสัมภาษณ์</h4>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-2">{screening.summary}</p>
       </div>

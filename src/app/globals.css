@@ -8,22 +8,26 @@
 */
 
 :root {
+  /* Brand: Hotel Plus — bold yellow + black (LOGA/neo-brutalist energy).
+     Yellow is too light to carry white text, so on yellow we use BLACK ink
+     (exactly like the H+ logo). Body stays white for reading hundreds of rows. */
+
   /* surfaces */
-  --bg: oklch(1 0 0); /* pure white — read hundreds of rows without fatigue */
-  --surface: oklch(0.985 0.002 250); /* cards / raised */
-  --surface-2: oklch(0.965 0.003 250); /* sunken / column bg */
-  --border: oklch(0.9 0.004 250);
-  --border-strong: oklch(0.82 0.006 250);
+  --bg: oklch(1 0 0); /* pure white */
+  --surface: oklch(0.99 0.004 100); /* cards — faint warm tint toward the brand */
+  --surface-2: oklch(0.97 0.006 100); /* sunken / column bg */
+  --border: oklch(0.88 0.01 100);
+  --border-strong: oklch(0.2 0.01 100); /* near-black — LOGA thick borders */
 
   /* ink (text) — high contrast, WCAG AA */
-  --ink: oklch(0.22 0.01 260); /* body */
-  --ink-2: oklch(0.44 0.012 260); /* secondary */
-  --ink-3: oklch(0.58 0.012 260); /* muted / hints (still ≥4.5:1 on bg) */
+  --ink: oklch(0.18 0.008 100); /* near-black body */
+  --ink-2: oklch(0.42 0.01 100); /* secondary */
+  --ink-3: oklch(0.56 0.012 100); /* muted / hints */
 
-  /* brand — deep slate-indigo, calm + authoritative (not navy-template) */
-  --primary: oklch(0.46 0.11 264);
-  --primary-ink: oklch(0.99 0 0); /* text on primary */
-  --primary-soft: oklch(0.95 0.03 264); /* tinted bg for selected/hover */
+  /* brand — Hotel Plus yellow. primary-ink is BLACK (yellow can't carry white). */
+  --primary: oklch(0.86 0.17 95); /* vivid brand yellow */
+  --primary-ink: oklch(0.16 0.01 100); /* black text/icon on yellow */
+  --primary-soft: oklch(0.95 0.08 95); /* tinted bg for selected/hover */
 
   /* functional accent — crimson, reserved for reject / destructive / urgent only */
   --danger: oklch(0.55 0.2 25);
@@ -32,37 +36,38 @@
   /* status semantics */
   --success: oklch(0.58 0.13 150);
   --success-soft: oklch(0.95 0.04 150);
-  --warning: oklch(0.7 0.13 75);
-  --warning-soft: oklch(0.96 0.05 75);
+  --warning: oklch(0.72 0.15 70);
+  --warning-soft: oklch(0.96 0.06 75);
 
   /* score scale (0-10): low → high, used by score chips */
   --score-low: oklch(0.55 0.2 25); /* 0-4  red */
-  --score-mid: oklch(0.7 0.13 75); /* 5-7  amber */
+  --score-mid: oklch(0.7 0.14 75); /* 5-7  amber */
   --score-high: oklch(0.58 0.13 150); /* 8-10 green */
 
   --radius: 0.625rem;
-  --shadow-card: 0 1px 2px oklch(0.2 0.02 260 / 0.06), 0 2px 8px oklch(0.2 0.02 260 / 0.04);
-  /* lift for primary/interactive surfaces — carries the brand hue, not gray */
-  --shadow-primary: 0 1px 2px oklch(0.46 0.11 264 / 0.12), 0 8px 24px oklch(0.46 0.11 264 / 0.14);
-  /* a quiet brand wash for hero/onboarding surfaces (meaning: "this is the welcome") */
-  --hero-wash: radial-gradient(120% 100% at 0% 0%, oklch(0.95 0.03 264 / 0.8) 0%, transparent 55%),
-               radial-gradient(120% 120% at 100% 0%, oklch(0.95 0.035 200 / 0.6) 0%, transparent 50%);
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 100 / 0.06), 0 2px 8px oklch(0.2 0.02 100 / 0.04);
+  /* lift for primary/interactive surfaces — LOGA hard black shadow */
+  --shadow-primary: 4px 4px 0 0 oklch(0.2 0.01 100);
+  /* hero wash — warm yellow glow */
+  --hero-wash: radial-gradient(120% 100% at 0% 0%, oklch(0.92 0.12 95 / 0.7) 0%, transparent 55%),
+               radial-gradient(120% 120% at 100% 0%, oklch(0.95 0.06 95 / 0.5) 0%, transparent 50%);
 }
 
 [data-theme="dark"] {
-  --bg: oklch(0.17 0.008 260); /* near-black, faint cool tint */
-  --surface: oklch(0.21 0.009 260);
-  --surface-2: oklch(0.24 0.01 260);
-  --border: oklch(0.3 0.012 260);
-  --border-strong: oklch(0.4 0.014 260);
+  /* Hotel Plus dark: near-black surfaces + the same vivid yellow (great contrast). */
+  --bg: oklch(0.16 0.006 100); /* near-black, faint warm tint */
+  --surface: oklch(0.21 0.008 100);
+  --surface-2: oklch(0.25 0.01 100);
+  --border: oklch(0.32 0.012 100);
+  --border-strong: oklch(0.86 0.17 95); /* yellow edge pops on dark (LOGA) */
 
-  --ink: oklch(0.95 0.005 260);
-  --ink-2: oklch(0.78 0.008 260);
-  --ink-3: oklch(0.64 0.01 260);
+  --ink: oklch(0.96 0.01 100);
+  --ink-2: oklch(0.78 0.012 100);
+  --ink-3: oklch(0.62 0.012 100);
 
-  --primary: oklch(0.7 0.12 264);
-  --primary-ink: oklch(0.17 0.01 260);
-  --primary-soft: oklch(0.3 0.05 264);
+  --primary: oklch(0.86 0.17 95); /* same brand yellow */
+  --primary-ink: oklch(0.16 0.01 100); /* black on yellow */
+  --primary-soft: oklch(0.34 0.07 95);
 
   --danger: oklch(0.68 0.18 25);
   --danger-soft: oklch(0.32 0.07 25);
@@ -76,25 +81,25 @@
   --score-high: oklch(0.72 0.13 150);
 
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 8px oklch(0 0 0 / 0.25);
-  --shadow-primary: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0.7 0.12 264 / 0.22);
-  --hero-wash: radial-gradient(120% 100% at 0% 0%, oklch(0.3 0.05 264 / 0.5) 0%, transparent 55%),
-               radial-gradient(120% 120% at 100% 0%, oklch(0.3 0.05 200 / 0.4) 0%, transparent 50%);
+  --shadow-primary: 4px 4px 0 0 oklch(0.86 0.17 95); /* yellow hard shadow on dark */
+  --hero-wash: radial-gradient(120% 100% at 0% 0%, oklch(0.4 0.1 95 / 0.4) 0%, transparent 55%),
+               radial-gradient(120% 120% at 100% 0%, oklch(0.35 0.08 95 / 0.3) 0%, transparent 50%);
 }
 
 /* Honor OS preference when the user hasn't explicitly chosen a theme. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: oklch(0.17 0.008 260);
-    --surface: oklch(0.21 0.009 260);
-    --surface-2: oklch(0.24 0.01 260);
-    --border: oklch(0.3 0.012 260);
-    --border-strong: oklch(0.4 0.014 260);
-    --ink: oklch(0.95 0.005 260);
-    --ink-2: oklch(0.78 0.008 260);
-    --ink-3: oklch(0.64 0.01 260);
-    --primary: oklch(0.7 0.12 264);
-    --primary-ink: oklch(0.17 0.01 260);
-    --primary-soft: oklch(0.3 0.05 264);
+    --bg: oklch(0.16 0.006 100);
+    --surface: oklch(0.21 0.008 100);
+    --surface-2: oklch(0.25 0.01 100);
+    --border: oklch(0.32 0.012 100);
+    --border-strong: oklch(0.86 0.17 95);
+    --ink: oklch(0.96 0.01 100);
+    --ink-2: oklch(0.78 0.012 100);
+    --ink-3: oklch(0.62 0.012 100);
+    --primary: oklch(0.86 0.17 95);
+    --primary-ink: oklch(0.16 0.01 100);
+    --primary-soft: oklch(0.34 0.07 95);
     --danger: oklch(0.68 0.18 25);
     --danger-soft: oklch(0.32 0.07 25);
     --success: oklch(0.72 0.13 150);
