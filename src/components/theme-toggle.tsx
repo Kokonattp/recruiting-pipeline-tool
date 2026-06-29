@@ -32,7 +32,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "สลับเป็นโหมดสว่าง" : "สลับเป็นโหมดมืด"}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-card)] border border-border text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-card)] border border-current/20 text-current/70 transition-colors hover:bg-current/10 hover:text-current"
     >
       {theme === "dark" ? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

@@ -18,11 +18,9 @@ export default async function LoginPage({
       <div className="loga-card w-full max-w-sm rounded-2xl border bg-surface p-8 text-center">
         <span
           aria-hidden
-          className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-ink shadow-[var(--shadow-primary)]"
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-primary text-[oklch(0.16_0.01_100)] text-xl font-black tracking-tight shadow-[var(--shadow-primary)]"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 4h18l-7 8v7l-4 2v-9L3 4z" />
-          </svg>
+          H+
         </span>
         <h1 className="mt-4 text-xl font-bold tracking-tight text-ink">Recruiting Pipeline</h1>
         <p className="mt-1 text-sm text-ink-2">เครื่องมือช่วยทีม HR สรรหาบุคลากรครบวงจร</p>
