@@ -1,6 +1,8 @@
 # สถานะโปรเจกต์ (handoff — สำหรับเริ่มแชทใหม่)
 
-> อัปเดตล่าสุด: 29 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · 33 commits · build ผ่าน · **scraper ทดสอบยิงเว็บจริงแล้ว (50 candidate)**
+> อัปเดตล่าสุด: 29 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
+>
+> **ล่าสุด:** Google login gate (Supabase Auth), Sourcing fan-out (scraper + Claude web search พร้อมกัน), UI polish (impeccable+LOGA, dark), RLS, PDF token opt (Haiku), poster (gpt-image). **เหลือ: ตั้งค่า key/Supabase/Google ตาม `docs/SETUP.md` → redeploy → e2e → demo.**
 
 ## ความคืบหน้า ~90% (อัปเดต)
 

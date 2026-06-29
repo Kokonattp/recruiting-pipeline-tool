@@ -8,7 +8,8 @@
 
 ```
 src/app/        routing + หน้า (UI เท่านั้น ไม่มี business logic)
-src/lib/        แกนกลาง: supabase, claude, google, types, mappers
+src/lib/        แกนกลาง: supabase, claude, google, web-search, pdf, openai, auth, types, mappers
+src/middleware.ts  auth gate (redirect → /login ถ้าไม่มี session)
 src/modules/    business logic แยกตาม module: jobs, scraper, screener, tracker, scheduler
 src/components/ UI ใช้ซ้ำ (ui/, sidebar, page-header)
 scraper/        service แยก (Playwright+Docker → Cloud Run) — อิสระจาก src/
@@ -29,7 +30,7 @@ supabase/       schema SQL migrations
 
 | Module | path | ทำอะไร |
 |--------|------|--------|
-| 1 Sourcing | `modules/scraper/` + `modules/jobs/` | JD Generator → Search Query Pack → scrape/CSV → AI rank → approve |
+| 1 Sourcing | `modules/scraper/` + `modules/jobs/` | JD Generator → query plan → **fan-out (scraper + `lib/web-search.ts` พร้อมกัน)** / CSV → AI rank รวม → approve |
 | 2 Screener | `modules/screener/` | CV (paste/PDF) + JD → Claude score 3 ด้าน + reasoning + prescreen Q |
 | 3 Tracker | `modules/tracker/` | board/list + drag-drop stage + stat bar + CRUD |
 | 4 Scheduler | `modules/scheduler/` | Google Calendar+Meet + conflict detection + sync stage |

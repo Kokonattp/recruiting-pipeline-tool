@@ -176,3 +176,17 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 **decision เชิงสถาปัตยกรรม:** แยก `lib/openai.ts` ออกจาก `lib/claude.ts` (คนละ provider/key) ใช้ `fetch` ตรง ไม่ลง SDK เพิ่ม. `OPENAI_API_KEY` เป็น **optional** — ไม่ใส่ feature อื่นยังทำงานครบ.
 
 **บทเรียน:** generative image ≠ ทดแทน layout เสมอ. สำหรับเอกสารที่ข้อความสำคัญ ("ต้องอ่านออก") HTML มักเหนือกว่า image model — แต่เมื่อผู้ใช้ต้องการ "ภาพหวือหวา" จริง หน้าที่เราคือทำให้ได้ + ติดป้ายข้อจำกัดให้ชัด ไม่ใช่ขัดใจหรือแกล้งว่าไม่มีปัญหา.
+
+## รอบที่ 9 — fan-out sourcing + auth (จากการคุยกับผู้ใช้)
+
+**จุดเริ่ม:** ผู้ใช้ตั้งคำถามดี — "เพื่อนบอกให้ Claude ค้นเอง พิมพ์คำเดียวก็เจอคน ทำไมเราทำยาก?" ทำให้กลับไปอ่านโจทย์ใหม่.
+
+**ตีความโจทย์ใหม่ (ไม่เข้าข้างของที่ทำไปแล้ว):** Module 1 เขียน "scrape**/search**" — slash แปลว่ารับทั้ง 2 วิธี, ไม่ได้บังคับ scrape HTML. + "ไม่จำกัดช่องทาง ยิ่งมากยิ่งดี". สรุป: **ทั้ง scraper และ Claude web search ผ่านโจทย์** แต่ scraper สื่อ "architecture depth" (Full Stack + code 30%) ได้มากกว่า การเรียก AI ขั้นเดียว.
+
+**decision: ทำทั้งคู่ แบบ fan-out.** ผู้ใช้เสนอ design เอง — "หน้างานค้นทีเดียว แต่เบื้องหลังทำพร้อมกัน". ตรงกับ pattern ของ AI Workflow Engineer พอดี (orchestrate หลาย source แบบ parallel). `runSourcing` ยิง scraper + web search ด้วย `Promise.allSettled` → merge → rank ครั้งเดียว. แหล่งไหนล่ม/ไม่ได้ตั้งค่าก็ข้าม (tally บอก HR) → web search ทำงานบน Vercel ได้แม้ไม่ deploy scraper.
+
+**กัน hallucinate:** Claude web search อาจแต่งชื่อคน → บังคับทุก candidate ต้องมี `sourceUrl` จริงจากผลค้น, ตัดตัวที่ไม่มี URL ทิ้ง. + human-in-the-loop เดิม (HR approve).
+
+**Auth (ผู้ใช้ขอ login):** เลือก **Supabase Auth (Google) เป็น gate ที่ขอบแอป** ไม่ใช่ rewrite data layer. เหตุผล: tool นี้ใช้ทีม HR เดียว → "login ด้วยบัญชีที่อนุญาต" คือ policy ทั้งหมด, ไม่ต้อง per-user RLS. ทุก query ยังผ่าน service_role เหมือนเดิม (ไม่พังของที่ทำงานอยู่). middleware กั้นทุก route, degrade graceful ถ้าไม่มี env. แยกชัดจาก Google Calendar OAuth (Module 4) ที่เป็นคนละ flow คนละ callback.
+
+**บทเรียน:** "วิธีที่ง่ายกว่า" ของผู้ใช้/เพื่อนมักมีแก่น — หน้าที่เราคืออ่านโจทย์ให้ตรง แล้วหาทางที่ได้ทั้งความง่าย (web search บน live) และความลึก (scraper architecture) ไม่ใช่เลือกข้างเดียวเพราะลงแรงไปแล้ว.

@@ -8,15 +8,15 @@
 
 | # | Module | ทำอะไร |
 |---|--------|--------|
-| 1 | **Candidate Data Scraper** | รับ JD → AI สร้าง search query → scrape ผู้สมัครจากหลายแหล่ง (LinkedIn/JobsDB/JobThai/Facebook/Web) → AI normalize + rank → HR review & approve เข้าระบบ |
+| 1 | **Candidate Data Scraper** | รับ JD → AI สร้าง search query → **คลิกเดียว ยิงทุกแหล่งพร้อมกัน** (scraper เว็บไซต์งาน + Claude web search) → AI normalize + rank รวม → HR review & approve เข้าระบบ |
 | 2 | **AI Resume Screener** | upload CV (PDF/text) + เลือก JD → Claude ให้คะแนน 3 ด้าน (Skills/Experience/Culture 0–10) + เหตุผล + คำถาม prescreen → score card |
 | 3 | **Applicant Tracker** | CRUD ผู้สมัคร + Kanban board (drag-drop ย้าย stage) + list view + filter ตาม stage/ตำแหน่ง/แหล่งที่มา |
 | 4 | **Interview Scheduler** | สร้างนัดผ่าน Google Calendar + Meet link อัตโนมัติ + conflict detection + แก้/ยกเลิก sync กลับ Tracker |
 
 ## Tech Stack
 
-- **Next.js 16** (App Router, TypeScript) — full-stack ใน codebase เดียว, Server Actions
-- **Supabase** — Postgres (data) + Storage (ไฟล์ CV) + Auth
+- **Next.js 16** (App Router, TypeScript) — full-stack ใน codebase เดียว, Server Actions, middleware auth gate
+- **Supabase** — Postgres (data, RLS) + Storage (ไฟล์ CV) + **Auth (Google login)**
 - **Claude API** (`@anthropic-ai/sdk`) — structured output ผ่าน tool-use
 - **Playwright + Docker** — scraper service (deploy แยก)
 - **googleapis** — Google Calendar + Meet (conferenceData)
@@ -43,20 +43,13 @@ SUPABASE (Postgres + Storage + Auth)
 ### ขั้นตอน
 
 ```bash
-# 1. ติดตั้ง dependencies
 npm install
-
-# 2. ตั้งค่า environment variables
-cp .env.example .env.local
-# แล้วเติมค่าใน .env.local (ดูตารางด้านล่าง)
-
-# 3. สร้าง schema ใน Supabase
-#    รัน SQL ใน supabase/migrations/ ผ่าน Supabase SQL Editor (หรือ supabase CLI)
-
-# 4. รัน dev server
-npm run dev
-# เปิด http://localhost:3000
+cp .env.example .env.local   # เติมค่า (ดู docs/SETUP.md)
+# รัน SQL ใน supabase/migrations/ (0001, 0002, 0003) + สร้าง bucket resumes
+npm run dev                  # http://localhost:3000
 ```
+
+> 📖 **คู่มือตั้งค่าเต็ม (Supabase, Google login, Calendar OAuth, deploy) อยู่ใน [`docs/SETUP.md`](docs/SETUP.md)** — ทำตามทีละ STEP
 
 ### Environment variables
 
