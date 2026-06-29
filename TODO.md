@@ -7,7 +7,7 @@
 - [x] **Sourcing one-click fan-out**: scraper + AI web search (Claude) ยิงพร้อมกัน → rank รวม
 - [x] Scraper service (Playwright+Docker) — WEB/JobsDB/JobThai **ทดสอบยิงจริงแล้ว (50 candidate)**
 - [x] Tracker: board/list + drag-drop stage + stat bar + **เพิ่ม/แก้ไข/ลบ ครบ CRUD**
-- [x] Screener: paste/PDF CV (extract text + Haiku, ลด token) + score 3 ด้าน + **Report PDF**
+- [x] Screener: paste/PDF CV (extract text + Haiku) + score 3 ด้าน + **Report PDF** + **กัน vibe-check (temp 0 + anchored rubric + confidence + band ไม่ใช่ cutoff)**
 - [x] Scheduler: Google Calendar/Meet จริง + conflict + stage sync + **reschedule**
 - [x] CSV import ในหน้า Sourcing (intake path ที่ไม่ติด anti-bot)
 - [x] JD → hiring poster image (OpenAI gpt-image-1, optional)
@@ -19,7 +19,7 @@
 ## เหลือทำ (ต้องการ ENV / การกระทำของผู้ใช้) — ทำแทนไม่ได้
 > 📖 ทุก step ละเอียดอยู่ใน **`docs/SETUP.md`**
 
-- [ ] STEP 1: Supabase — รัน SQL `0001` + `0002` + `0003_enable_rls` + bucket `resumes`
+- [ ] STEP 1: Supabase — รัน SQL `0001` + `0002` + `0003` + `0004` + bucket `resumes`
 - [ ] STEP 2: env บน Vercel (Supabase + Anthropic) — ⚠️ URL ห้ามมี `/rest/v1/`
 - [ ] STEP 3: เปิด Google provider ใน Supabase (login gate)
 - [ ] STEP 4: Google Calendar OAuth (Module 4)

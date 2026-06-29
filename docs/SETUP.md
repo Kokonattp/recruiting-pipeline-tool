@@ -14,6 +14,7 @@
    - `0001_init.sql` (ตาราง)
    - `0002_seed_job.sql` (JD ตัวอย่าง)
    - `0003_enable_rls.sql` (ปิด public API — security)
+   - `0004_screening_confidence.sql` (คอลัมน์ confidence/recommendation ของ Screener)
 3. **Storage → New bucket** → ชื่อ `resumes`
 4. **Project Settings → API** → จด: Project URL, anon key, service_role key
 
