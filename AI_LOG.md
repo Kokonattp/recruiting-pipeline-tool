@@ -47,7 +47,7 @@
 
 หัวใจของ AI Integration. prompt อยู่ใน `src/modules/screener/ai.ts`. หลักการที่ใส่ลง system prompt:
 
-1. **score 3 แกนแยกกัน + มี rubric ชัด** (8-10 strong / 5-7 partial / 0-4 weak) — กันไม่ให้ AI ยุบทุกอย่างเป็น "vibe score" เดียว.
+1. **score 3 แกนแยกกัน + มี rubric ชัด** — กันไม่ให้ AI ยุบทุกอย่างเป็น "vibe score" เดียว. (rubric หยาบ 8-10/5-7/0-4 เดิม ถูกอัปเป็น anchored rubric ละเอียด + temperature 0 ในรอบที่ 10 ดูท้ายไฟล์).
 2. **reasoning ต้องอ้างหลักฐานจาก CV จริง** "Never invent experience the CV doesn't show" — กัน hallucination / คะแนนเฟ้อ.
 3. **cultureFit สั่งให้ conservative** บอกตรงๆ ถ้าหลักฐานน้อย — เพราะ culture เดาจาก CV ยาก ไม่ควรมั่ว.
 4. **prescreenQuestions เจาะ "gap/risk"** ไม่ใช่คำถาม generic ("เล่าตัวเอง") — ให้ตรงกับสิ่งที่ recruiter ต้องถามจริงตอนโทร.
@@ -190,3 +190,22 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 **Auth (ผู้ใช้ขอ login):** เลือก **Supabase Auth (Google) เป็น gate ที่ขอบแอป** ไม่ใช่ rewrite data layer. เหตุผล: tool นี้ใช้ทีม HR เดียว → "login ด้วยบัญชีที่อนุญาต" คือ policy ทั้งหมด, ไม่ต้อง per-user RLS. ทุก query ยังผ่าน service_role เหมือนเดิม (ไม่พังของที่ทำงานอยู่). middleware กั้นทุก route, degrade graceful ถ้าไม่มี env. แยกชัดจาก Google Calendar OAuth (Module 4) ที่เป็นคนละ flow คนละ callback.
 
 **บทเรียน:** "วิธีที่ง่ายกว่า" ของผู้ใช้/เพื่อนมักมีแก่น — หน้าที่เราคืออ่านโจทย์ให้ตรง แล้วหาทางที่ได้ทั้งความง่าย (web search บน live) และความลึก (scraper architecture) ไม่ใช่เลือกข้างเดียวเพราะลงแรงไปแล้ว.
+
+## รอบที่ 10 — กันปัญหา "vibe-check scoring" (จากเคส HackerRank ATS)
+
+**ที่มา:** ผู้ใช้ส่งบทความ — HackerRank open-source ATS ให้คะแนน resume เดิมแกว่ง 66-99 ใน 100 รอบ. ถ้า HR ตั้ง cutoff 85 คนเดิมผ่านบ้างตกบ้าง "ตามดวงของ LLM". บทเรียนของผู้เขียน: LLM เก่ง parse → structured data แต่ถ้าให้ "ตัดสิน 18 หรือ 24 คะแนน" โดยไม่มี rubric แน่น มันกลายเป็น vibe-check.
+
+**ตรวจตัวเอง (ไม่เข้าข้าง):** Module 2 เราโดน 2 ใน 3 ของปัญหานี้ —
+1. 🔴 ไม่ได้ตั้ง `temperature` → Claude สุ่มทุกครั้ง = คะแนนแกว่งได้เหมือนกัน.
+2. 🟡 มี rubric แต่หยาบ (8-10/5-7/0-4 ไม่บอกว่าอะไรคือ 8 vs 9) → แกนที่ต้อง judgment (culture/exp) แกว่ง.
+3. 🟢 เราดีกว่าตรงมี `reasoning` อ้างหลักฐานทุกแกน (HackerRank เป็น black box) → ตรงนี้รักษาไว้.
+
+**สิ่งที่ทำ (4 อย่าง):**
+1. **`temperature: 0`** สำหรับ screening — deterministic: CV เดิม → คะแนนเดิมเสมอ. (ใน `lib/claude.ts` ทำให้ temperature กับ extended-thinking exclusive กัน เพราะ API บังคับ).
+2. **Rubric แบบ anchored ต่อช่วงคะแนน** — บอกชัดว่า 9-10 ต้องเห็นอะไร, 7-8 ต่างยังไง → ลด judgment สุ่ม. เน้น "demonstrated depth ไม่ใช่แค่ listed" (กันคนที่แค่พิมพ์ skill เยอะ).
+3. **`confidence` (HIGH/MED/LOW)** — บังคับ AI บอกเองถ้า CV บางเกินจะตัดสิน. low-confidence high-score = อันตรายกว่า "ไม่แน่ใจอย่างซื่อสัตย์".
+4. **`recommendation` band (STRONG/CONSIDER/WEAK) แทน single cutoff** — UI เขียนตรง ๆ ว่า "คะแนนนี้เป็นตัวช่วยจัดลำดับ ไม่ใช่เกณฑ์ตัดอัตโนมัติ" → กัน HR เอาเลขเดียวมา gate (ปัญหาหลักของบทความ).
+
+**ทำไมสำคัญกับตำแหน่งนี้:** AI Workflow Engineer ไม่ใช่แค่ "เรียก LLM ให้ทำงาน" แต่ต้องรู้ว่า**ผลของ LLM เปราะตรงไหน แล้วออกแบบ guardrail**. เคสนี้คือตัวอย่างจริงของ "ใช้ AI ผิดจุด → กรองคนด้วยความสุ่ม". เราเลือก deterministic + anchored rubric + human-in-the-loop ชัด (band ไม่ใช่ gate) — ตอบโจทย์ "structured และ useful จริง ไม่ใช่ generic" ตรง ๆ.
+
+**ข้อจำกัดที่ซื่อสัตย์:** temperature 0 ลดความแกว่ง**มาก** แต่ไม่ใช่ 0% (LLM ยังมี non-determinism เล็กน้อยจาก infra). และ rubric ดีขึ้นแต่ exp axis ยัง "แยก junior/senior ได้ไม่ละเอียดพอ" (ปัญหาเดียวกับที่บทความชี้) — งานต่อไปถ้ามีเวลา: ให้ AI ดึง years-of-experience เป็นตัวเลขก่อน แล้ว map เป็นคะแนนด้วย logic ของเรา ไม่ใช่ให้ LLM เดาคะแนนตรง ๆ.

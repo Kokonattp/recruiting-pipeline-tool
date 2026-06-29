@@ -9,6 +9,32 @@ const BAND_BG: Record<"low" | "mid" | "high", string> = {
   high: "bg-[var(--score-high)]",
 };
 
+const REC_STYLE = {
+  STRONG: { label: "แนะนำสัมภาษณ์", cls: "bg-success-soft text-[var(--success)]" },
+  CONSIDER: { label: "ควรให้คนดูเพิ่ม", cls: "bg-warning-soft text-[var(--warning)]" },
+  WEAK: { label: "น่าจะไม่ตรง", cls: "bg-danger-soft text-[var(--danger)]" },
+} as const;
+
+const CONF_LABEL = { HIGH: "ความเชื่อมั่นสูง", MEDIUM: "ความเชื่อมั่นปานกลาง", LOW: "ความเชื่อมั่นต่ำ" } as const;
+
+function RecommendationPill({ value }: { value: keyof typeof REC_STYLE }) {
+  const s = REC_STYLE[value];
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.cls}`}>{s.label}</span>;
+}
+
+function ConfidencePill({ value }: { value: keyof typeof CONF_LABEL }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-ink-2">
+      <span
+        aria-hidden
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ background: value === "HIGH" ? "var(--success)" : value === "LOW" ? "var(--danger)" : "var(--warning)" }}
+      />
+      {CONF_LABEL[value]}
+    </span>
+  );
+}
+
 /** One axis: label, big score, reasoning, and a 0-10 bar colored by band. */
 function Axis({ label, score, reason }: { label: string; score: number; reason: string }) {
   const band = scoreBand(score);
@@ -49,6 +75,10 @@ export function ScoreCard({
             รายงานผลคัดกรอง{candidateName ? `: ${candidateName}` : ""}
           </h3>
           {jobTitle && <p className="text-xs text-ink-3">ตำแหน่ง: {jobTitle}</p>}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <RecommendationPill value={screening.recommendation} />
+            <ConfidencePill value={screening.confidence} />
+          </div>
         </div>
         <button
           type="button"
@@ -98,6 +128,11 @@ export function ScoreCard({
           </section>
         )}
       </div>
+
+      <p className="rounded-[var(--radius-card)] border border-border bg-surface-2 px-3 py-2 text-xs text-ink-3">
+        ℹ️ คะแนนนี้เป็น <strong className="text-ink-2">ตัวช่วยจัดลำดับ</strong> ให้มนุษย์ตัดสิน — ไม่ใช่เกณฑ์ตัดอัตโนมัติ.
+        ดู &ldquo;ความเชื่อมั่น&rdquo; ประกอบ และถ้าคะแนนก้ำกึ่ง ควรให้คนอ่าน CV เอง (ระบบให้คะแนนแบบ deterministic — CV เดิมได้คะแนนเดิมเสมอ).
+      </p>
     </div>
   );
 }

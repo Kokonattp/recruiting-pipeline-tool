@@ -143,6 +143,8 @@ export interface ScreeningResult {
   expFit: number; // 0-10
   cultureFit: number; // 0-10
   reasoning: { skills: string; experience: string; culture: string };
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+  recommendation: "STRONG" | "CONSIDER" | "WEAK";
   strengths: string[];
   prescreenQuestions: string[];
   summary: string;

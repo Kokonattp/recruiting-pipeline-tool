@@ -64,6 +64,8 @@ export function toScreening(r: Row): ScreeningResult {
     expFit: r.exp_fit as number,
     cultureFit: r.culture_fit as number,
     reasoning: r.reasoning as ScreeningResult["reasoning"],
+    confidence: (r.confidence as ScreeningResult["confidence"]) ?? "MEDIUM",
+    recommendation: (r.recommendation as ScreeningResult["recommendation"]) ?? "CONSIDER",
     strengths: (r.strengths as string[]) ?? [],
     prescreenQuestions: (r.prescreen_questions as string[]) ?? [],
     summary: r.summary as string,

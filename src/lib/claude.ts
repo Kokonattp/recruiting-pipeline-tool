@@ -47,6 +47,14 @@ interface StructuredOptions<T> {
   maxTokens?: number;
   /** Override the model (defaults to CLAUDE_MODEL). e.g. SCREENING_MODEL for cheap, bounded tasks. */
   model?: string;
+  /**
+   * Sampling temperature. Omit for the default (adaptive thinking, temp ~1). Set to 0
+   * for a *deterministic* scoring task — same input → same score, which is the whole
+   * point of resume screening (a candidate shouldn't pass or fail on the model's dice
+   * roll). Setting temperature disables extended thinking, since the two are mutually
+   * exclusive in the API.
+   */
+  temperature?: number;
 }
 
 /**
@@ -55,10 +63,16 @@ interface StructuredOptions<T> {
  * fails validation — callers should surface that as a clear error, not a silent fallback.
  */
 export async function structured<T>(opts: StructuredOptions<T>): Promise<T> {
+  // temperature and extended thinking are mutually exclusive; a fixed temperature
+  // (e.g. 0 for deterministic scoring) takes precedence and turns thinking off.
+  const deterministic = opts.temperature !== undefined;
+
   const response = await client().messages.create({
     model: opts.model ?? CLAUDE_MODEL,
     max_tokens: opts.maxTokens ?? 16000,
-    thinking: { type: "adaptive" },
+    ...(deterministic
+      ? { temperature: opts.temperature }
+      : { thinking: { type: "adaptive" as const } }),
     system: opts.system,
     tools: [
       {
