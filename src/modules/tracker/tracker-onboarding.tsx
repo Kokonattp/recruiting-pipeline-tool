@@ -112,14 +112,7 @@ function IntakeCard({
   accent?: boolean;
 }) {
   return (
-    <div
-      className={[
-        "group flex flex-col rounded-2xl border bg-surface p-5 transition-shadow",
-        accent
-          ? "border-primary/30 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-primary)]"
-          : "border-border hover:shadow-[var(--shadow-card)]",
-      ].join(" ")}
-    >
+    <div className="loga-card group flex flex-col rounded-2xl border bg-surface p-5">
       <div className="flex items-center gap-3">
         <span
           aria-hidden

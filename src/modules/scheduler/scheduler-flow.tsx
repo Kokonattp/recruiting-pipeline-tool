@@ -212,7 +212,7 @@ function InterviewRow({ iv }: { iv: Interview }) {
   }
 
   return (
-    <li className="rounded-[var(--radius-card)] border border-border bg-surface p-3">
+    <li className="loga-card rounded-[var(--radius-card)] border bg-surface p-3">
       <div className="flex items-center justify-between">
         <div>
           <div className="text-sm font-medium text-ink">
