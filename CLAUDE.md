@@ -24,7 +24,8 @@ supabase/       schema SQL migrations
 4. **AI ทุกจุดผ่าน `lib/claude.structured()`** (tool-use + zod) — ไม่รับ free text ที่ไม่ validate
 5. **row mapping ที่ `lib/mappers.ts`** เท่านั้น (snake_case ↔ camelCase)
 6. **ไม่มี mock/fake data** — data จริงจาก DB, ว่าง → empty state
-7. **UI**: design token ใน `globals.css` (OKLCH, light/dark), อ้าง token ไม่ฮาร์ดโค้ดสี. แนว Impeccable (กัน AI-slop) + LOGA accents ที่ board
+7. **UI**: design token ใน `globals.css` (OKLCH, light/dark), อ้าง token ไม่ฮาร์ดโค้ดสี. **แบรนด์ Hotel Plus = เหลือง+ดำ** (บนเหลืองใช้ ink ดำ — `--primary-ink`). แนว Impeccable + **LOGA cards** (`.loga-card`: ขอบหนา+เงาแข็ง) ที่ card หลัก
+8. **AI model tiering** (`lib/claude.ts`): `CLAUDE_MODEL` (Opus) เฉพาะงาน judgment ยาก = rank candidates + web search · `CONTENT_MODEL` (Sonnet 4.6) = JD gen + query · `SCREENING_MODEL` (Sonnet 4.6) = screen CV. เลือก model ตามความยากงาน ไม่จับ Opus ยัดทุกที่
 
 ## 4 Modules
 

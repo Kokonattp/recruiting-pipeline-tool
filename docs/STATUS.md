@@ -2,7 +2,7 @@
 
 > อัปเดตล่าสุด: 29 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** Google login gate (Supabase Auth), Sourcing fan-out (scraper + Claude web search พร้อมกัน), UI polish (impeccable+LOGA, dark), RLS, PDF token opt (Haiku), poster (gpt-image). **เหลือ: ตั้งค่า key/Supabase/Google ตาม `docs/SETUP.md` → redeploy → e2e → demo.**
+> **ล่าสุด:** Google login gate (Supabase Auth), Sourcing fan-out (scraper + Claude web search พร้อมกัน), **rebrand Hotel Plus (เหลือง+ดำ, LOGA cards, H+ logo/favicon)**, dark mode, RLS, **model tiering** (Opus เฉพาะ rank+websearch / Sonnet 4.6 = JD+query+screen), poster (gpt-image, env-configurable). **เหลือ: ตั้งค่า key/Supabase/Google ตาม `docs/SETUP.md` → redeploy → e2e → demo.**
 
 ## ความคืบหน้า ~90% (อัปเดต)
 

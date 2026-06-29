@@ -7,11 +7,13 @@
 - [x] **Sourcing one-click fan-out**: scraper + AI web search (Claude) ยิงพร้อมกัน → rank รวม
 - [x] Scraper service (Playwright+Docker) — WEB/JobsDB/JobThai **ทดสอบยิงจริงแล้ว (50 candidate)**
 - [x] Tracker: board/list + drag-drop stage + stat bar + **เพิ่ม/แก้ไข/ลบ ครบ CRUD**
-- [x] Screener: paste/PDF CV (extract text + Haiku) + score 3 ด้าน + **Report PDF** + **กัน vibe-check (temp 0 + anchored rubric + confidence + band ไม่ใช่ cutoff)**
+- [x] Screener: paste/PDF CV (extract text + Sonnet 4.6) + score 3 ด้าน + **Report PDF** + **กัน vibe-check (temp 0 + anchored rubric + confidence + band ไม่ใช่ cutoff)**
 - [x] Scheduler: Google Calendar/Meet จริง + conflict + stage sync + **reschedule**
 - [x] CSV import ในหน้า Sourcing (intake path ที่ไม่ติด anti-bot)
 - [x] JD → hiring poster image (OpenAI gpt-image-1, optional)
 - [x] **UI polish**: impeccable + LOGA accents (hero empty state, การ์ดขอบหนา/เงาแข็ง, hue pills, module icons), dark mode
+- [x] **Rebrand Hotel Plus**: เหลือง+ดำ, H+ logo + favicon, sidebar พื้นดำ, nav เรียง 1→2→3→4, dark-mode readability
+- [x] **AI model tiering**: Opus เฉพาะ rank+websearch / Sonnet 4.6 = JD+query+screen (คุม cost)
 - [x] **Security: RLS** ทุกตาราง (0003) — ปิด public API
 - [x] wiring DB (queries/CRUD/ingest/approve/persist) — build + type-check + lint ผ่าน
 - [x] docs: README, ARCHITECTURE, AI_LOG, STATUS, CLAUDE.md, **SETUP.md**
