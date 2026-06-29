@@ -42,6 +42,11 @@
 
   --radius: 0.625rem;
   --shadow-card: 0 1px 2px oklch(0.2 0.02 260 / 0.06), 0 2px 8px oklch(0.2 0.02 260 / 0.04);
+  /* lift for primary/interactive surfaces — carries the brand hue, not gray */
+  --shadow-primary: 0 1px 2px oklch(0.46 0.11 264 / 0.12), 0 8px 24px oklch(0.46 0.11 264 / 0.14);
+  /* a quiet brand wash for hero/onboarding surfaces (meaning: "this is the welcome") */
+  --hero-wash: radial-gradient(120% 100% at 0% 0%, oklch(0.95 0.03 264 / 0.8) 0%, transparent 55%),
+               radial-gradient(120% 120% at 100% 0%, oklch(0.95 0.035 200 / 0.6) 0%, transparent 50%);
 }
 
 [data-theme="dark"] {
@@ -71,6 +76,9 @@
   --score-high: oklch(0.72 0.13 150);
 
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 8px oklch(0 0 0 / 0.25);
+  --shadow-primary: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0.7 0.12 264 / 0.22);
+  --hero-wash: radial-gradient(120% 100% at 0% 0%, oklch(0.3 0.05 264 / 0.5) 0%, transparent 55%),
+               radial-gradient(120% 120% at 100% 0%, oklch(0.3 0.05 200 / 0.4) 0%, transparent 50%);
 }
 
 /* Honor OS preference when the user hasn't explicitly chosen a theme. */

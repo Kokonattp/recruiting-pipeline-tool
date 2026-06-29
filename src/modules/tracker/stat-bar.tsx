@@ -15,34 +15,40 @@ export function StatBar({ applications }: { applications: ApplicationWithRelatio
     (a) => a.stage === "APPLIED" || a.stage === "SCREENING",
   ).length;
 
-  const stats: { label: string; value: number; tone?: "success" | "danger" }[] = [
-    { label: "ผู้สมัครทั้งหมด", value: total },
-    { label: "กำลังสัมภาษณ์", value: interviewing },
-    { label: "รอคัดกรอง", value: inReview },
+  const stats: { label: string; value: number; tone: "primary" | "info" | "neutral" | "success" | "danger" }[] = [
+    { label: "ผู้สมัครทั้งหมด", value: total, tone: "primary" },
+    { label: "กำลังสัมภาษณ์", value: interviewing, tone: "info" },
+    { label: "รอคัดกรอง", value: inReview, tone: "neutral" },
     { label: "รับแล้ว", value: hired, tone: "success" },
     { label: "ไม่ผ่าน", value: rejected, tone: "danger" },
   ];
+
+  const TONE: Record<string, { num: string; dot: string }> = {
+    primary: { num: "text-primary", dot: "var(--primary)" },
+    info: { num: "text-ink", dot: "oklch(0.6 0.16 200)" },
+    neutral: { num: "text-ink", dot: "var(--border-strong)" },
+    success: { num: "text-[var(--success)]", dot: "var(--success)" },
+    danger: { num: "text-[var(--danger)]", dot: "var(--danger)" },
+  };
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {stats.map((s) => (
         <div
           key={s.label}
-          className="rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3"
+          className="rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3 transition-shadow hover:shadow-[var(--shadow-card)]"
         >
-          <div
-            className={[
-              "text-2xl font-semibold tabular-nums",
-              s.tone === "success"
-                ? "text-[var(--success)]"
-                : s.tone === "danger"
-                  ? "text-[var(--danger)]"
-                  : "text-ink",
-            ].join(" ")}
-          >
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="h-2 w-2 rounded-full"
+              style={{ background: TONE[s.tone].dot }}
+            />
+            <div className="text-xs font-medium text-ink-2">{s.label}</div>
+          </div>
+          <div className={`mt-1 text-2xl font-bold tabular-nums ${TONE[s.tone].num}`}>
             {s.value}
           </div>
-          <div className="mt-0.5 text-xs text-ink-2">{s.label}</div>
         </div>
       ))}
     </div>
