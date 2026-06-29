@@ -15,11 +15,14 @@ import { z } from "zod";
 export const CLAUDE_MODEL = "claude-opus-4-8";
 
 /**
- * Model for high-volume, well-scoped extraction like resume screening. Haiku is far
- * cheaper than Opus and the screening task is bounded by a strict tool schema, so the
- * quality trade-off is small while the per-CV cost drops by an order of magnitude.
+ * Model for resume screening (Module 2). Sonnet 4.6 over Haiku: screening is a
+ * *judgment* task (score + evidence-grounded reasoning), and Sonnet's judgment is
+ * meaningfully better than Haiku's while staying far cheaper than Opus (~1/5). For a
+ * decision that gates real candidates, the small extra cost per CV is worth the
+ * sharper, more consistent reasoning. (Haiku is fine for pure extract/classify, not
+ * for "is this person a fit".)
  */
-export const SCREENING_MODEL = "claude-haiku-4-5-20251001";
+export const SCREENING_MODEL = "claude-sonnet-4-6";
 
 let _client: Anthropic | null = null;
 function client(): Anthropic {

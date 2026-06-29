@@ -67,7 +67,7 @@ export async function screenResume(
     toolDescription: "Submit the structured 3-axis screening assessment for this candidate.",
     inputSchema: SCREENING_TOOL_SCHEMA as unknown as Record<string, unknown>,
     validate: ScreeningSchema,
-    model: SCREENING_MODEL, // cheap, bounded task — Haiku over Opus
+    model: SCREENING_MODEL, // Sonnet 4.6 — judgment task; sharper than Haiku, cheaper than Opus
     temperature: 0, // deterministic: same CV → same score, not a dice roll (see types.ts)
   });
 
