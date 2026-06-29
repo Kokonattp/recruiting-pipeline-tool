@@ -4,6 +4,7 @@ import { getInterviews } from "@/modules/scheduler/queries";
 import { isGoogleConnected } from "@/modules/scheduler/actions";
 import { getApplications } from "@/modules/tracker/queries";
 import { SchedulerFlow } from "@/modules/scheduler/scheduler-flow";
+import { SchedulerIcon } from "@/components/module-icons";
 
 export const metadata = { title: "Interview Scheduler" };
 
@@ -23,7 +24,7 @@ export default async function SchedulerPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader module={meta.module} title="Interview Scheduler" description={meta.description} />
+      <PageHeader module={meta.module} title="Interview Scheduler" description={meta.description} icon={<SchedulerIcon />} />
       <SchedulerFlow interviews={interviews} candidates={schedulable} googleConnected={connected} />
     </div>
   );

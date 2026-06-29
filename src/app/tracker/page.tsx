@@ -6,6 +6,7 @@ import { TrackerBoard } from "@/modules/tracker/tracker-board";
 import { TrackerOnboarding } from "@/modules/tracker/tracker-onboarding";
 import { StatBar } from "@/modules/tracker/stat-bar";
 import { AddCandidateDialog } from "@/modules/tracker/add-candidate-dialog";
+import { TrackerIcon } from "@/components/module-icons";
 
 export const metadata = { title: "Applicant Tracker" };
 
@@ -21,6 +22,7 @@ export default async function TrackerPage() {
         module={meta.module}
         title="Applicant Tracker"
         description={meta.description}
+        icon={<TrackerIcon />}
         actions={hasData ? <AddCandidateDialog jobs={jobs} /> : null}
       />
 

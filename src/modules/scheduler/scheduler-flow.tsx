@@ -62,16 +62,29 @@ export function SchedulerFlow({
 
   if (!googleConnected) {
     return (
-      <div className="rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface px-6 py-12 text-center">
-        <h2 className="text-lg font-semibold text-ink">เชื่อมต่อ Google Calendar ก่อน</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-ink-2">
-          อนุญาตให้ระบบสร้างนัดสัมภาษณ์ในปฏิทินของคุณ พร้อม Meet link และส่ง invite อัตโนมัติ
+      <div
+        className="relative overflow-hidden rounded-2xl border border-border bg-surface px-6 py-14 text-center"
+        style={{ backgroundImage: "var(--hero-wash)" }}
+      >
+        <span
+          aria-hidden
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-ink shadow-[var(--shadow-primary)]"
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01" />
+          </svg>
+        </span>
+        <h2 className="mt-4 text-xl font-bold text-ink">เชื่อมต่อ Google Calendar</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-2">
+          อนุญาตให้ระบบสร้างนัดสัมภาษณ์ในปฏิทินของคุณ พร้อม Meet link และส่ง invite ให้ผู้สมัครอัตโนมัติ
         </p>
         <button
           type="button"
           onClick={connect}
-          className="mt-5 h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink hover:opacity-90"
+          className="mx-auto mt-6 inline-flex h-11 items-center gap-2.5 rounded-[var(--radius-card)] bg-primary px-6 text-sm font-semibold text-primary-ink shadow-[var(--shadow-primary)] transition-transform hover:-translate-y-0.5"
         >
+          <span aria-hidden className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-ink text-[11px] font-bold text-primary">G</span>
           เชื่อมต่อ Google Calendar
         </button>
         {msg && <p className="mt-3 text-sm text-[var(--danger)]">{msg.text}</p>}

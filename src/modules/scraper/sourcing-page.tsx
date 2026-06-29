@@ -20,24 +20,32 @@ export function SourcingPage({ jobs }: { jobs: JobDescription[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="inline-flex rounded-[var(--radius-card)] border border-border p-0.5">
+      <div className="inline-flex flex-wrap gap-1 rounded-[var(--radius-card)] border border-border bg-surface p-1">
         {(
           [
-            ["generate", "1 · สร้างตำแหน่ง (JD)"],
-            ["source", "2 · ค้นหาผู้สมัคร"],
-            ["csv", "3 · นำเข้า CSV"],
+            ["generate", "1", "สร้างตำแหน่ง (JD)"],
+            ["source", "2", "ค้นหาผู้สมัคร"],
+            ["csv", "3", "นำเข้า CSV"],
           ] as const
-        ).map(([id, label]) => (
+        ).map(([id, step, label]) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
             aria-pressed={tab === id}
             className={[
-              "rounded-[calc(var(--radius-card)-2px)] px-3.5 py-1.5 text-sm font-medium transition-colors",
-              tab === id ? "bg-primary text-primary-ink" : "text-ink-2 hover:text-ink",
+              "flex items-center gap-2 rounded-[calc(var(--radius-card)-3px)] px-3.5 py-1.5 text-sm font-semibold transition-colors",
+              tab === id ? "bg-primary text-primary-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
             ].join(" ")}
           >
+            <span
+              className={[
+                "flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold tabular-nums",
+                tab === id ? "bg-primary-ink/20 text-primary-ink" : "bg-surface-2 text-ink-3",
+              ].join(" ")}
+            >
+              {step}
+            </span>
             {label}
           </button>
         ))}
