@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Theme = "light" | "dark";
 
+/** Read the current theme from the DOM (set pre-paint by the inline script in layout). */
+function currentTheme(): Theme {
+  if (typeof document === "undefined") return "light";
+  const stored = document.documentElement.getAttribute("data-theme") as Theme | null;
+  return stored ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+}
+
 /** Toggles [data-theme] on <html> and remembers the choice in localStorage. */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme | null>(null);
-
-  useEffect(() => {
-    const stored = document.documentElement.getAttribute("data-theme") as Theme | null;
-    setTheme(stored ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-  }, []);
+  // Lazy initializer reads the DOM once on mount — no setState-in-effect cascade.
+  const [theme, setTheme] = useState<Theme>(currentTheme);
 
   function toggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
