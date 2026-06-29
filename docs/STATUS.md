@@ -1,6 +1,6 @@
 # สถานะโปรเจกต์ (handoff — สำหรับเริ่มแชทใหม่)
 
-> อัปเดตล่าสุด: 27 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · 25 commits · build ผ่าน
+> อัปเดตล่าสุด: 29 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · 33 commits · build ผ่าน · **scraper ทดสอบยิงเว็บจริงแล้ว (50 candidate)**
 
 ## ความคืบหน้า ~90% (อัปเดต)
 
@@ -15,23 +15,19 @@
 - **Module 1 Sourcing:** wizard 3 step (JD → AI gen query → ranked shortlist → approve เข้า Tracker). `src/modules/scraper/`.
 - **Module 2 Screener:** form (paste CV+JD) → Claude score 3 ด้าน + reasoning + prescreen Q → score card. `src/modules/screener/`.
 - **Module 4 Scheduler:** form สร้างนัด + agenda + conflict detection (pure fn) + google.ts (Calendar+Meet helper). `src/modules/scheduler/`.
-- **Scraper service** (agent ทำ): `scraper/` — Playwright+Express+Docker. WEB(Bing)/JobsDB/JobThai ใช้ได้, LinkedIn/FB/JobBKK stub. type-check ผ่าน.
+- **Scraper service** (agent ทำ): `scraper/` — Playwright+Express+Docker. WEB(Bing)/JobsDB/JobThai ใช้ได้, LinkedIn/FB/JobBKK stub. **ทดสอบ e2e 29 มิ.ย.: ยิง /scrape จริง → WEB 10 + JobsDB 20 + JobThai 20 = 50 candidate, LinkedIn skip โดยไม่ crash, auth/health ผ่าน** (ดู AI_LOG รอบที่ 6).
 - **Wiring DB:** `src/lib/mappers.ts` + queries จริง (tracker/scheduler/jobs) + CRUD actions + `/api/scrape-ingest` + seed JD. graceful empty เมื่อไม่มี env.
 - **AI:** ทุกจุดใช้ `lib/claude.structured()` (tool-use + zod), รองรับ PDF (`pdfBlock`). model `claude-opus-4-8`.
 
 ## ⏳ เหลือทำ (พรุ่งนี้)
 
-1. **เสียบ ENV** (ดูด้านล่าง) → ลง `.env.local`
-2. **รัน SQL ใน Supabase:** `supabase/migrations/0001_init.sql` + `0002_seed_job.sql` + สร้าง bucket `resumes`
-3. **wire UI ที่ค้าง** (ทำได้เลยไม่ต้องรอ key):
-   - modal "เพิ่มผู้สมัคร" ใน Tracker (เรียก `addCandidate`)
-   - JD dropdown ใน Sourcing + Screener (เลือกตำแหน่งจาก DB ผ่าน `modules/jobs/queries.getJobs()`)
-   - ผูก approve button ใน Sourcing → `approveCandidates`
-   - ปุ่ม upload PDF ใน Screener → ส่ง base64 เข้า Claude
-4. **ทดสอบ data จริงไหล** ครบ pipeline (e2e)
-5. **เสริม AI_LOG.md** ด้วย prompt จริง + Claude output จริง + การ iterate (ต้องมี Anthropic key)
-6. **Deploy:** Vercel + Cloud Run (`gcloud run deploy` ใน scraper/) + ใส่ env บน Vercel
-7. **Demo video ~3 นาที** + อัปเดต README ใส่ live URL
+> ✅ **ทำเสร็จแล้ว (29 มิ.ย.)** — UI ที่เคยค้างทำครบ: add-candidate modal, JD picker (Sourcing+Screener), approve→Tracker, Screener PDF upload. scraper ทดสอบยิงจริงแล้ว.
+
+1. **เสียบ ENV** (ดูด้านล่าง) → ลง `.env.local` ← *ต้องการ key จากผู้ใช้*
+2. **รัน SQL ใน Supabase:** `supabase/migrations/0001_init.sql` + `0002_seed_job.sql` + สร้าง bucket `resumes` ← *ต้องการ project จากผู้ใช้*
+3. **ทดสอบ data จริงไหล** ครบ pipeline (e2e) หลังเสียบ ENV: JD→scrape→rank→approve→tracker→screener→scheduler
+4. **Deploy:** Vercel + Cloud Run (`gcloud run deploy` ใน scraper/) + ใส่ env บน Vercel
+5. **Demo video ~3 นาที** + อัปเดต README ใส่ live URL
 
 ## 🚀 Deploy: 1 repo → 2 service แยก (สำคัญ — เคยงงจุดนี้)
 

@@ -74,3 +74,29 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 - **Empty state เป็น onboarding** — โชว์ pipeline เปล่า + 2 วิธีเอา candidate เข้า (AI sourcing / manual) ไม่ใช่กล่องว่าง และ**ไม่มี mock candidate**.
 - **State management: ไม่ใช้ Redux/RTK** — Next.js Server Component + Server Action + useState (local) พอ, RTK จะ over-engineer.
 - **แบ่งงาน scraper service ให้ sub-agent ทำขนาน** — เพราะเป็น service แยกสมบูรณ์ (Playwright+Docker) ไม่แตะ design system, contract ชัด (RawCandidate/SearchQuery) → คุม consistency ได้. ส่วน UI ทำเองเพื่อรักษาสไตล์ให้เป็นเอกภาพ.
+
+---
+
+## รอบที่ 6 — ทดสอบ scraper จริง (e2e, 29 มิ.ย. 2026)
+
+**ทำไมต้องทดสอบ:** เขียน scraper ไว้แต่ไม่เคยรันยิงเว็บจริง = แค่ "type-check ผ่าน" ไม่พอ. ต้องพิสูจน์ว่า scrape ได้ data จริง ไม่ใช่โดน anti-bot block หมด.
+
+**วิธีทดสอบ:** รัน service local (`tsx server.ts`, PORT=4000, มี `SCRAPER_INGEST_SECRET`) แล้วยิง `POST /scrape` ด้วย 4 query (WEB / JOBSDB / JOBTHAI / LINKEDIN).
+
+**ผลจริง (verified):**
+
+| Source | ผล | หมายเหตุ |
+|--------|-----|---------|
+| WEB (Bing) | ✅ 10 results | title + snippet + link จริง |
+| JOBSDB | ✅ 20 results | job posting จริง (บริษัท+จังหวัด) เช่น MUI Robotics, TISCO, SCG, True Corp |
+| JOBTHAI | ✅ 20 results | job posting จริง |
+| LINKEDIN | ⏭️ skip (0) | stub — log ชัด "requires session (auth + ToS)" ไม่ crash |
+
+รวม **50 candidate จริง** จาก 1 request. `/health` ✅ + auth reject (secret ผิด → 401) ✅.
+
+**สิ่งที่ยืนยันจากการทดสอบ:**
+1. per-source try/catch ทำงานจริง — LINKEDIN stub ถูกข้ามโดยไม่ล้ม source อื่น (เห็นใน log: `[LINKEDIN] returned 0`, ตัวอื่นยังคืนผลครบ).
+2. browser เดียวต่อ request + page แยกต่อ source → memory คุมได้บน container เล็ก.
+3. data ที่ได้พร้อมส่งต่อให้ Claude `rankCandidates()` normalize+rank ต่อทันที.
+
+**ข้อจำกัดที่ซื่อสัตย์:** ผลขึ้นกับ markup ของ Bing/JobsDB ณ วันรัน (selector อาจเปลี่ยน) + อาจโดน rate-limit ถ้ายิงถี่. design เลือกให้ "block = คืน [] ไม่ใช่ throw" จึงทนต่อความเปราะตรงนี้ได้ระดับหนึ่ง. LinkedIn/FB/JobBKK เป็น stub โดยตั้งใจ (ToS/auth) — ระบุชัดทั้งใน code comment และ README ไม่แกล้งทำว่า scrape ได้.
