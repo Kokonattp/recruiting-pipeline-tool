@@ -52,7 +52,7 @@ export function CsvImport({ jobs }: { jobs: JobDescription[] }) {
           <select
             value={jobId}
             onChange={(e) => pickJob(e.target.value)}
-            className="h-10 w-full max-w-md rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+            className="h-10 w-full max-w-md rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
           >
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>{j.title}</option>

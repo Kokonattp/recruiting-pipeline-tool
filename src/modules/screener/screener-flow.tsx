@@ -66,7 +66,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
             <select
               value={jobId}
               onChange={(e) => pickJob(e.target.value)}
-              className="h-10 w-full rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              className="h-10 w-full rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
             >
               {jobs.map((j) => (
                 <option key={j.id} value={j.id}>{j.title}</option>
@@ -79,7 +79,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
             onChange={(e) => setJdText(e.target.value)}
             rows={9}
             placeholder="เลือกตำแหน่งด้านบน หรือวาง JD ที่นี่…"
-            className="w-full rounded-[var(--radius-card)] border border-border bg-bg p-3 text-sm text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none"
+            className="w-full rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3 "
           />
         </div>
 
@@ -120,7 +120,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
               onChange={(e) => setCvText(e.target.value)}
               rows={9}
               placeholder="วางข้อความ CV ที่นี่ หรือกด 'อัปโหลด PDF' ด้านบน…"
-              className="w-full rounded-[var(--radius-card)] border border-border bg-bg p-3 text-sm text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none"
+              className="w-full rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3 "
             />
           )}
         </div>

@@ -134,7 +134,7 @@ function Toolbar({ view, onView, filters, onFilters, total }: ToolbarProps) {
         value={filters.search}
         onChange={(e) => onFilters({ ...filters, search: e.target.value })}
         placeholder="ค้นหาชื่อ / ตำแหน่ง…"
-        className="h-9 w-56 rounded-[var(--radius-card)] border border-border bg-bg px-3 text-sm text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none"
+        className="field h-9 w-56 rounded-[var(--radius-card)] px-3 text-sm text-ink placeholder:text-ink-3"
       />
 
       <select
@@ -142,7 +142,7 @@ function Toolbar({ view, onView, filters, onFilters, total }: ToolbarProps) {
         onChange={(e) =>
           onFilters({ ...filters, source: (e.target.value || null) as Source | null })
         }
-        className="h-9 rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink-2 focus:border-primary focus:outline-none"
+        className="field h-9 rounded-[var(--radius-card)] px-2.5 text-sm text-ink-2"
       >
         <option value="">ทุกแหล่งที่มา</option>
         {SOURCES.map((s) => (

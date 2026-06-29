@@ -68,7 +68,7 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
           placeholder="เช่น Senior AI Engineer, Python, LangChain, 5 ปี, กรุงเทพ"
-          className="h-10 w-full rounded-[var(--radius-card)] border border-border bg-bg px-3 text-sm text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none"
+          className="h-10 w-full rounded-[var(--radius-card)] field px-3 text-sm text-ink placeholder:text-ink-3 "
         />
       </div>
 
@@ -219,7 +219,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-full rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="h-9 w-full rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
       />
     </label>
   );
@@ -233,7 +233,7 @@ function Area({ label, value, rows, onChange }: { label: string; value: string; 
         value={value}
         rows={rows}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-[var(--radius-card)] border border-border bg-bg p-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="w-full rounded-[var(--radius-card)] field p-2.5 text-sm text-ink "
       />
     </label>
   );

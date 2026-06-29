@@ -139,7 +139,7 @@ function Input({ label, value, onChange }: { label: string; value: string; onCha
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-full rounded-[var(--radius-card)] border border-border bg-bg px-3 text-sm text-ink focus:border-primary focus:outline-none"
+        className="h-9 w-full rounded-[var(--radius-card)] field px-3 text-sm text-ink "
       />
     </label>
   );
@@ -162,7 +162,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-full rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="h-9 w-full rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
       >
         {options.length === 0 && <option value="">— ยังไม่มีตำแหน่ง —</option>}
         {options.map((o) => (

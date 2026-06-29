@@ -110,7 +110,7 @@ export function SchedulerFlow({
             type="datetime-local"
             value={datetime}
             onChange={(e) => setDatetime(e.target.value)}
-            className="h-10 w-full rounded-[var(--radius-card)] border border-border bg-bg px-3 text-sm text-ink focus:border-primary focus:outline-none"
+            className="h-10 w-full rounded-[var(--radius-card)] field px-3 text-sm text-ink "
           />
         </div>
 
@@ -119,7 +119,7 @@ export function SchedulerFlow({
           <select
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
-            className="h-10 w-full rounded-[var(--radius-card)] border border-border bg-bg px-3 text-sm text-ink focus:border-primary focus:outline-none"
+            className="h-10 w-full rounded-[var(--radius-card)] field px-3 text-sm text-ink "
           >
             {[15, 30, 45, 60].map((m) => (
               <option key={m} value={m}>{m} นาที</option>
@@ -251,7 +251,7 @@ function InterviewRow({ iv }: { iv: Interview }) {
             type="datetime-local"
             value={newAt}
             onChange={(e) => setNewAt(e.target.value)}
-            className="h-9 flex-1 rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+            className="h-9 flex-1 rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
           />
           <button
             type="button"
@@ -285,7 +285,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-full rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="h-10 w-full rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
       >
         {options.length === 0 && <option value="">— ยังไม่มีผู้สมัครในระบบ —</option>}
         {options.map((o) => (

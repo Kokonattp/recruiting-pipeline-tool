@@ -185,6 +185,23 @@ body {
   .loga-card:hover { transform: none; }
 }
 
+/* Form fields in the Hotel Plus / LOGA key: a slightly heavier border than a hairline,
+   and on focus the border goes brand-yellow with a soft ring — so inputs feel part of
+   the same bold system as the cards, not a separate quiet layer. Apply to inputs,
+   textareas, and selects. */
+.field {
+  border-width: 1.5px;
+  border-color: var(--border-strong);
+  background: var(--bg);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field:focus,
+.field:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 30%, transparent);
+}
+
 /* Disabled primary (yellow) buttons: a faded-yellow tile reads as broken/unreadable,
    especially on dark. Force a clear muted state so "can't click yet" is obvious. */
 button:disabled.bg-primary,

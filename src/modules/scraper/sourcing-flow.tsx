@@ -183,7 +183,7 @@ function JdStep({
           <select
             value={jobId}
             onChange={(e) => onPickJob(e.target.value)}
-            className="h-10 w-full max-w-md rounded-[var(--radius-card)] border border-border bg-bg px-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+            className="h-10 w-full max-w-md rounded-[var(--radius-card)] field px-2.5 text-sm text-ink "
           >
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>{j.title}</option>
@@ -200,7 +200,7 @@ function JdStep({
           onChange={(e) => onJd(e.target.value)}
           rows={8}
           placeholder="วางรายละเอียดตำแหน่งที่ต้องการหา เช่น Senior AI Workflow & Automation Engineer — ทักษะ, ประสบการณ์, สิ่งที่ต้องมี…"
-          className="w-full rounded-[var(--radius-card)] border border-border bg-bg p-3 text-sm text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none"
+          className="w-full rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3 "
         />
       </div>
 
