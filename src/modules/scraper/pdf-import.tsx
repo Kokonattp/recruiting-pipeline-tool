@@ -29,8 +29,10 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
         .filter((f) => f.type === "application/pdf" || f.name.endsWith(".pdf"))
         .map(async (f) => {
           const buf = await f.arrayBuffer();
-          const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-          return { name: f.name, base64: b64 };
+          const bytes = new Uint8Array(buf);
+          let binary = "";
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          return { name: f.name, base64: btoa(binary) };
         }),
     );
     setFiles((prev) => {
