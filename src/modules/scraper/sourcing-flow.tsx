@@ -5,12 +5,11 @@ import { SOURCE_LABELS, SOURCES, type JobDescription, type Source } from "@/lib/
 import {
   approveCandidates,
   generateQueryPlan,
-  runSourcing,
   type ActionResult,
 } from "./actions";
 
 type SourceTally = { name: string; found: number; ok: boolean }[];
-import type { QueryPlan, RankResult } from "./types";
+import type { QueryPlan, RankResult, RawCandidate } from "./types";
 
 /** Default sources to search — the public ones that work without login are pre-checked. */
 const DEFAULT_SOURCES: Source[] = ["WEB", "GITHUB", "JOBSDB", "JOBTHAI"];
@@ -31,6 +30,8 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   const [fbGroups, setFbGroups] = useState(""); // Facebook group URLs (one per line)
   const [plan, setPlan] = useState<QueryPlan | null>(null);
   const [result, setResult] = useState<RankResult | null>(null);
+  const [rawCandidates, setRawCandidates] = useState<RawCandidate[]>([]);
+  const [isRanking, setIsRanking] = useState(false);
   const [tally, setTally] = useState<SourceTally>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,21 +70,73 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
 
   async function onRunScrape() {
     if (!plan) return;
-    // Warn if Facebook is selected but no group URL was provided
     const facebookGroups = fbGroups.split("\n").map((s) => s.trim()).filter(Boolean);
     if (sources.includes("FACEBOOK") && facebookGroups.length === 0) {
       setError("เลือก Facebook แต่ยังไม่ได้ใส่ URL กลุ่ม — ใส่ URL กลุ่มด้านล่าง หรือยกเลิกการเลือก Facebook ก่อนค้น");
       return;
     }
     setBusy(true);
-    const r = await runSourcing({ jdText, plan, facebookGroups });
-    const data = unwrap(r);
-    setBusy(false);
-    if (data) {
-      setResult(data.result);
-      setTally(data.sources);
-      setStep("shortlist");
+    setError(null);
+    setRawCandidates([]);
+    setIsRanking(false);
+    setTally([]);
+
+    const res = await fetch("/api/sourcing-stream", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jdText, plan, facebookGroups }),
+    });
+
+    if (!res.ok || !res.body) {
+      setError("เชื่อมต่อ sourcing stream ไม่ได้");
+      setBusy(false);
+      return;
     }
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const parts = buf.split("\n\n");
+      buf = parts.pop() ?? "";
+      for (const part of parts) {
+        const line = part.trim();
+        if (!line.startsWith("data:")) continue;
+        try {
+          const ev = JSON.parse(line.slice(5).trim()) as {
+            type: string;
+            source?: string;
+            candidates?: RawCandidate[];
+            shortlist?: RankResult["shortlist"];
+            message?: string;
+          };
+          if (ev.type === "raw" && ev.candidates) {
+            setRawCandidates((prev) => [...prev, ...ev.candidates!]);
+            setTally((prev) => {
+              const existing = prev.find((t) => t.name === ev.source);
+              if (existing) return prev.map((t) => t.name === ev.source ? { ...t, found: t.found + ev.candidates!.length } : t);
+              return [...prev, { name: ev.source ?? "Unknown", found: ev.candidates!.length, ok: true }];
+            });
+          } else if (ev.type === "sourceError") {
+            setTally((prev) => [...prev, { name: ev.source ?? "Unknown", found: 0, ok: false }]);
+          } else if (ev.type === "ranking") {
+            setIsRanking(true);
+          } else if (ev.type === "ranked" && ev.shortlist) {
+            setResult({ shortlist: ev.shortlist });
+            setStep("shortlist");
+          } else if (ev.type === "error") {
+            setError(ev.message ?? "ผิดพลาด");
+          }
+        } catch { /* malformed chunk */ }
+      }
+    }
+    setBusy(false);
+    setIsRanking(false);
   }
 
   async function onApprove(selected: RankResult["shortlist"]): Promise<string | null> {
@@ -128,6 +181,8 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
         <PlanStep
           plan={plan}
           busy={busy}
+          isRanking={isRanking}
+          rawCandidates={rawCandidates}
           onBack={() => setStep("jd")}
           onRun={onRunScrape}
         />
@@ -297,11 +352,15 @@ function JdStep({
 function PlanStep({
   plan,
   busy,
+  isRanking,
+  rawCandidates,
   onBack,
   onRun,
 }: {
   plan: QueryPlan;
   busy: boolean;
+  isRanking: boolean;
+  rawCandidates: RawCandidate[];
   onBack: () => void;
   onRun: () => void;
 }) {
@@ -338,7 +397,8 @@ function PlanStep({
         <button
           type="button"
           onClick={onBack}
-          className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
+          disabled={busy}
+          className="h-10 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2 disabled:opacity-40"
         >
           ← แก้ JD
         </button>
@@ -349,23 +409,47 @@ function PlanStep({
           className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-60 inline-flex items-center gap-2"
         >
           {busy && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
-          {busy ? "กำลังค้นหาทุกแหล่ง & จัดอันดับ…" : "เริ่มค้นหาผู้สมัคร →"}
+          {busy ? (isRanking ? "AI กำลังจัดอันดับ…" : "กำลังค้นหา…") : "เริ่มค้นหาผู้สมัคร →"}
         </button>
       </div>
-      {busy ? (
-        <div className="rounded-[var(--radius-card)] border-2 border-border bg-surface p-4 space-y-2 animate-pulse">
-          <p className="text-xs font-semibold text-ink-2">ระบบกำลังทำงาน…</p>
-          {["GitHub", "AI Web Search", "JobsDB", "JobThai"].map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-xs text-ink-3">ค้นหาจาก {s}…</span>
+
+      {/* Live feed: raw candidates stream in as sources respond */}
+      {busy && rawCandidates.length === 0 && !isRanking && (
+        <div className="rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3 flex items-center gap-2">
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="text-sm text-ink-2">กำลังค้นหาทุกแหล่งพร้อมกัน…</span>
+        </div>
+      )}
+
+      {rawCandidates.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-ink-2">
+            พบแล้ว {rawCandidates.length} ราย
+            {isRanking && <span className="ml-2 text-ink-3">— AI กำลังจัดอันดับ…</span>}
+          </p>
+          {rawCandidates.map((c, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-[var(--radius-card)] border border-border bg-bg px-3 py-2">
+              <span className="mt-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium text-ink-3 shrink-0">
+                {c.source}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink truncate">{c.name ?? "ไม่ระบุชื่อ"}</p>
+                {c.headline && <p className="text-xs text-ink-3 truncate">{c.headline}</p>}
+                {c.sourceUrl && (
+                  <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] text-ink-3 hover:text-primary hover:underline truncate block">
+                    {c.sourceUrl}
+                  </a>
+                )}
+              </div>
             </div>
           ))}
-          <p className="text-xs text-ink-3 pt-1">อาจใช้เวลา 30–90 วินาที — กำลังดึงข้อมูลและให้ AI จัดอันดับ</p>
         </div>
-      ) : (
+      )}
+
+      {!busy && rawCandidates.length === 0 && (
         <p className="text-xs text-ink-3">
-          คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน (เว็บไซต์งาน + AI web search) แล้วให้ AI จัดอันดับรวมให้ — อาจใช้เวลาสักครู่ (30–90 วินาที)
+          คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน แล้วแสดงผู้สมัครทันทีที่แต่ละแหล่งตอบ — AI จัดอันดับให้เมื่อครบ
         </p>
       )}
     </div>

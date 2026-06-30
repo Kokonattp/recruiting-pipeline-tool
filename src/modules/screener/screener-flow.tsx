@@ -52,8 +52,10 @@ export function ScreenerFlow({
 
   async function onPdf(file: File) {
     const buf = await file.arrayBuffer();
-    // base64 without the data: prefix — Claude's document block wants raw base64
-    const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const b64 = btoa(binary);
     setPdfBase64(b64);
     setPdfName(file.name);
     setCvText(""); // PDF takes precedence
