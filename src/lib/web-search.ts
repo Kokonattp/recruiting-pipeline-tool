@@ -76,7 +76,7 @@ export async function webSearchCandidates(
 
   const response = await client().messages.create({
     model: CLAUDE_MODEL,
-    max_tokens: 4096,
+    max_tokens: 8000, // room for 10-20 candidates + their search reasoning
     system: [
       "You are a technical sourcer. Use web search to find real, public candidate profiles or",
       "people who match the job description: LinkedIn/Facebook public profiles, portfolios,",
@@ -85,10 +85,11 @@ export async function webSearchCandidates(
       siteLine,
       "CRITICAL: never invent a person. Only submit candidates that appear in actual search results,",
       "each with the real result URL. If a result is a company/listing rather than a person, still",
-      "include it with its URL and a clear headline. Submit 5-12 of the most relevant results.",
+      "Run SEVERAL searches with different angles (role+skills, location, specific tools, github/portfolio) to maximize coverage.",
+      "include it with its URL and a clear headline. Submit 10-20 of the most relevant results — aim for breadth, not just the top few.",
     ].filter(Boolean).join("\n"),
     tools: [
-      { type: "web_search_20250305", name: "web_search", max_uses: 4 } as Anthropic.Messages.ToolUnion,
+      { type: "web_search_20250305", name: "web_search", max_uses: 8 } as Anthropic.Messages.ToolUnion,
       SUBMIT_TOOL as unknown as Anthropic.Messages.Tool,
     ],
     messages: [

@@ -16,7 +16,7 @@ import type { Source } from "./index.js";
  */
 
 const API = "https://api.github.com";
-const MAX_RESULTS = 12;
+const MAX_RESULTS = 30; // GitHub allows up to 100/req; 30 keeps profile-enrichment fast
 
 export const githubSource: Source = {
   name: "GITHUB",

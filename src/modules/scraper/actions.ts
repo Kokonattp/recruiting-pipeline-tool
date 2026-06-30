@@ -90,9 +90,14 @@ export async function runSourcing(input: {
     // LinkedIn/Facebook can't be scraped (ToS/login) — but if HR picked them, steer web
     // search at their PUBLIC indexed profiles via site: filters (legitimate, no login).
     const picked = new Set(input.plan.queries.map((q) => q.source));
-    const siteHints: string[] = [];
+    // Always include github.com (best real-dev source) so web search yields candidates
+    // even when the Playwright scraper isn't deployed; add LinkedIn/FB public profiles
+    // and job boards if HR picked them.
+    const siteHints: string[] = ["github.com"];
     if (picked.has("LINKEDIN")) siteHints.push("linkedin.com/in");
     if (picked.has("FACEBOOK")) siteHints.push("facebook.com");
+    if (picked.has("JOBSDB")) siteHints.push("th.jobsdb.com");
+    if (picked.has("JOBTHAI")) siteHints.push("jobthai.com");
     const found = await webSearchCandidates(input.jdText, siteHints);
     return found.map((c) => ({
       source: "WEB" as const,
@@ -126,8 +131,13 @@ export async function runSourcing(input: {
     return { ok: false, error: why };
   }
 
+  // The same person can surface from more than one source (e.g. a GitHub profile via both
+  // the scraper and web search). De-dupe before ranking so HR doesn't see the same person
+  // twice and we don't pay to rank duplicates.
+  const deduped = dedupeCandidates(raw);
+
   try {
-    const result = await rankCandidates(input.jdText, raw);
+    const result = await rankCandidates(input.jdText, deduped);
     return { ok: true, data: { result, sources } };
   } catch (e) {
     return { ok: false, error: aiError(e) };
@@ -174,6 +184,26 @@ export async function approveCandidates(input: {
 
   revalidatePath("/tracker");
   return { ok: true, data: { inserted } };
+}
+
+/** Drop duplicate raw candidates: same normalized URL, or same source+name. Keeps the
+ *  first (richest) occurrence. Runs before ranking so HR sees each person once. */
+function dedupeCandidates(list: RawCandidate[]): RawCandidate[] {
+  const seenUrl = new Set<string>();
+  const seenName = new Set<string>();
+  const out: RawCandidate[] = [];
+  for (const c of list) {
+    const url = c.sourceUrl
+      ? c.sourceUrl.replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "").toLowerCase()
+      : "";
+    const nameKey = c.name ? `${c.source}:${c.name.trim().toLowerCase()}` : "";
+    if (url && seenUrl.has(url)) continue;
+    if (nameKey && seenName.has(nameKey)) continue;
+    if (url) seenUrl.add(url);
+    if (nameKey) seenName.add(nameKey);
+    out.push(c);
+  }
+  return out;
 }
 
 function aiError(e: unknown): string {
