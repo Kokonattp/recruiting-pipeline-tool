@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   SOURCE_LABELS,
   SOURCES,
@@ -88,7 +89,7 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
     else setError(r.error);
   }
 
-  return (
+  const content = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="loga-card w-full max-w-md rounded-[var(--radius-card)] border bg-bg p-5">
         <h2 className="text-base font-semibold text-ink">
@@ -139,6 +140,7 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
       </div>
     </div>
   );
+  return createPortal(content, document.body);
 }
 
 function Input({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {

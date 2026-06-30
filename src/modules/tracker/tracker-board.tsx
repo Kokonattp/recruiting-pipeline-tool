@@ -25,6 +25,7 @@ import { ListView } from "./list-view";
 import { CandidateCard } from "./candidate-card";
 import { updateStage } from "./actions";
 import { EMPTY_FILTERS, type TrackerFilters, type TrackerView } from "./view-types";
+import { TrackerProvider } from "./tracker-ctx";
 
 interface TrackerBoardProps {
   initial: ApplicationWithRelations[];
@@ -95,7 +96,12 @@ export function TrackerBoard({ initial, jobs }: TrackerBoardProps) {
     });
   }
 
+  function onDeleted(applicationId: string) {
+    setApps((prev) => prev.filter((a) => a.id !== applicationId));
+  }
+
   return (
+    <TrackerProvider onDeleted={onDeleted}>
     <div className="space-y-4">
       <Toolbar
         view={view}
@@ -125,6 +131,7 @@ export function TrackerBoard({ initial, jobs }: TrackerBoardProps) {
         <ListView applications={filtered} />
       )}
     </div>
+    </TrackerProvider>
   );
 }
 

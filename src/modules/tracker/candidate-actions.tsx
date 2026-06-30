@@ -6,6 +6,7 @@ import { STAGES, STAGE_LABELS, type Candidate, type Stage } from "@/lib/types";
 import { EditCandidateDialog } from "./add-candidate-dialog";
 import { deleteCandidate, updateStage } from "./actions";
 import { Toast } from "@/components/ui/toast";
+import { useTracker } from "./tracker-ctx";
 
 /**
  * Per-card screen/edit/delete affordance. Lives in its own client component so the card
@@ -24,6 +25,7 @@ export function CandidateActions({
   applicationId?: string;
   currentStage?: Stage;
 }) {
+  const { onDeleted } = useTracker();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -34,7 +36,7 @@ export function CandidateActions({
     setBusy(true);
     await deleteCandidate(candidate.id);
     setBusy(false);
-    setToast(`ลบ "${candidate.name}" แล้ว`);
+    if (applicationId) onDeleted(applicationId);
   }
 
   async function onMoveStage(stage: Stage) {

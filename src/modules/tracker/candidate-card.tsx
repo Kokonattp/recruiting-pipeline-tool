@@ -13,7 +13,6 @@ function initials(name: string): string {
 
 interface CandidateCardProps {
   application: ApplicationWithRelations;
-  /** drag affordances injected by the board (dnd-kit) */
   dragHandle?: React.ReactNode;
 }
 
