@@ -164,7 +164,11 @@ export function SchedulerFlow({
           />
           <span className="text-ink-2">
             ส่งอีเมล invite ให้ผู้สมัคร
-            <span className="block text-xs text-ink-3">ปิดไว้ตอนทดสอบ — นัดจะถูกสร้างในปฏิทินคุณ แต่ไม่ส่งเมลรบกวนผู้สมัคร</span>
+            <span className="block text-xs text-ink-3">
+              {notifyCandidate
+                ? "✉️ ผู้สมัครจะได้รับอีเมล invite + Meet link จริง"
+                : "🔒 จะไม่ส่งเมล — สร้างนัดในปฏิทินคุณเท่านั้น (เหมาะตอนทดสอบ)"}
+            </span>
           </span>
         </label>
 
