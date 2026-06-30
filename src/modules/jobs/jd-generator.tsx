@@ -137,6 +137,9 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
             >
               {posterBusy ? "AI กำลังสร้างรูป…" : "🖼️ สร้างรูปประกาศ (AI)"}
             </button>
+            {!jd.title.trim() && (
+              <span className="text-xs text-ink-3">← ใส่ชื่อตำแหน่งก่อนบันทึก / สร้างรูป</span>
+            )}
           </div>
 
           {poster && (
