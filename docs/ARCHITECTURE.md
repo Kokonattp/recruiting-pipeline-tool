@@ -10,7 +10,7 @@
 │  WEB APP  (Next.js 16)       │  HTTP  │  SCRAPER SERVICE (Docker)    │
 │  • หน้าจอ HR + 4 module       │ ─────► │  • Playwright headless        │
 │  • Server Actions / API       │ ◄───── │  • POST /scrape  → push DB    │
-│  • เรียก Claude + Google API  │ ingest │  • session cookie = secret    │
+│  • เรียก Claude + Google API  │ ingest │  • shared secret auth         │
 │  Git → Vercel (URL จริง)      │        │  Deploy: Google Cloud Run     │
 └──────────────┬───────────────┘        └──────────────────────────────┘
                │ supabase-js
@@ -125,7 +125,7 @@ design token เป็น CSS variable (OKLCH) สอง set: `:root` (light) + 
 |--------|-------|----------|
 | WEB | ✅ ใช้ได้ | ใช้ **Bing** (Google บล็อก headless หนัก) |
 | JOBSDB / JOBTHAI | ✅ ใช้ได้ | เป็น public job board → ได้ job posting เป็น lead (ฝั่ง public ไม่ใช่ open CV database) |
-| LINKEDIN / FACEBOOK | ⏸ stub | ต้อง login session + ผิด ToS — return [] + log (ออกแบบ pluggable เพิ่มทีหลังได้) |
+| LINKEDIN / FACEBOOK | 🔶 optional API | ใช้ Apify/Web Search; ถ้าไม่ตั้ง token จะ skip โดยไม่ล้ม flow และไม่เก็บ cookie ผู้ใช้ |
 | JOBBKK | ⏸ stub | candidate search ต้อง employer login |
 
 > ความจริงของ anti-bot: เว็บเปลี่ยน markup/rate-limit/CAPTCHA ได้ — selector เป็น best-effort. การแยก source + try/catch + timeout คือ design ที่รับมือกับความจริงนี้.
