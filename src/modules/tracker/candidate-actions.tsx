@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Candidate } from "@/lib/types";
+import { STAGES, STAGE_LABELS, type Candidate, type Stage } from "@/lib/types";
 import { EditCandidateDialog } from "./add-candidate-dialog";
-import { deleteCandidate } from "./actions";
+import { deleteCandidate, updateStage } from "./actions";
 import { Toast } from "@/components/ui/toast";
 
 /**
@@ -13,7 +13,17 @@ import { Toast } from "@/components/ui/toast";
  * candidate + their job, so HR only has to attach the CV. Edit opens the shared dialog;
  * delete confirms before removing (cascades to applications).
  */
-export function CandidateActions({ candidate, jobId }: { candidate: Candidate; jobId?: string }) {
+export function CandidateActions({
+  candidate,
+  jobId,
+  applicationId,
+  currentStage,
+}: {
+  candidate: Candidate;
+  jobId?: string;
+  applicationId?: string;
+  currentStage?: Stage;
+}) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -26,9 +36,27 @@ export function CandidateActions({ candidate, jobId }: { candidate: Candidate; j
     setToast(`ลบ "${candidate.name}" แล้ว`);
   }
 
+  async function onMoveStage(stage: Stage) {
+    if (!applicationId || stage === currentStage) return;
+    await updateStage({ applicationId, stage });
+  }
+
   return (
     <>
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        {/* Mobile stage-move select — shown on touch devices where drag is awkward */}
+        {applicationId && currentStage && (
+          <select
+            aria-label="ย้าย stage"
+            value={currentStage}
+            onChange={(e) => onMoveStage(e.target.value as Stage)}
+            className="sm:hidden rounded border border-border bg-bg px-1 py-0.5 text-[11px] text-ink-2"
+          >
+            {STAGES.map((s) => (
+              <option key={s} value={s}>{STAGE_LABELS[s]}</option>
+            ))}
+          </select>
+        )}
         <Link
           href={`/screener?cand=${candidate.id}${jobId ? `&job=${jobId}` : ""}`}
           aria-label="คัดกรอง CV"
