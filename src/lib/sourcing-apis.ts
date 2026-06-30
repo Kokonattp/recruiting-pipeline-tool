@@ -74,18 +74,15 @@ async function runApify(actor: string, input: Record<string, unknown>): Promise<
 }
 
 // ── LinkedIn (Apify) ──────────────────────────────────────────────────────
-// Actor: harvestapi/linkedin-profile-search-by-name
-// Input: searches by job title keyword (used as the "name" search field).
-// This is not a perfect semantic match but is the closest available without cookies.
+// Actor: harvestapi/linkedin-profile-search (M2FMdjRVeF1HPGFcc)
+// Input: searchQuery (fuzzy search) + maxProfiles
 export async function linkedinCandidates(query: string): Promise<RawCandidate[]> {
   if (!apifyEnabled()) return [];
-  const actor = process.env.APIFY_LINKEDIN_ACTOR || "harvestapi/linkedin-profile-search-by-name";
-  // Extract a short title keyword from the query (first 60 chars) — the actor expects
-  // a name/title string, not a full sentence.
-  const keyword = query.slice(0, 60);
+  const actor = process.env.APIFY_LINKEDIN_ACTOR || "harvestapi/linkedin-profile-search";
   const items = (await runApify(actor, {
-    name: keyword,
-    maxPages: 1, // 1 page ≈ 10 profiles; enough for our cap
+    searchQuery: query,
+    maxProfiles: APIFY_MAX,
+    profileScraperMode: "Short", // cheaper — enough for name/headline/url
   })) as Array<Record<string, unknown>>;
 
   const str = (...keys: string[]) => (o: Record<string, unknown>) => {
