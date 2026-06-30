@@ -82,7 +82,7 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-[var(--radius-card)] border border-border bg-bg p-5 shadow-lg">
+      <div className="loga-card w-full max-w-md rounded-[var(--radius-card)] border bg-bg p-5">
         <h2 className="text-base font-semibold text-ink">
           {mode === "add" ? "เพิ่มผู้สมัคร" : "แก้ไขผู้สมัคร"}
         </h2>

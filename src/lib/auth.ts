@@ -35,10 +35,20 @@ export async function createAuthClient() {
   );
 }
 
-/** The current signed-in user, or null (also null when auth env is unset). */
-export async function getCurrentUser() {
+/**
+ * The current signed-in user's identity for chrome (sidebar email), or null.
+ *
+ * Uses getClaims() — reads/verifies the JWT locally without a network round-trip to
+ * Supabase. This runs in the root layout on EVERY navigation, so a network call here
+ * (getUser hits the auth server) made every page change feel slow. The middleware still
+ * does the authoritative getUser() check on each request, so security is unchanged;
+ * this is purely the fast read for display.
+ */
+export async function getCurrentUser(): Promise<{ email?: string } | null> {
   if (!isAuthConfigured()) return null;
   const supabase = await createAuthClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return null;
+  return { email: typeof claims.email === "string" ? claims.email : undefined };
 }
