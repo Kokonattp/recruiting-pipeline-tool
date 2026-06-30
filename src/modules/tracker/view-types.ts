@@ -8,12 +8,15 @@ export interface TrackerFilters {
   search: string;
   /** null = all sources */
   source: Source | null;
-  /** null = all stages (list view only; board shows every stage as a column) */
+  /** null = all stages */
   stage: Stage | null;
+  /** null = all positions */
+  jobId: string | null;
 }
 
 export const EMPTY_FILTERS: TrackerFilters = {
   search: "",
   source: null,
   stage: null,
+  jobId: null,
 };

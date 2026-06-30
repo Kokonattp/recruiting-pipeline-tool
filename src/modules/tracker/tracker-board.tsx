@@ -12,9 +12,11 @@ import {
 } from "@dnd-kit/core";
 import {
   STAGES,
+  STAGE_LABELS,
   SOURCE_LABELS,
   SOURCES,
   type ApplicationWithRelations,
+  type JobDescription,
   type Source,
   type Stage,
 } from "@/lib/types";
@@ -26,6 +28,7 @@ import { EMPTY_FILTERS, type TrackerFilters, type TrackerView } from "./view-typ
 
 interface TrackerBoardProps {
   initial: ApplicationWithRelations[];
+  jobs: Pick<JobDescription, "id" | "title">[];
 }
 
 function emptyByStage(): Record<Stage, ApplicationWithRelations[]> {
@@ -39,7 +42,7 @@ function emptyByStage(): Record<Stage, ApplicationWithRelations[]> {
  * drag-to-restage. Stage moves are local-only for now; Phase B wires `updateStage`
  * (Server Action) so the move persists to Supabase.
  */
-export function TrackerBoard({ initial }: TrackerBoardProps) {
+export function TrackerBoard({ initial, jobs }: TrackerBoardProps) {
   const [apps, setApps] = useState(initial);
   const [view, setView] = useState<TrackerView>("board");
   const [filters, setFilters] = useState<TrackerFilters>(EMPTY_FILTERS);
@@ -53,6 +56,8 @@ export function TrackerBoard({ initial }: TrackerBoardProps) {
     const q = filters.search.trim().toLowerCase();
     return apps.filter((a) => {
       if (filters.source && a.candidate.source !== filters.source) return false;
+      if (filters.stage && a.stage !== filters.stage) return false;
+      if (filters.jobId && a.jobId !== filters.jobId) return false;
       if (q) {
         const hay = `${a.candidate.name} ${a.candidate.headline ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
@@ -98,6 +103,7 @@ export function TrackerBoard({ initial }: TrackerBoardProps) {
         filters={filters}
         onFilters={setFilters}
         total={filtered.length}
+        jobs={jobs}
       />
 
       {filtered.length === 0 && apps.length > 0 ? (
@@ -128,9 +134,11 @@ interface ToolbarProps {
   filters: TrackerFilters;
   onFilters: (f: TrackerFilters) => void;
   total: number;
+  jobs: Pick<JobDescription, "id" | "title">[];
 }
 
-function Toolbar({ view, onView, filters, onFilters, total }: ToolbarProps) {
+function Toolbar({ view, onView, filters, onFilters, total, jobs }: ToolbarProps) {
+  const hasFilter = filters.search || filters.source || filters.stage || filters.jobId;
   return (
     <div className="flex flex-wrap items-center gap-3">
       <input
@@ -138,8 +146,30 @@ function Toolbar({ view, onView, filters, onFilters, total }: ToolbarProps) {
         value={filters.search}
         onChange={(e) => onFilters({ ...filters, search: e.target.value })}
         placeholder="ค้นหาชื่อ / ตำแหน่ง…"
-        className="field h-9 w-56 rounded-[var(--radius-card)] px-3 text-sm text-ink placeholder:text-ink-3"
+        className="field h-9 w-48 rounded-[var(--radius-card)] px-3 text-sm text-ink placeholder:text-ink-3"
       />
+
+      <select
+        value={filters.stage ?? ""}
+        onChange={(e) => onFilters({ ...filters, stage: (e.target.value || null) as Stage | null })}
+        className="field h-9 rounded-[var(--radius-card)] px-2.5 text-sm text-ink-2"
+      >
+        <option value="">ทุก Stage</option>
+        {STAGES.map((s) => (
+          <option key={s} value={s}>{STAGE_LABELS[s]}</option>
+        ))}
+      </select>
+
+      <select
+        value={filters.jobId ?? ""}
+        onChange={(e) => onFilters({ ...filters, jobId: e.target.value || null })}
+        className="field h-9 rounded-[var(--radius-card)] px-2.5 text-sm text-ink-2"
+      >
+        <option value="">ทุกตำแหน่ง</option>
+        {jobs.map((j) => (
+          <option key={j.id} value={j.id}>{j.title}</option>
+        ))}
+      </select>
 
       <select
         value={filters.source ?? ""}
@@ -153,6 +183,16 @@ function Toolbar({ view, onView, filters, onFilters, total }: ToolbarProps) {
           <option key={s} value={s}>{SOURCE_LABELS[s]}</option>
         ))}
       </select>
+
+      {hasFilter && (
+        <button
+          type="button"
+          onClick={() => onFilters({ search: "", source: null, stage: null, jobId: null })}
+          className="text-xs text-ink-3 hover:text-ink underline"
+        >
+          ล้างตัวกรอง
+        </button>
+      )}
 
       <span className="text-sm text-ink-3">{total} ผู้สมัคร</span>
 

@@ -29,7 +29,7 @@ export default async function TrackerPage() {
       {hasData ? (
         <>
           <StatBar applications={applications} />
-          <TrackerBoard initial={applications} />
+          <TrackerBoard initial={applications} jobs={jobs} />
         </>
       ) : (
         <TrackerOnboarding onAddManually={<AddCandidateDialog jobs={jobs} />} />
