@@ -13,7 +13,7 @@
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 /** Default to gpt-image-1 (the current OpenAI image model). Override via env if OpenAI
  *  ships a newer one — no code change needed, just set OPENAI_IMAGE_MODEL. */
-export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
 
 export type PosterSize = "1024x1024" | "1024x1536" | "1536x1024";
 
@@ -34,7 +34,7 @@ export async function generatePosterImage(
       model: IMAGE_MODEL,
       prompt,
       size,
-      quality: "high",
+      quality: "ultra_high",
       n: 1,
     }),
   });

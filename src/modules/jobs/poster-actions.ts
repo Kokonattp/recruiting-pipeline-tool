@@ -27,13 +27,13 @@ function buildPrompt(jd: z.infer<typeof PosterInput>): string {
   const skills = jd.requiredSkills.slice(0, 5).join(", ");
   const titleLine = `${jd.seniority ? jd.seniority + " " : ""}${jd.title}`.toUpperCase();
   return [
-    "A premium, cinematic tech recruitment poster. Vertical A4 portrait format (2:3 ratio).",
-    "Deep charcoal-black (#0e0e0e) background. Warm golden-amber (#f5c842) as the ONLY accent color — glowing rim light, subtle radial gradient, thin gold rule lines.",
-    "TOP SECTION: Large ultra-bold white sans-serif text 'WE'RE HIRING' — this is the dominant headline. Below it, gold-colored job title text: '" + titleLine + "'. No other text blocks anywhere.",
-    "CENTER SECTION: Cinematic photo-real image of a developer at a dark workstation — multiple glowing monitors showing data dashboards and workflow node graphs, shallow depth of field bokeh, dramatic side lighting.",
-    skills ? `Subtle floating UI fragments hinting at: ${skills} — as glowing icon overlays, not text labels.` : "",
-    "BOTTOM SECTION: Minimal — just a thin gold horizontal rule and small placeholder logo area. NO bullet points, NO paragraphs, NO body copy.",
-    "Overall: high-end agency quality, heavy contrast, dramatic lighting, editorial feel. Think Apple × Cyberpunk × Corporate annual report.",
+    "Ultra high-resolution premium tech recruitment poster. Vertical A4 portrait (2:3). Sharp crisp edges, zero blur on UI elements, 8K detail level.",
+    "Background: deep charcoal black (#0e0e0e). Single accent color: warm gold (#f5c842) — used for glow, rim light, thin rule lines, and job title only. No other colors.",
+    "LAYOUT TOP (30%): Stark white ultra-bold condensed sans-serif 'WE'RE HIRING' — massive, dominant. Directly below: gold text '" + titleLine + "' in a refined lighter weight. Nothing else in this zone.",
+    "LAYOUT CENTER (50%): Photorealistic cinematic scene — lone developer silhouetted at a curved ultrawide monitor setup in a dark room. Screens glow with node-graph workflow diagrams and dashboard data. Dramatic golden rim light from the right. Shallow DOF bokeh background. High contrast, film-grade color grading.",
+    skills ? `Holographic icon overlays floating near the screens — abstract symbols for: ${skills}. Icons only, no text labels.` : "",
+    "LAYOUT BOTTOM (20%): Single thin horizontal gold (#f5c842) rule. Small 'H+' logomark in gold bottom-center. Absolute silence — no text, no bullets, no body copy.",
+    "Quality directives: razor-sharp typography, no font artifacts, no lorem ipsum, no extra words. Cinematic depth. Agency-grade composition. Think Cyberpunk × Apple keynote × Wired magazine cover.",
   ]
     .filter(Boolean)
     .join(" ");
