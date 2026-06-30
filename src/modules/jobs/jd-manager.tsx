@@ -23,7 +23,8 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
   const [editing, setEditing] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, GeneratedJD>>({});
   const [busy, setBusy] = useState<string | null>(null);
-  const [posterBusy, setPosterBusy] = useState<string | null>(null);
+  // Set-based so multiple jobs can generate poster simultaneously without clobbering each other
+  const [posterBusy, setPosterBusy] = useState<Set<string>>(new Set());
   const [posters, setPosters] = useState<Record<string, string>>({}); // jobId → base64
   const [error, setError] = useState<string | null>(null);
 
@@ -48,10 +49,10 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
   }
 
   async function onPoster(job: JobDescription) {
-    setPosterBusy(job.id);
+    setPosterBusy((prev) => new Set(prev).add(job.id));
     setError(null);
     const r = await generateJobPoster(toGeneratedJD(job));
-    setPosterBusy(null);
+    setPosterBusy((prev) => { const s = new Set(prev); s.delete(job.id); return s; });
     if (r.ok) setPosters((prev) => ({ ...prev, [job.id]: r.base64 }));
     else setError(r.error);
   }
@@ -151,11 +152,11 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
                     <button
                       type="button"
                       title="สร้างรูปประกาศ (AI)"
-                      disabled={posterBusy === job.id}
+                      disabled={posterBusy.has(job.id)}
                       onClick={() => onPoster(job)}
                       className="rounded p-1.5 text-ink-3 hover:bg-surface-2 hover:text-primary disabled:opacity-40"
                     >
-                      {posterBusy === job.id
+                      {posterBusy.has(job.id)
                         ? <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 15 5-5 4 4 3-3 4 4"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
                       }
@@ -185,7 +186,19 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
                   </div>
                 </div>
 
-                {posters[job.id] && (
+                {posterBusy.has(job.id) && (
+                  <div className="space-y-2 border-t border-border pt-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+                      <p className="text-xs font-medium text-ink-2">AI กำลังสร้างรูปประกาศ… (~20–30 วิ)</p>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+                      <div className="h-full w-1/3 animate-pulse rounded-full bg-primary opacity-70" />
+                    </div>
+                  </div>
+                )}
+
+                {!posterBusy.has(job.id) && posters[job.id] && (
                   <div className="space-y-2 border-t border-border pt-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -206,7 +219,7 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
                         <button
                           type="button"
                           onClick={() => onPoster(job)}
-                          disabled={posterBusy === job.id}
+                          disabled={posterBusy.has(job.id)}
                           className="shrink-0 text-xs font-semibold text-ink-3 hover:text-ink disabled:opacity-40"
                         >
                           สร้างใหม่
