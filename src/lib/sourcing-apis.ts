@@ -74,15 +74,18 @@ async function runApify(actor: string, input: Record<string, unknown>): Promise<
 }
 
 // ── LinkedIn (Apify) ──────────────────────────────────────────────────────
-// Default actor: harvestapi/linkedin-profile-search ("Search query" + "maxItems").
-// Field names vary between actors, so we read several aliases for each value.
+// Actor: harvestapi/linkedin-profile-search-by-name
+// Input: searches by job title keyword (used as the "name" search field).
+// This is not a perfect semantic match but is the closest available without cookies.
 export async function linkedinCandidates(query: string): Promise<RawCandidate[]> {
   if (!apifyEnabled()) return [];
-  const actor = process.env.APIFY_LINKEDIN_ACTOR || "harvestapi/linkedin-profile-search";
+  const actor = process.env.APIFY_LINKEDIN_ACTOR || "harvestapi/linkedin-profile-search-by-name";
+  // Extract a short title keyword from the query (first 60 chars) — the actor expects
+  // a name/title string, not a full sentence.
+  const keyword = query.slice(0, 60);
   const items = (await runApify(actor, {
-    searchQuery: query,
-    maxItems: APIFY_MAX,
-    profileScraperMode: "Short", // cheaper than Full; enough for name/headline/url
+    name: keyword,
+    maxPages: 1, // 1 page ≈ 10 profiles; enough for our cap
   })) as Array<Record<string, unknown>>;
 
   const str = (...keys: string[]) => (o: Record<string, unknown>) => {
@@ -108,13 +111,17 @@ export async function linkedinCandidates(query: string): Promise<RawCandidate[]>
 }
 
 // ── Facebook job groups (Apify) ───────────────────────────────────────────
+// Actor: apify/facebook-groups-scraper
+// Input: group URLs + number of posts. The actor does NOT support keyword search —
+// it returns recent posts from the group. Claude ranks them at the shortlist step.
 export async function facebookCandidates(query: string, groups: string[]): Promise<RawCandidate[]> {
   if (!apifyEnabled() || groups.length === 0) return [];
+  // query is kept in the signature so future actors with keyword support can use it;
+  // current actor ignores it — we fetch recent posts and let Claude triage.
+  void query;
   const items = (await runApify("apify/facebook-groups-scraper", {
     startUrls: groups.map((u) => ({ url: u })),
-    searchQueries: [query],
     maxPosts: APIFY_MAX,
-    maxPostsPerSearch: APIFY_MAX,
   })) as Array<{ text?: string; url?: string; user?: { name?: string }; authorName?: string }>;
   return items.filter((p) => p.text).slice(0, APIFY_MAX).map((p) => {
     const name = p.user?.name ?? p.authorName;
