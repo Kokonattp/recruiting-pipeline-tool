@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Candidate } from "@/lib/types";
 import { EditCandidateDialog } from "./add-candidate-dialog";
 import { deleteCandidate } from "./actions";
+import { Toast } from "@/components/ui/toast";
 
 /**
  * Per-card screen/edit/delete affordance. Lives in its own client component so the card
@@ -15,12 +16,14 @@ import { deleteCandidate } from "./actions";
 export function CandidateActions({ candidate, jobId }: { candidate: Candidate; jobId?: string }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   async function onDelete() {
     if (!window.confirm(`ลบ "${candidate.name}" ออกจากระบบ?`)) return;
     setBusy(true);
     await deleteCandidate(candidate.id);
     setBusy(false);
+    setToast(`ลบ "${candidate.name}" แล้ว`);
   }
 
   return (
@@ -61,8 +64,15 @@ export function CandidateActions({ candidate, jobId }: { candidate: Candidate; j
       </div>
 
       {editing && (
-        <EditCandidateDialog candidate={candidate} onClose={() => setEditing(false)} />
+        <EditCandidateDialog
+          candidate={candidate}
+          onClose={(success) => {
+            setEditing(false);
+            if (success) setToast("บันทึกการแก้ไขแล้ว ✓");
+          }}
+        />
       )}
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </>
   );
 }

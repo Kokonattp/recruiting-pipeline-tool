@@ -100,7 +100,11 @@ export function TrackerBoard({ initial }: TrackerBoardProps) {
         total={filtered.length}
       />
 
-      {view === "board" ? (
+      {filtered.length === 0 && apps.length > 0 ? (
+        <div className="flex items-center justify-center rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface px-6 py-12 text-center">
+          <p className="text-sm text-ink-2">ไม่พบผู้สมัครตามตัวกรองที่เลือก — ลองล้างคำค้นหาหรือเปลี่ยนแหล่งที่มา</p>
+        </div>
+      ) : view === "board" ? (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
           <BoardView byStage={byStage} />
           <DragOverlay>

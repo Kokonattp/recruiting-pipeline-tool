@@ -9,6 +9,7 @@ import {
   type Source,
 } from "@/lib/types";
 import { addCandidate, editCandidate } from "./actions";
+import { Toast } from "@/components/ui/toast";
 
 /**
  * Add a candidate by hand (referral / direct applicant). Uses a centered overlay
@@ -17,6 +18,12 @@ import { addCandidate, editCandidate } from "./actions";
  */
 export function AddCandidateDialog({ jobs }: { jobs: JobDescription[] }) {
   const [open, setOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  function handleClose(success?: boolean) {
+    setOpen(false);
+    if (success) setToast("เพิ่มผู้สมัครแล้ว ✓");
+  }
 
   return (
     <>
@@ -27,7 +34,8 @@ export function AddCandidateDialog({ jobs }: { jobs: JobDescription[] }) {
       >
         + เพิ่มผู้สมัคร
       </button>
-      {open && <CandidateForm mode="add" jobs={jobs} onClose={() => setOpen(false)} />}
+      {open && <CandidateForm mode="add" jobs={jobs} onClose={handleClose} />}
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </>
   );
 }
@@ -42,14 +50,14 @@ export function EditCandidateDialog({
   onClose,
 }: {
   candidate: Candidate;
-  onClose: () => void;
+  onClose: (success?: boolean) => void;
 }) {
   return <CandidateForm mode="edit" candidate={candidate} onClose={onClose} />;
 }
 
 type FormProps =
-  | { mode: "add"; jobs: JobDescription[]; onClose: () => void; candidate?: undefined }
-  | { mode: "edit"; candidate: Candidate; onClose: () => void; jobs?: undefined };
+  | { mode: "add"; jobs: JobDescription[]; onClose: (success?: boolean) => void; candidate?: undefined }
+  | { mode: "edit"; candidate: Candidate; onClose: (success?: boolean) => void; jobs?: undefined };
 
 function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
   const [busy, setBusy] = useState(false);
@@ -76,7 +84,7 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
             source: form.source,
           });
     setBusy(false);
-    if (r.ok) onClose();
+    if (r.ok) onClose(true);
     else setError(r.error);
   }
 
@@ -113,7 +121,7 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
         <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose()}
             className="h-9 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
           >
             ยกเลิก
