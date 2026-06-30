@@ -127,20 +127,16 @@ export function ScreenerFlow({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-ink">CV ผู้สมัคร</label>
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="text-xs font-medium text-primary hover:underline"
-            >
+            <label className="cursor-pointer text-xs font-medium text-primary hover:underline">
               อัปโหลด PDF
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/pdf"
-              hidden
-              onChange={(e) => e.target.files?.[0] && onPdf(e.target.files[0])}
-            />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/pdf"
+                className="sr-only"
+                onChange={(e) => e.target.files?.[0] && onPdf(e.target.files[0])}
+              />
+            </label>
           </div>
 
           {pdfName ? (
