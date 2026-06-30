@@ -61,8 +61,13 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
 
   async function onRunScrape() {
     if (!plan) return;
-    setBusy(true);
+    // Warn if Facebook is selected but no group URL was provided
     const facebookGroups = fbGroups.split("\n").map((s) => s.trim()).filter(Boolean);
+    if (sources.includes("FACEBOOK") && facebookGroups.length === 0) {
+      setError("เลือก Facebook แต่ยังไม่ได้ใส่ URL กลุ่ม — ใส่ URL กลุ่มด้านล่าง หรือยกเลิกการเลือก Facebook ก่อนค้น");
+      return;
+    }
+    setBusy(true);
     const r = await runSourcing({ jdText, plan, facebookGroups });
     const data = unwrap(r);
     setBusy(false);
@@ -156,6 +161,9 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
+// Sources that require Apify (pay-per-event) — only usable when ENABLE_APIFY=true
+const APIFY_SOURCES: Source[] = ["LINKEDIN", "FACEBOOK"];
+
 function JdStep({
   jobs,
   jobId,
@@ -181,9 +189,6 @@ function JdStep({
   busy: boolean;
   onNext: () => void;
 }) {
-  // LinkedIn/Facebook can't be scraped directly (ToS + login), but AI web search CAN
-  // reach their PUBLIC, Google-indexed profiles via site: filters — so they're enabled.
-  const sessionGated: Source[] = [];
   return (
     <div className="space-y-5">
       {jobs.length > 0 && (
@@ -217,36 +222,36 @@ function JdStep({
         <legend className="mb-2 text-sm font-medium text-ink">ค้นหาจากแหล่ง</legend>
         <div className="flex flex-wrap gap-2">
           {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK").map((s) => {
-            const gated = sessionGated.includes(s);
+            const needsApify = APIFY_SOURCES.includes(s);
             const on = sources.includes(s);
             return (
               <button
                 key={s}
                 type="button"
-                disabled={gated}
                 onClick={() => onToggle(s)}
-                title={gated ? "ต้องล็อกอิน session — ยังไม่รองรับในเดโม" : undefined}
+                title={needsApify ? `ต้องเปิด Apify (ตั้ง ENABLE_APIFY=true + APIFY_TOKEN) — เลือกได้แต่คืน 0 ถ้าไม่ได้เปิด` : undefined}
                 className={[
                   "rounded-[var(--radius-card)] border px-3 py-1.5 text-sm font-semibold transition-colors",
-                  gated
-                    ? "cursor-not-allowed border-border text-ink-3 opacity-50"
-                    : on
-                      ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-ink)]"
-                      : "border-border-strong text-ink-2 hover:bg-surface-2",
+                  on
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-ink)]"
+                    : "border-border-strong text-ink-2 hover:bg-surface-2",
                 ].join(" ")}
               >
                 {SOURCE_LABELS[s]}
-                {gated && " 🔒"}
+                {needsApify && <span className="ml-1 text-[10px] font-normal opacity-60">Apify</span>}
               </button>
             );
           })}
         </div>
-        {/* LinkedIn searches by keyword (no group needed). Facebook needs the specific
-            job-groups to look in — HR pastes the group URLs they trust. */}
+        <p className="mt-1.5 text-xs text-ink-3">
+          LinkedIn / Facebook ใช้ Apify — ต้องตั้ง <code className="font-mono">ENABLE_APIFY=true</code> ถึงจะดึงข้อมูลได้ (ไม่เปิด = คืน 0 เงียบ ๆ)
+        </p>
+
+        {/* Facebook needs specific group URLs; LinkedIn searches by keyword automatically */}
         {sources.includes("FACEBOOK") && (
           <div className="mt-3">
             <label className="mb-1.5 block text-xs font-medium text-ink-2">
-              Facebook group ที่จะค้น (วาง URL บรรทัดละ 1 กลุ่ม)
+              Facebook group ที่จะค้น (วาง URL บรรทัดละ 1 กลุ่ม) <span className="text-[var(--danger)]">*จำเป็น</span>
             </label>
             <textarea
               value={fbGroups}
@@ -255,7 +260,7 @@ function JdStep({
               placeholder={"https://www.facebook.com/groups/xxxxx\nhttps://www.facebook.com/groups/yyyyy"}
               className="w-full rounded-[var(--radius-card)] field p-2.5 text-sm text-ink placeholder:text-ink-3 "
             />
-            <p className="mt-1 text-xs text-ink-3">เว้นว่างได้ — ถ้าไม่ใส่ จะข้าม Facebook (LinkedIn ไม่ต้องใส่กลุ่ม)</p>
+            <p className="mt-1 text-xs text-ink-3">ต้องใส่อย่างน้อย 1 URL — ถ้าไม่ใส่จะบล็อกก่อนค้น (LinkedIn ไม่ต้องใส่กลุ่ม)</p>
           </div>
         )}
       </fieldset>
@@ -337,7 +342,7 @@ function PlanStep({
         </button>
       </div>
       <p className="text-xs text-ink-3">
-        คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน (เว็บไซต์งาน + AI web search) แล้วให้ AI จัดอันดับรวมให้
+        คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน (เว็บไซต์งาน + AI web search) แล้วให้ AI จัดอันดับรวมให้ — อาจใช้เวลาสักครู่ (30–90 วินาที)
       </p>
     </div>
   );
