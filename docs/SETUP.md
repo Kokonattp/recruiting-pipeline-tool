@@ -112,15 +112,7 @@
 
 ---
 
-## STEP 6 — OpenAI (poster, optional) 🖼️
-
-ปุ่ม "สร้างรูปประกาศ" ใน JD Generator. ข้ามได้ถ้าไม่ใช้.
-
-- `OPENAI_API_KEY` จาก platform.openai.com (เติมเงิน + อาจต้อง verify org สำหรับ gpt-image-1)
-
----
-
-## STEP 7 — Scraper service บน Cloud Run (optional) 🔍
+## STEP 6 — Scraper service บน Cloud Run (optional) 🔍
 
 > Module 1 ค้นได้ครบบน Vercel แล้ว (Web Search + GitHub + LinkedIn/Facebook ผ่าน Apify).
 > scraper service เหลือหน้าที่เดียว = **scrape job board (JobsDB/JobThai) ด้วย Playwright**

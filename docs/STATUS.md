@@ -2,7 +2,7 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** UX polish ครบทุก module — spinner ทุกปุ่ม async, poster persist ลง DB, JD manager edit/delete/poster, PDF resume intake, beforeunload guard ระหว่างค้นหา, perf tuning (web search + image generation)
+> **ล่าสุด:** UX polish ครบทุก module — spinner ทุกปุ่ม async, JD manager edit/delete, PDF resume intake, beforeunload guard ระหว่างค้นหา, inline confirm แทน browser dialog, perf tuning (web search)
 
 ## ความคืบหน้า ~98%
 
@@ -19,7 +19,6 @@
 - **JD Generator:** keyword → Claude Sonnet สร้าง JD ฉบับเต็ม + spinner + skeleton loading
 - **JD Manager tab:** list/edit/delete JD ที่บันทึกไว้, inline edit form (title/dept/level/skills/fulltext)
 - **PDF Resume Intake:** drag & drop PDF → Claude อ่านแต่ละไฟล์ parallel (Promise.allSettled) → rank → approve
-- **Hiring Poster:** gpt-image-2 medium quality 1024×1024, persist base64 ลง DB (poster_base64 column), overlay skills chips + contact จาก JD จริง บน AI background, download ได้
 - **Source toggle:** LOGA style (border-2 + shadow)
 - **JD textarea:** max-height 280px + resize-y กัน textarea ยาวผลักปุ่มออกนอกหน้าจอ
 - **beforeunload guard:** เตือนก่อนออกจากหน้าขณะค้นหาอยู่
@@ -60,13 +59,12 @@
 | 0002_seed_job.sql | seed JD ตัวอย่าง |
 | 0003_enable_rls.sql | Row Level Security |
 | 0004_screening_confidence.sql | confidence + recommendation columns |
-| 0005_job_poster.sql | poster_base64 column ใน job_descriptions |
+| 0005_job_poster.sql | poster_base64 column (migration ยังอยู่ใน DB แต่ feature ถูกปิดแล้ว) |
 
 ## ⏳ เหลือทำ
 
 1. **รัน migration 0005** ใน Supabase SQL Editor:
    ```sql
-   alter table job_descriptions add column if not exists poster_base64 text;
    ```
 2. **Demo video ~3 นาที** — M1→M3→M2→M4 happy path (ต้องทำเอง)
 

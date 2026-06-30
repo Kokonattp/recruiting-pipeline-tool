@@ -66,7 +66,7 @@ npm run dev                  # http://localhost:3000
 | `SCRAPER_INGEST_SECRET` | shared secret ให้ scraper push ข้อมูลเข้า app |
 | `SCRAPER_SERVICE_URL` | Cloud Run scraper URL (optional, for JobsDB/JobThai) |
 | `ENABLE_APIFY` / `APIFY_TOKEN` | LinkedIn/Facebook via Apify (optional, off by default) |
-| `OPENAI_API_KEY` | Hiring poster generation (Module 1 — poster feature) |
+| `OPENAI_API_KEY` | (ไม่จำเป็น — poster feature ถูกปิดแล้ว) |
 
 ## Scraper service (Module 1)
 

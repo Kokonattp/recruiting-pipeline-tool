@@ -43,7 +43,7 @@
 
 ```
 job_descriptions   id, title, department, seniority, raw_text,
-                   required_skills[], nice_to_have[], poster_base64, created_at
+                   required_skills[], nice_to_have[], created_at
 candidates         id, name, email, phone, source(enum), source_url, headline,
                    raw_profile(jsonb), normalized(jsonb),
                    review_status(enum: pending|approved|rejected), created_at
