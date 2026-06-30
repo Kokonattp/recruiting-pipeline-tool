@@ -92,7 +92,7 @@ export function SchedulerFlow({
         <button
           type="button"
           onClick={connect}
-          className="mx-auto mt-6 inline-flex h-11 items-center gap-2.5 rounded-[var(--radius-card)] bg-primary px-6 text-sm font-semibold text-primary-ink shadow-[var(--shadow-primary)] transition-transform hover:-translate-y-0.5"
+          className="mx-auto mt-6 inline-flex h-11 items-center gap-2.5 rounded-[var(--radius-card)] btn-primary px-6 text-sm font-semibold"
         >
           <span aria-hidden className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-ink text-[11px] font-bold text-primary">G</span>
           เชื่อมต่อ Google Calendar
@@ -176,7 +176,7 @@ export function SchedulerFlow({
           type="button"
           disabled={!canBook}
           onClick={book}
-          className="h-10 w-full rounded-[var(--radius-card)] bg-primary text-sm font-medium text-primary-ink hover:opacity-90 disabled:opacity-40"
+          className="h-10 w-full rounded-[var(--radius-card)] btn-primary text-sm font-semibold"
         >
           {busy ? "กำลังสร้างนัด…" : "สร้างนัด + Google Meet"}
         </button>
@@ -363,7 +363,7 @@ function InterviewRow({ iv, name }: { iv: Interview; name?: string }) {
             type="button"
             disabled={busy || !newAt}
             onClick={saveReschedule}
-            className="h-9 rounded-[var(--radius-card)] bg-primary px-3 text-sm font-medium text-primary-ink hover:opacity-90 disabled:opacity-40"
+            className="h-9 rounded-[var(--radius-card)] btn-primary px-3 text-sm font-semibold"
           >
             {busy ? "กำลังเลื่อน…" : "ยืนยันเวลาใหม่"}
           </button>

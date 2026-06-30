@@ -77,7 +77,7 @@ export function TrackerOnboarding({ onAddManually }: { onAddManually?: React.Rea
           action={
             <Link
               href="/scraper"
-              className="inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-semibold text-primary-ink shadow-[var(--shadow-primary)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
             >
               เริ่มที่ Sourcing
               <ArrowIcon />

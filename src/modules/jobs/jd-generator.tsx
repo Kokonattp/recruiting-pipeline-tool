@@ -82,7 +82,7 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
         type="button"
         disabled={busy || keywords.trim().length < 5}
         onClick={onGenerate}
-        className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
       >
         {busy ? "AI กำลังสร้าง JD…" : "สร้าง Job Description ด้วย AI"}
       </button>
@@ -125,7 +125,7 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
               type="button"
               disabled={saving || !jd.title.trim()}
               onClick={onSave}
-              className="h-9 rounded-[var(--radius-card)] bg-primary px-4 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="h-9 rounded-[var(--radius-card)] btn-primary px-4 text-sm font-semibold"
             >
               {saving ? "กำลังบันทึก…" : "บันทึกตำแหน่งนี้"}
             </button>

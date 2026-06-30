@@ -185,6 +185,28 @@ body {
   .loga-card:hover { transform: none; }
 }
 
+/* Primary button — one consistent Hotel Plus look everywhere (yellow + black ink +
+   LOGA hard shadow that presses in on hover). Use on every primary action so buttons
+   don't drift into different shadow/hover styles across the app. */
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-ink);
+  box-shadow: 3px 3px 0 0 var(--border-strong);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 0 var(--border-strong);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 0 var(--border-strong);
+}
+.btn-primary:disabled { opacity: 0.4; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary, .btn-primary:hover { transform: none; }
+}
+
 /* Form fields in the Hotel Plus / LOGA key: a slightly heavier border than a hairline,
    and on focus the border goes brand-yellow with a soft ring — so inputs feel part of
    the same bold system as the cards, not a separate quiet layer. Apply to inputs,

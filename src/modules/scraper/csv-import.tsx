@@ -88,7 +88,7 @@ export function CsvImport({ jobs }: { jobs: JobDescription[] }) {
         type="button"
         disabled={busy || rows.length === 0 || jdText.trim().length < 20}
         onClick={onRank}
-        className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink hover:opacity-90 disabled:opacity-40"
+        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
       >
         {busy ? "AI กำลังจัดอันดับ…" : "จัดอันดับด้วย AI"}
       </button>

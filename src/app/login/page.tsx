@@ -34,7 +34,7 @@ export default async function LoginPage({
         <form action={signInWithGoogle} className="mt-6">
           <button
             type="submit"
-            className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-[var(--radius-card)] bg-primary text-sm font-semibold text-primary-ink shadow-[var(--shadow-primary)] transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-[var(--radius-card)] btn-primary text-sm font-semibold"
           >
             <span aria-hidden className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-ink text-[11px] font-bold text-primary">G</span>
             เข้าสู่ระบบด้วย Google

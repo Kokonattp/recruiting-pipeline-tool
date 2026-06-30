@@ -23,7 +23,7 @@ export function AddCandidateDialog({ jobs }: { jobs: JobDescription[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="h-9 rounded-[var(--radius-card)] bg-primary px-4 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90"
+        className="h-9 rounded-[var(--radius-card)] btn-primary px-4 text-sm font-semibold"
       >
         + เพิ่มผู้สมัคร
       </button>
@@ -122,7 +122,7 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
             type="button"
             disabled={busy || !form.name.trim() || (mode === "add" && !form.jobId)}
             onClick={submit}
-            className="h-9 rounded-[var(--radius-card)] bg-primary px-4 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="h-9 rounded-[var(--radius-card)] btn-primary px-4 text-sm font-semibold"
           >
             {busy ? "กำลังบันทึก…" : "บันทึก"}
           </button>

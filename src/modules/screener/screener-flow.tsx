@@ -174,7 +174,7 @@ export function ScreenerFlow({
         type="button"
         disabled={!canRun}
         onClick={onScreen}
-        className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
       >
         {busy ? "AI กำลังประเมิน…" : "ประเมินด้วย AI"}
       </button>

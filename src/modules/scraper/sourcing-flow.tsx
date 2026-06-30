@@ -264,7 +264,7 @@ function JdStep({
         type="button"
         disabled={busy || jdText.trim().length < 20 || sources.length === 0}
         onClick={onNext}
-        className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
       >
         {busy ? "AI กำลังสร้างคำค้นหา…" : "สร้างคำค้นหาด้วย AI →"}
       </button>
@@ -324,7 +324,7 @@ function PlanStep({
           type="button"
           disabled={busy}
           onClick={onRun}
-          className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
         >
           {busy ? "กำลังค้นหาทุกแหล่ง & จัดอันดับ…" : "เริ่มค้นหาผู้สมัคร →"}
         </button>
@@ -470,7 +470,7 @@ function ShortlistBody({
             type="button"
             disabled={approving}
             onClick={doApprove}
-            className="h-10 rounded-[var(--radius-card)] bg-primary px-5 text-sm font-medium text-primary-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
           >
             {approving ? "กำลังอนุมัติ…" : "อนุมัติทั้งหมดเข้า Tracker"}
           </button>
