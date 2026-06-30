@@ -12,7 +12,17 @@ import type { RawCandidate } from "@/modules/scraper/types";
  */
 
 const GH_MAX = 10;
-const APIFY_MAX = 10;
+const APIFY_MAX = 5; // small per-run cap — Apify LinkedIn/FB actors are pay-per-event
+
+/**
+ * Apify costs money per run (pay-per-event), so it's OFF unless explicitly enabled.
+ * Set ENABLE_APIFY=true (plus APIFY_TOKEN) to turn on LinkedIn/Facebook sourcing.
+ * This prevents accidental spend during normal use/demo; GitHub + AI web search
+ * (both free) cover sourcing otherwise.
+ */
+function apifyEnabled(): boolean {
+  return process.env.ENABLE_APIFY === "true" && Boolean(process.env.APIFY_TOKEN);
+}
 
 // ── GitHub ────────────────────────────────────────────────────────────────
 export async function githubCandidates(query: string): Promise<RawCandidate[]> {
@@ -67,7 +77,7 @@ async function runApify(actor: string, input: Record<string, unknown>): Promise<
 // Default actor: harvestapi/linkedin-profile-search ("Search query" + "maxItems").
 // Field names vary between actors, so we read several aliases for each value.
 export async function linkedinCandidates(query: string): Promise<RawCandidate[]> {
-  if (!process.env.APIFY_TOKEN) return [];
+  if (!apifyEnabled()) return [];
   const actor = process.env.APIFY_LINKEDIN_ACTOR || "harvestapi/linkedin-profile-search";
   const items = (await runApify(actor, {
     searchQuery: query,
@@ -99,7 +109,7 @@ export async function linkedinCandidates(query: string): Promise<RawCandidate[]>
 
 // ── Facebook job groups (Apify) ───────────────────────────────────────────
 export async function facebookCandidates(query: string, groups: string[]): Promise<RawCandidate[]> {
-  if (!process.env.APIFY_TOKEN || groups.length === 0) return [];
+  if (!apifyEnabled() || groups.length === 0) return [];
   const items = (await runApify("apify/facebook-groups-scraper", {
     startUrls: groups.map((u) => ({ url: u })),
     searchQueries: [query],
