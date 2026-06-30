@@ -13,7 +13,7 @@ type SourceTally = { name: string; found: number; ok: boolean }[];
 import type { QueryPlan, RankResult } from "./types";
 
 /** Default sources to search — the public ones that work without login are pre-checked. */
-const DEFAULT_SOURCES: Source[] = ["WEB", "JOBSDB", "JOBTHAI"];
+const DEFAULT_SOURCES: Source[] = ["WEB", "GITHUB", "JOBSDB", "JOBTHAI"];
 
 type Step = "jd" | "plan" | "shortlist";
 

@@ -11,6 +11,7 @@ const SOURCE_HUE: Record<Source, number> = {
   JOBBKK: 280,
   JOBTHAI: 160,
   FACEBOOK: 250,
+  GITHUB: 280,
   WEB: 70,
   REFERRAL: 150,
   MANUAL: 300,

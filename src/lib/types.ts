@@ -68,6 +68,7 @@ export type Source =
   | "JOBBKK"
   | "JOBTHAI"
   | "FACEBOOK"
+  | "GITHUB"
   | "WEB"
   | "REFERRAL"
   | "MANUAL";
@@ -78,6 +79,7 @@ export const SOURCES: Source[] = [
   "JOBBKK",
   "JOBTHAI",
   "FACEBOOK",
+  "GITHUB",
   "WEB",
   "REFERRAL",
   "MANUAL",
@@ -89,6 +91,7 @@ export const SOURCE_LABELS: Record<Source, string> = {
   JOBBKK: "JobBKK",
   JOBTHAI: "JobThai",
   FACEBOOK: "Facebook",
+  GITHUB: "GitHub",
   WEB: "Web",
   REFERRAL: "Referral",
   MANUAL: "Manual",

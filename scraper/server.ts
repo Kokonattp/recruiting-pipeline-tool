@@ -19,6 +19,7 @@ const VALID_SOURCES: SourceName[] = [
   "JOBBKK",
   "JOBTHAI",
   "FACEBOOK",
+  "GITHUB",
   "WEB",
   "REFERRAL",
   "MANUAL",

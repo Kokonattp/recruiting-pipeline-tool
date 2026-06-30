@@ -7,6 +7,7 @@ import { jobthaiSource } from "./jobthai.js";
 import { linkedinSource } from "./linkedin.js";
 import { facebookSource } from "./facebook.js";
 import { jobbkkSource } from "./jobbkk.js";
+import { githubSource } from "./github.js";
 
 /**
  * A pluggable scraper source.
@@ -32,6 +33,7 @@ export const sources: Record<SourceName, Source | undefined> = {
   LINKEDIN: linkedinSource,
   FACEBOOK: facebookSource,
   JOBBKK: jobbkkSource,
+  GITHUB: githubSource,
   // REFERRAL and MANUAL are human-entered sources — nothing to scrape.
   REFERRAL: undefined,
   MANUAL: undefined,

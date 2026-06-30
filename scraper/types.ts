@@ -13,6 +13,7 @@ export type Source =
   | "JOBBKK"
   | "JOBTHAI"
   | "FACEBOOK"
+  | "GITHUB"
   | "WEB"
   | "REFERRAL"
   | "MANUAL";
