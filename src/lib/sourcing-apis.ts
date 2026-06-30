@@ -84,9 +84,8 @@ export async function linkedinCandidates(query: string): Promise<RawCandidate[]>
 }
 
 // ── Facebook job groups (Apify) ───────────────────────────────────────────
-export async function facebookCandidates(query: string): Promise<RawCandidate[]> {
-  if (!process.env.APIFY_TOKEN) return [];
-  const groups = ["https://www.facebook.com/groups/jobthaidev", "https://www.facebook.com/groups/programmerthai"];
+export async function facebookCandidates(query: string, groups: string[]): Promise<RawCandidate[]> {
+  if (!process.env.APIFY_TOKEN || groups.length === 0) return [];
   const items = (await runApify("apify/facebook-groups-scraper", {
     startUrls: groups.map((u) => ({ url: u })),
     searchQueries: [query],

@@ -71,6 +71,7 @@ export async function generateQueryPlan(input: {
 export async function runSourcing(input: {
   jdText: string;
   plan: QueryPlan;
+  facebookGroups?: string[];
 }): Promise<ActionResult<{ result: RankResult; sources: { name: string; found: number; ok: boolean }[] }>> {
   const sources: { name: string; found: number; ok: boolean }[] = [];
 
@@ -101,7 +102,9 @@ export async function runSourcing(input: {
   // (Apify) when HR picked them and APIFY_TOKEN is set. Each runs in parallel.
   const githubPromise = githubCandidates(firstQuery);
   const linkedinPromise = picked.has("LINKEDIN") ? linkedinCandidates(firstQuery) : Promise.resolve([]);
-  const facebookPromise = picked.has("FACEBOOK") ? facebookCandidates(firstQuery) : Promise.resolve([]);
+  const fbGroups = input.facebookGroups ?? [];
+  const facebookPromise =
+    picked.has("FACEBOOK") && fbGroups.length > 0 ? facebookCandidates(firstQuery, fbGroups) : Promise.resolve([]);
 
   const [scrapeRes, webRes, ghRes, liRes, fbRes] = await Promise.allSettled([
     scrapePromise, webPromise, githubPromise, linkedinPromise, facebookPromise,

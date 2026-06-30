@@ -28,6 +28,7 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   const [jobId, setJobId] = useState<string>(jobs[0]?.id ?? "");
   const [jdText, setJdText] = useState(jobs[0]?.rawText ?? "");
   const [sources, setSources] = useState<Source[]>(DEFAULT_SOURCES);
+  const [fbGroups, setFbGroups] = useState(""); // Facebook group URLs (one per line)
   const [plan, setPlan] = useState<QueryPlan | null>(null);
   const [result, setResult] = useState<RankResult | null>(null);
   const [tally, setTally] = useState<SourceTally>([]);
@@ -61,7 +62,8 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   async function onRunScrape() {
     if (!plan) return;
     setBusy(true);
-    const r = await runSourcing({ jdText, plan });
+    const facebookGroups = fbGroups.split("\n").map((s) => s.trim()).filter(Boolean);
+    const r = await runSourcing({ jdText, plan, facebookGroups });
     const data = unwrap(r);
     setBusy(false);
     if (data) {
@@ -102,6 +104,8 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
           onJd={setJdText}
           sources={sources}
           onToggle={toggleSource}
+          fbGroups={fbGroups}
+          onFbGroups={setFbGroups}
           busy={busy}
           onNext={onGeneratePlan}
         />
@@ -160,6 +164,8 @@ function JdStep({
   onJd,
   sources,
   onToggle,
+  fbGroups,
+  onFbGroups,
   busy,
   onNext,
 }: {
@@ -170,6 +176,8 @@ function JdStep({
   onJd: (v: string) => void;
   sources: Source[];
   onToggle: (s: Source) => void;
+  fbGroups: string;
+  onFbGroups: (v: string) => void;
   busy: boolean;
   onNext: () => void;
 }) {
@@ -233,6 +241,23 @@ function JdStep({
             );
           })}
         </div>
+        {/* LinkedIn searches by keyword (no group needed). Facebook needs the specific
+            job-groups to look in — HR pastes the group URLs they trust. */}
+        {sources.includes("FACEBOOK") && (
+          <div className="mt-3">
+            <label className="mb-1.5 block text-xs font-medium text-ink-2">
+              Facebook group ที่จะค้น (วาง URL บรรทัดละ 1 กลุ่ม)
+            </label>
+            <textarea
+              value={fbGroups}
+              onChange={(e) => onFbGroups(e.target.value)}
+              rows={2}
+              placeholder={"https://www.facebook.com/groups/xxxxx\nhttps://www.facebook.com/groups/yyyyy"}
+              className="w-full rounded-[var(--radius-card)] field p-2.5 text-sm text-ink placeholder:text-ink-3 "
+            />
+            <p className="mt-1 text-xs text-ink-3">เว้นว่างได้ — ถ้าไม่ใส่ จะข้าม Facebook (LinkedIn ไม่ต้องใส่กลุ่ม)</p>
+          </div>
+        )}
       </fieldset>
 
       <button
