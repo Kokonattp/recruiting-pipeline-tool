@@ -76,10 +76,12 @@ npm run dev                  # http://localhost:3000
 
 | แหล่ง | สถานะ | หมายเหตุ |
 |------|------|---------|
-| WEB (Bing) | ✅ live | ทดสอบ: คืน 10 ผลจริง |
-| JobsDB | ✅ live | ทดสอบ: คืน 20 job posting จริง |
-| JobThai | ✅ live | ทดสอบ: คืน 20 ผลจริง |
-| LinkedIn / Facebook / JobBKK | 🔶 stub โดยตั้งใจ | ต้อง auth session + ติด ToS — ระบุชัดใน code, คืน `[]` ไม่ crash |
+| AI Web Search (Claude) | ✅ live | Claude ค้นเว็บ → สูงสุด 10 คน |
+| GitHub | ✅ live | GitHub Search API ฟรี → สูงสุด 10 คน |
+| LinkedIn | ✅ live (Apify) | `harvestapi/linkedin-profile-search` → 5 คน/รอบ (ต้อง `ENABLE_APIFY=true`) |
+| Facebook Groups | ✅ live (Apify) | `apify/facebook-groups-scraper` → 5 โพสต์/รอบ + HR กำหนด group URL ใน UI |
+| JobsDB / JobThai (Playwright) | 🔶 optional | Cloud Run scraper — deploy แยก, ทดสอบยิงจริงแล้ว (20 ผล/แหล่ง) |
+| JobBKK | 🔶 stub | ติด login wall — ระบุชัดใน code, คืน `[]` ไม่ crash |
 
 > ออกแบบให้ source แยกไฟล์ละแหล่ง + per-source try/catch — แหล่งหนึ่งโดน anti-bot block จะคืน `[]` ไม่ล้มทั้ง request. (รายละเอียดการทดสอบ e2e: [`AI_LOG.md`](AI_LOG.md) รอบที่ 6)
 
