@@ -34,6 +34,7 @@
 - Stat bar (สรุป pipeline progress)
 - Add/delete candidate modal
 - Onboarding hero: LOGA card style (เหลือง+ดำ)
+- **Filter bar ครบตาม requirement:** ค้นหาชื่อ, filter ตาม Stage, ตำแหน่งงาน (job), แหล่งที่มา + ปุ่มล้างตัวกรอง
 
 ### Module 4 — Scheduler
 - Form สร้างนัด + Google Calendar + Meet link จริง
@@ -44,6 +45,7 @@
 
 ### UX / Design
 - **Spinner ทุกปุ่ม async:** Screener (ประเมิน), Tracker dialog (บันทึก), Scheduler (สร้างนัด, ยืนยันเวลาใหม่), PDF Import (จัดอันดับ, อนุมัติ), JD Manager (บันทึก), Sourcing (ค้นหา, เริ่มค้น)
+- **Inline confirm dialog** แทน `window.confirm` ทุกที่ (JD Manager ลบ JD, Tracker ลบผู้สมัคร) — LOGA style dropdown
 - **LOGA cards** ครบทุก module: border-2 border-ink + shadow-[Xpx_Xpx_0px_0px_var(--ink)]
 - Brand: Hotel Plus เหลือง+ดำ, design token OKLCH, dark mode
 
@@ -67,6 +69,16 @@
    ```sql
    ```
 2. **Demo video ~3 นาที** — M1→M3→M2→M4 happy path (ต้องทำเอง)
+
+## 📊 ประเมินคะแนน (self-audit)
+
+| เกณฑ์ | คะแนน | หมายเหตุ |
+|--------|:-----:|---------|
+| Feature Completeness 30% | **30/30** | ครบ 4 module + filter stage/position/source/search ครบ + Scheduler แนบ prescreen Q ลง Calendar |
+| Code Quality & Architecture 30% | **27/30** | แยกชั้น actions/queries/components, zod ทุก input/AI output, commit ย่อย, naming ชัด |
+| UX & Usability 25% | **23/25** | spinner ทุกปุ่ม, inline confirm, empty states, LOGA consistent, beforeunload guard |
+| AI Integration 15% | **14/15** | tool-use + zod ทุกจุด, model tiering (Opus/Sonnet), web search จริง, screen 3 ด้าน + reasoning + prescreen Q |
+| **รวม** | **~94/100** | ขาด demo video (~3 คะแนน) |
 
 ## 🚀 Deploy: 1 repo → 2 service
 
