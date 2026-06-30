@@ -260,14 +260,21 @@ function JdStep({
         )}
       </fieldset>
 
-      <button
-        type="button"
-        disabled={busy || jdText.trim().length < 20 || sources.length === 0}
-        onClick={onNext}
-        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
-      >
-        {busy ? "AI กำลังสร้างคำค้นหา…" : "สร้างคำค้นหาด้วย AI →"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={busy || jdText.trim().length < 20 || sources.length === 0}
+          onClick={onNext}
+          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+        >
+          {busy ? "AI กำลังสร้างคำค้นหา…" : "สร้างคำค้นหาด้วย AI →"}
+        </button>
+        {!busy && (jdText.trim().length < 20 || sources.length === 0) && (
+          <span className="text-xs text-ink-3">
+            {jdText.trim().length < 20 ? "← วาง Job Description ก่อน" : "← เลือกแหล่งค้นหาอย่างน้อย 1 แหล่ง"}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
