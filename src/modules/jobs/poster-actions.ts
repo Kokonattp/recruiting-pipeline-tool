@@ -44,7 +44,7 @@ export async function generateJobPoster(jd: GeneratedJD): Promise<PosterResult> 
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   try {
-    const { base64 } = await generatePosterImage(buildPrompt(parsed.data), "1024x1536");
+    const { base64 } = await generatePosterImage(buildPrompt(parsed.data), "1024x1792");
     return { ok: true, base64 };
   } catch (e) {
     if (e instanceof Error && e.message.includes("OPENAI_API_KEY")) {
