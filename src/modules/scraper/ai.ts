@@ -78,10 +78,10 @@ export async function rankCandidates(
       "List concerns/gaps honestly so HR knows what to verify on a call.",
       "Drop entries that are clearly irrelevant or too sparse to assess. Order shortlist best-first.",
     ].join("\n"),
-    user: `Job Description:\n"""${jdText}"""\n\nRaw candidates (JSON):\n${JSON.stringify(raw, null, 2)}`,
+    user: `Job Description:\n"""${jdText}"""\n\nRaw candidates (JSON — max 20 shown):\n${JSON.stringify(raw.slice(0, 20), null, 2)}`,
     toolName: "submit_shortlist",
     toolDescription: "Submit the normalized, ranked shortlist of candidates.",
-    maxTokens: 8000,
+    maxTokens: 4000,
     inputSchema: {
       type: "object",
       additionalProperties: false,
