@@ -75,9 +75,10 @@ export async function POST(req: NextRequest) {
 
       try {
         const picked = new Set(plan.queries.map((q) => q.source));
-        const firstQuery = plan.queries[0]?.query ?? jdText.slice(0, 120);
-        // Use the WEB query from plan if available, otherwise first query
-        const webQuery = plan.queries.find((q) => q.source === "WEB")?.query ?? firstQuery;
+        // Prefer source-specific English queries from the plan; fall back to first query
+        const webQuery = plan.queries.find((q) => q.source === "WEB")?.query
+          ?? plan.queries[0]?.query ?? jdText.slice(0, 120);
+        const githubQuery = plan.queries.find((q) => q.source === "GITHUB")?.query ?? webQuery;
 
         const tasks: Promise<void>[] = [];
 
@@ -95,14 +96,14 @@ export async function POST(req: NextRequest) {
         );
 
         tasks.push(
-          withTimeout(githubCandidates(firstQuery), SOURCE_TIMEOUT_MS)
+          withTimeout(githubCandidates(githubQuery), SOURCE_TIMEOUT_MS)
             .then((r) => handleSource("GitHub", r))
             .catch(() => send({ type: "sourceError", source: "GitHub" }))
         );
 
         if (picked.has("LINKEDIN")) {
           tasks.push(
-            withTimeout(linkedinCandidates(firstQuery), SOURCE_TIMEOUT_MS)
+            withTimeout(linkedinCandidates(webQuery), SOURCE_TIMEOUT_MS)
               .then((r) => handleSource("LinkedIn", r))
               .catch(() => send({ type: "sourceError", source: "LinkedIn" }))
           );
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
 
         if (picked.has("FACEBOOK") && facebookGroups.length > 0) {
           tasks.push(
-            withTimeout(facebookCandidates(firstQuery, facebookGroups), SOURCE_TIMEOUT_MS)
+            withTimeout(facebookCandidates(webQuery, facebookGroups), SOURCE_TIMEOUT_MS)
               .then((r) => handleSource("Facebook", r))
               .catch(() => send({ type: "sourceError", source: "Facebook" }))
           );
