@@ -211,10 +211,11 @@ function JdStep({
         <label className="mb-1.5 block text-sm font-medium text-ink">Job Description</label>
         <textarea
           value={jdText}
-          onChange={(e) => onJd(e.target.value)}
-          rows={8}
+          onChange={(e) => { onJd(e.target.value); e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
+          onFocus={(e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
+          rows={5}
           placeholder="วางรายละเอียดตำแหน่งที่ต้องการหา เช่น Senior AI Workflow & Automation Engineer — ทักษะ, ประสบการณ์, สิ่งที่ต้องมี…"
-          className="w-full rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3 "
+          className="w-full resize-none overflow-hidden rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3"
         />
       </div>
 
@@ -231,10 +232,10 @@ function JdStep({
                 onClick={() => onToggle(s)}
                 title={needsApify ? `ต้องเปิด Apify (ตั้ง ENABLE_APIFY=true + APIFY_TOKEN) — เลือกได้แต่คืน 0 ถ้าไม่ได้เปิด` : undefined}
                 className={[
-                  "rounded-[var(--radius-card)] border px-3 py-1.5 text-sm font-semibold transition-colors",
+                  "rounded-[var(--radius-card)] border-2 px-3 py-1.5 text-sm font-bold transition-all",
                   on
-                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-ink)]"
-                    : "border-border-strong text-ink-2 hover:bg-surface-2",
+                    ? "border-ink bg-[var(--primary)] text-[var(--primary-ink)] shadow-[2px_2px_0px_0px_var(--ink)] active:translate-x-px active:translate-y-px active:shadow-none"
+                    : "border-border-strong bg-bg text-ink-2 hover:border-ink hover:bg-surface-2 shadow-[2px_2px_0px_0px_transparent] hover:shadow-[2px_2px_0px_0px_var(--ink)]",
                 ].join(" ")}
               >
                 {SOURCE_LABELS[s]}
