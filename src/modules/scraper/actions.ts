@@ -195,10 +195,13 @@ function dedupeCandidates(list: RawCandidate[]): RawCandidate[] {
   const seenName = new Set<string>();
   const out: RawCandidate[] = [];
   for (const c of list) {
+    // Normalise URL: strip protocol/www/trailing slash for cross-source URL matching.
     const url = c.sourceUrl
       ? c.sourceUrl.replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "").toLowerCase()
       : "";
-    const nameKey = c.name ? `${c.source}:${c.name.trim().toLowerCase()}` : "";
+    // Name key is cross-source (no source prefix) so the same person found on LinkedIn
+    // and GitHub in the same run is collapsed to whichever came first.
+    const nameKey = c.name ? c.name.trim().toLowerCase() : "";
     if (url && seenUrl.has(url)) continue;
     if (nameKey && seenName.has(nameKey)) continue;
     if (url) seenUrl.add(url);
