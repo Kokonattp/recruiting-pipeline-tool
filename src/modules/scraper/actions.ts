@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { SOURCES, type Source } from "@/lib/types";
 import { planQueries, rankCandidates } from "./ai";
 import { webSearchCandidates } from "@/lib/web-search";
+import { githubCandidates, linkedinCandidates, facebookCandidates } from "@/lib/sourcing-apis";
 import type { QueryPlan, RankResult, RawCandidate } from "./types";
 
 /**
@@ -86,43 +87,41 @@ export async function runSourcing(input: {
     return ((await res.json()) as { candidates: RawCandidate[] }).candidates;
   })();
 
+  const picked = new Set(input.plan.queries.map((q) => q.source));
+  const firstQuery = input.plan.queries[0]?.query ?? input.jdText.slice(0, 120);
+
   const webPromise: Promise<RawCandidate[]> = (async () => {
-    // LinkedIn/Facebook can't be scraped (ToS/login) — but if HR picked them, steer web
-    // search at their PUBLIC indexed profiles via site: filters (legitimate, no login).
-    const picked = new Set(input.plan.queries.map((q) => q.source));
-    // Always include github.com (best real-dev source) so web search yields candidates
-    // even when the Playwright scraper isn't deployed; add LinkedIn/FB public profiles
-    // and job boards if HR picked them.
-    const siteHints: string[] = ["github.com"];
-    if (picked.has("LINKEDIN")) siteHints.push("linkedin.com/in");
-    if (picked.has("FACEBOOK")) siteHints.push("facebook.com");
-    if (picked.has("JOBSDB")) siteHints.push("th.jobsdb.com");
-    if (picked.has("JOBTHAI")) siteHints.push("jobthai.com");
-    const found = await webSearchCandidates(input.jdText, siteHints);
+    const found = await webSearchCandidates(input.jdText, ["github.com"]);
     return found.map((c) => ({
-      source: "WEB" as const,
-      sourceUrl: c.sourceUrl,
-      name: c.name,
-      headline: c.headline,
-      snippet: c.snippet,
+      source: "WEB" as const, sourceUrl: c.sourceUrl, name: c.name, headline: c.headline, snippet: c.snippet,
     }));
   })();
 
-  const [scrapeRes, webRes] = await Promise.allSettled([scrapePromise, webPromise]);
+  // In-Vercel sources (plain APIs, no scraper service): GitHub always, LinkedIn/Facebook
+  // (Apify) when HR picked them and APIFY_TOKEN is set. Each runs in parallel.
+  const githubPromise = githubCandidates(firstQuery);
+  const linkedinPromise = picked.has("LINKEDIN") ? linkedinCandidates(firstQuery) : Promise.resolve([]);
+  const facebookPromise = picked.has("FACEBOOK") ? facebookCandidates(firstQuery) : Promise.resolve([]);
+
+  const [scrapeRes, webRes, ghRes, liRes, fbRes] = await Promise.allSettled([
+    scrapePromise, webPromise, githubPromise, linkedinPromise, facebookPromise,
+  ]);
 
   const raw: RawCandidate[] = [];
-  if (scrapeRes.status === "fulfilled") {
-    raw.push(...scrapeRes.value);
-    sources.push({ name: "Scraper (เว็บไซต์งาน)", found: scrapeRes.value.length, ok: true });
-  } else {
-    sources.push({ name: "Scraper (เว็บไซต์งาน)", found: 0, ok: false });
-  }
-  if (webRes.status === "fulfilled") {
-    raw.push(...webRes.value);
-    sources.push({ name: "AI Web Search", found: webRes.value.length, ok: true });
-  } else {
-    sources.push({ name: "AI Web Search", found: 0, ok: false });
-  }
+  const tally = (name: string, r: PromiseSettledResult<RawCandidate[]>) => {
+    if (r.status === "fulfilled") {
+      raw.push(...r.value);
+      sources.push({ name, found: r.value.length, ok: true });
+    } else {
+      sources.push({ name, found: 0, ok: false });
+    }
+  };
+  tally("AI Web Search", webRes);
+  tally("GitHub", ghRes);
+  if (picked.has("LINKEDIN")) tally("LinkedIn (Apify)", liRes);
+  if (picked.has("FACEBOOK")) tally("Facebook (Apify)", fbRes);
+  // Scraper service is optional (job boards via Playwright); only report it if configured.
+  if (process.env.SCRAPER_SERVICE_URL) tally("Scraper (เว็บไซต์งาน)", scrapeRes);
 
   if (raw.length === 0) {
     const why = sources.every((s) => !s.ok)

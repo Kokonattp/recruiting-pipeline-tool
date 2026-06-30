@@ -17,7 +17,7 @@ import type { Source } from "./index.js";
  */
 
 const DEFAULT_ACTOR = "apimaestro~linkedin-profile-search-scraper-no-cookies";
-const MAX_RESULTS = 25;
+const MAX_RESULTS = 10; // capped low to stay within Apify's free tier
 
 export const linkedinSource: Source = {
   name: "LINKEDIN",

@@ -19,7 +19,7 @@ import type { Source } from "./index.js";
  */
 
 const ACTOR = "apify~facebook-groups-scraper";
-const MAX_POSTS = 25;
+const MAX_POSTS = 10; // capped low to stay within Apify's free tier
 
 // Public Thai job/hiring groups to search. Kept here (not hard-coded per query) so it's
 // easy to extend; the actor searches these groups for the query terms.
