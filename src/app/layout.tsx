@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Prompt, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
+import { NavLoading } from "@/components/nav-loading";
 import { getCurrentUser } from "@/lib/auth";
 
 // Prompt carries both Thai and Latin in one family — per impeccable's product register,
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="min-h-full">
         {user ? (
           <div className="flex min-h-screen">
+            <NavLoading />
             <Sidebar userEmail={user.email} />
             <main className="flex-1 overflow-x-hidden px-8 py-7">{children}</main>
           </div>
