@@ -123,7 +123,8 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
               return [...prev, { name: ev.source ?? "Unknown", found: ev.candidates!.length, ok: true }];
             });
           } else if (ev.type === "sourceError") {
-            setTally((prev) => [...prev, { name: ev.source ?? "Unknown", found: 0, ok: false }]);
+            const detail = (ev as { detail?: string }).detail;
+            setTally((prev) => [...prev, { name: (ev.source ?? "Unknown") + (detail ? ` (${detail})` : ""), found: 0, ok: false }]);
           } else if (ev.type === "ranking") {
             setIsRanking(true);
           } else if (ev.type === "ranked" && ev.shortlist) {

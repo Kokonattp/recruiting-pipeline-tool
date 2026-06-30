@@ -98,14 +98,14 @@ export async function POST(req: NextRequest) {
         tasks.push(
           withTimeout(githubCandidates(githubQuery), SOURCE_TIMEOUT_MS)
             .then((r) => handleSource("GitHub", r))
-            .catch(() => send({ type: "sourceError", source: "GitHub" }))
+            .catch((e) => send({ type: "sourceError", source: "GitHub", detail: String(e?.message ?? e) }))
         );
 
         if (picked.has("LINKEDIN")) {
           tasks.push(
             withTimeout(linkedinCandidates(webQuery), SOURCE_TIMEOUT_MS)
               .then((r) => handleSource("LinkedIn", r))
-              .catch(() => send({ type: "sourceError", source: "LinkedIn" }))
+              .catch((e) => send({ type: "sourceError", source: "LinkedIn", detail: String(e?.message ?? e) }))
           );
         }
 
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
           tasks.push(
             withTimeout(facebookCandidates(webQuery, facebookGroups), SOURCE_TIMEOUT_MS)
               .then((r) => handleSource("Facebook", r))
-              .catch(() => send({ type: "sourceError", source: "Facebook" }))
+              .catch((e) => send({ type: "sourceError", source: "Facebook", detail: String(e?.message ?? e) }))
           );
         }
 
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
                 .then((res) => res.ok ? res.json() : Promise.reject(new Error(`scraper ${res.status}`)))
                 .then((data: { candidates: RawCandidate[] }) => handleSource("Scraper", data.candidates)),
               SOURCE_TIMEOUT_MS
-            ).catch(() => send({ type: "sourceError", source: "Scraper" }))
+            ).catch((e) => send({ type: "sourceError", source: "Scraper", detail: String(e?.message ?? e) }))
           );
         }
 
