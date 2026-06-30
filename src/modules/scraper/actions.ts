@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { z, type ZodType } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { SOURCES, type Source } from "@/lib/types";
 import { planQueries, rankCandidates } from "./ai";
@@ -37,6 +37,68 @@ export async function importCsvAndRank(input: {
   if (input.rows.length === 0) return { ok: false, error: "ไฟล์ CSV ว่างหรืออ่านไม่ได้" };
   try {
     const ranked = await rankCandidates(input.jdText, input.rows);
+    return { ok: true, data: ranked };
+  } catch (e) {
+    return { ok: false, error: aiError(e) };
+  }
+}
+
+/**
+ * PDF resume intake: HR uploads one or more PDF resumes (as base64).
+ * Claude reads each PDF natively, extracts candidate info (name/email/skills),
+ * then we run the same AI ranking as scraping. Realistic for actual hiring flows.
+ */
+export async function importPdfsAndRank(input: {
+  jdText: string;
+  pdfs: { name: string; base64: string }[];
+}): Promise<ActionResult<RankResult>> {
+  if (input.pdfs.length === 0) return { ok: false, error: "ยังไม่ได้เลือกไฟล์ PDF" };
+  const { structured, pdfBlock, textBlock, CONTENT_MODEL } = await import("@/lib/claude");
+  const ExtractSchema = z.object({
+    name: z.string(),
+    headline: z.string().optional(),
+    email: z.string().optional(),
+    snippet: z.string().optional(),
+  });
+  type ExtractedCandidate = z.infer<typeof ExtractSchema>;
+  // Extract each PDF in parallel
+  const extracted = await Promise.allSettled(
+    input.pdfs.map(async (pdf): Promise<RawCandidate> => {
+      const result = await structured<ExtractedCandidate>({
+        system: "Extract candidate information from this resume PDF. Return a concise professional summary as snippet (2-3 sentences). Name is required; others fill from the document.",
+        user: [
+          textBlock(`Resume file: ${pdf.name}\nJob Description:\n"""${input.jdText}"""`),
+          pdfBlock(pdf.base64),
+        ],
+        toolName: "extract_candidate",
+        toolDescription: "Extract candidate info from resume",
+        maxTokens: 1000,
+        model: CONTENT_MODEL,
+        validate: ExtractSchema as ZodType<ExtractedCandidate>,
+        inputSchema: {
+          type: "object" as const,
+          required: ["name"],
+          additionalProperties: false,
+          properties: {
+            name: { type: "string" },
+            headline: { type: "string" },
+            email: { type: "string" },
+            snippet: { type: "string" },
+          },
+        },
+      });
+      return { source: "MANUAL", name: result.name, headline: result.headline, snippet: result.snippet };
+    }),
+  );
+
+  const rows: RawCandidate[] = extracted
+    .filter((r): r is PromiseFulfilledResult<RawCandidate> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  if (rows.length === 0) return { ok: false, error: "อ่าน PDF ไม่สำเร็จ — ลองไฟล์อื่น" };
+
+  try {
+    const ranked = await rankCandidates(input.jdText, rows);
     return { ok: true, data: ranked };
   } catch (e) {
     return { ok: false, error: aiError(e) };
