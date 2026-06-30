@@ -64,20 +64,34 @@ async function runApify(actor: string, input: Record<string, unknown>): Promise<
 }
 
 // ── LinkedIn (Apify) ──────────────────────────────────────────────────────
+// Default actor: harvestapi/linkedin-profile-search ("Search query" + "maxItems").
+// Field names vary between actors, so we read several aliases for each value.
 export async function linkedinCandidates(query: string): Promise<RawCandidate[]> {
   if (!process.env.APIFY_TOKEN) return [];
-  const actor = process.env.APIFY_LINKEDIN_ACTOR || "apimaestro/linkedin-profile-search-scraper-no-cookies";
-  const items = (await runApify(actor, { searchQuery: query, keywords: query, maxItems: APIFY_MAX })) as Array<{
-    fullName?: string; name?: string; headline?: string; jobTitle?: string;
-    profileUrl?: string; url?: string; location?: string; summary?: string;
-  }>;
+  const actor = process.env.APIFY_LINKEDIN_ACTOR || "harvestapi/linkedin-profile-search";
+  const items = (await runApify(actor, {
+    searchQuery: query,
+    maxItems: APIFY_MAX,
+    profileScraperMode: "Short", // cheaper than Full; enough for name/headline/url
+  })) as Array<Record<string, unknown>>;
+
+  const str = (...keys: string[]) => (o: Record<string, unknown>) => {
+    for (const k of keys) if (typeof o[k] === "string" && o[k]) return o[k] as string;
+    return undefined;
+  };
+  const getName = str("fullName", "name", "firstName");
+  const getHeadline = str("headline", "occupation", "jobTitle", "position");
+  const getUrl = str("linkedinUrl", "profileUrl", "url", "publicProfileUrl");
+  const getLoc = str("location", "locationName", "addressWithCountry");
+  const getSummary = str("summary", "about");
+
   return items.slice(0, APIFY_MAX).map((p) => {
-    const c: RawCandidate = { source: "LINKEDIN", headline: p.headline ?? p.jobTitle ?? "LinkedIn profile" };
-    const name = p.fullName ?? p.name;
-    const link = p.profileUrl ?? p.url;
+    const c: RawCandidate = { source: "LINKEDIN", headline: getHeadline(p) ?? "LinkedIn profile" };
+    const name = getName(p);
+    const link = getUrl(p);
     if (name) c.name = name;
     if (link) c.sourceUrl = link;
-    const snippet = [p.location, p.summary].filter(Boolean).join(" · ");
+    const snippet = [getLoc(p), getSummary(p)].filter(Boolean).join(" · ");
     if (snippet) c.snippet = snippet.slice(0, 400);
     return c;
   });
