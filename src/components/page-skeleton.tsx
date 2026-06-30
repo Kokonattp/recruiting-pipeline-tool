@@ -1,32 +1,23 @@
-/**
- * Shared loading skeleton shown while a module's server data is fetching. Next renders
- * this instantly on navigation (via each route's loading.tsx), so switching modules
- * feels immediate instead of freezing on the previous page. Mirrors the page header +
- * a few content blocks so the layout doesn't jump when real content arrives.
- */
 export function PageSkeleton() {
   return (
-    <div className="relative">
-      {/* faint skeleton so the layout doesn't jump */}
-      <div className="animate-pulse space-y-6 opacity-60" aria-hidden>
-        <div className="flex items-start gap-3.5 border-b border-border pb-5">
-          <div className="h-11 w-11 rounded-xl bg-surface-2" />
-          <div className="space-y-2">
-            <div className="h-3 w-16 rounded bg-surface-2" />
-            <div className="h-6 w-56 rounded bg-surface-2" />
-            <div className="h-3 w-72 rounded bg-surface-2" />
-          </div>
+    <div className="grid min-h-[55vh] place-items-center px-4 py-16" aria-live="polite" aria-busy>
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="relative grid h-20 w-20 place-items-center">
+          <span
+            className="absolute inset-0 animate-spin rounded-2xl border-[3px] border-transparent border-r-primary border-t-primary motion-reduce:animate-none"
+            aria-hidden
+          />
+          <span
+            className="grid h-14 w-14 place-items-center rounded-xl bg-primary text-xl font-black text-primary-ink shadow-[3px_3px_0_0_var(--loga-edge)]"
+            aria-hidden
+          >
+            H+
+          </span>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="h-40 rounded-[var(--radius-card)] bg-surface-2" />
-          <div className="h-40 rounded-[var(--radius-card)] bg-surface-2" />
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-ink">กำลังโหลด...</p>
+          <p className="text-xs font-medium text-ink-3">Recruiting Pipeline</p>
         </div>
-      </div>
-
-      {/* clear spinner + label so HR knows it's loading, centered over the content */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 pt-24">
-        <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-border-strong border-t-primary" aria-hidden />
-        <span className="text-sm font-medium text-ink-2">กำลังโหลด…</span>
       </div>
     </div>
   );
