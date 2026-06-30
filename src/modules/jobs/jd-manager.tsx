@@ -199,22 +199,46 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
                 )}
 
                 {!posterBusy.has(job.id) && posters[job.id] && (
-                  <div className="space-y-2 border-t border-border pt-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`data:image/png;base64,${posters[job.id]}`}
-                      alt={`รูปประกาศ: ${job.title}`}
-                      className="mx-auto w-full max-w-xs rounded-[var(--radius-card)] border-2 border-border"
-                    />
+                  <div className="space-y-3 border-t border-border pt-3">
+                    {/* Poster: AI image as background + real text overlay */}
+                    <div
+                      className="relative mx-auto w-full max-w-sm overflow-hidden rounded-[var(--radius-card)] border-2 border-ink shadow-[4px_4px_0px_0px_var(--ink)]"
+                      style={{ aspectRatio: "2/3" }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`data:image/png;base64,${posters[job.id]}`}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      {/* dark gradient overlay for readability */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80" />
+                      {/* bottom content panel */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+                        {job.requiredSkills.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {job.requiredSkills.slice(0, 6).map((s) => (
+                              <span key={s} className="rounded bg-[var(--primary)] px-1.5 py-0.5 text-[10px] font-bold text-ink">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[11px] text-white/80">
+                          📧 สนใจสมัคร ส่ง Resume มาที่ hr@hotelplus.co.th
+                        </p>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-ink-3">⚠️ ข้อความบนรูป AI อาจไม่ถูกต้อง — ใช้เป็นภาพประกอบ</p>
+                      <p className="text-xs text-ink-3">รูป AI + ข้อมูลจริงจาก JD ที่บันทึก</p>
                       <div className="flex gap-2">
                         <a
                           href={`data:image/png;base64,${posters[job.id]}`}
                           download={`hiring-${job.title.replace(/\s+/g, "-")}.png`}
                           className="shrink-0 text-xs font-semibold text-primary hover:underline"
                         >
-                          ดาวน์โหลด
+                          ดาวน์โหลดรูป AI
                         </a>
                         <button
                           type="button"
