@@ -12,7 +12,8 @@ import type { RawCandidate } from "@/modules/scraper/types";
  */
 
 const GH_MAX = 10;
-const APIFY_MAX = 5; // Apify is pay-per-event — keep low
+const APIFY_MAX = 5;       // Apify is pay-per-event — keep low
+const JOBBOARD_MAX = 10;   // job listings per board
 
 /**
  * Apify costs money per run (pay-per-event), so it's OFF unless explicitly enabled.
@@ -105,6 +106,50 @@ export async function linkedinCandidates(query: string): Promise<RawCandidate[]>
     if (snippet) c.snippet = snippet.slice(0, 400);
     return c;
   });
+}
+
+// ── JobsDB Thailand (Apify) ───────────────────────────────────────────────
+// Actor: shahidirfan/Jobsdb-Scraper
+// Input verified from https://apify.com/shahidirfan/Jobsdb-Scraper
+export async function jobsdbCandidates(query: string): Promise<RawCandidate[]> {
+  if (!apifyEnabled()) return [];
+  const items = (await runApify("shahidirfan/Jobsdb-Scraper", {
+    keyword: query,
+    country: "th",
+    results_wanted: JOBBOARD_MAX,
+  })) as Array<Record<string, unknown>>;
+
+  return items.slice(0, JOBBOARD_MAX).map((item) => jobboardToCandidate(item, "JOBSDB"));
+}
+
+// ── JobThai (Apify) ───────────────────────────────────────────────────────
+// Actor: shahidirfan/JobThai-com-Scraper
+// Input verified from https://apify.com/shahidirfan/JobThai-com-Scraper
+export async function jobthaiCandidates(query: string): Promise<RawCandidate[]> {
+  if (!apifyEnabled()) return [];
+  const items = (await runApify("shahidirfan/JobThai-com-Scraper", {
+    keyword: query,
+    resultsWanted: JOBBOARD_MAX,
+  })) as Array<Record<string, unknown>>;
+
+  return items.slice(0, JOBBOARD_MAX).map((item) => jobboardToCandidate(item, "JOBTHAI"));
+}
+
+function jobboardToCandidate(item: Record<string, unknown>, source: "JOBSDB" | "JOBTHAI"): RawCandidate {
+  const str = (...keys: string[]) => {
+    for (const k of keys) if (typeof item[k] === "string" && item[k]) return item[k] as string;
+    return undefined;
+  };
+  const title = str("jobTitle", "title", "position") ?? `${source} listing`;
+  const company = str("company", "companyName", "employer");
+  const location = str("location", "jobLocation", "province");
+  const url = str("url", "jobUrl", "link", "applyUrl");
+  const snippet = [company, location, str("description", "snippet", "teaser")]
+    .filter(Boolean).join(" — ").slice(0, 400);
+  const c: RawCandidate = { source, headline: title, name: company };
+  if (snippet) c.snippet = snippet;
+  if (url) c.sourceUrl = url;
+  return c;
 }
 
 // ── Facebook job groups (Apify) ───────────────────────────────────────────

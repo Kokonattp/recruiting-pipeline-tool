@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { webSearchCandidates } from "@/lib/web-search";
-import { githubCandidates, linkedinCandidates, facebookCandidates } from "@/lib/sourcing-apis";
+import { githubCandidates, linkedinCandidates, facebookCandidates, jobsdbCandidates, jobthaiCandidates } from "@/lib/sourcing-apis";
 import { rankCandidates } from "@/modules/scraper/ai";
 import type { RawCandidate, QueryPlan } from "@/modules/scraper/types";
 
@@ -117,19 +117,20 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        const serviceUrl = process.env.SCRAPER_SERVICE_URL;
-        if (serviceUrl) {
+        // JobsDB + JobThai via Apify actors (no Playwright needed)
+        const jobQuery = plan.queries.find((q) => q.source === "JOBSDB" || q.source === "JOBTHAI")?.query ?? webQuery;
+        if (picked.has("JOBSDB")) {
           tasks.push(
-            withTimeout(
-              fetch(`${serviceUrl}/scrape`, {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ secret: process.env.SCRAPER_INGEST_SECRET, queries: plan.queries }),
-              })
-                .then((res) => res.ok ? res.json() : Promise.reject(new Error(`scraper ${res.status}`)))
-                .then((data: { candidates: RawCandidate[] }) => handleSource("Scraper", data.candidates)),
-              SOURCE_TIMEOUT_MS
-            ).catch((e) => send({ type: "sourceError", source: "Scraper", detail: String(e?.message ?? e) }))
+            withTimeout(jobsdbCandidates(jobQuery), SOURCE_TIMEOUT_MS)
+              .then((r) => handleSource("JobsDB", r))
+              .catch((e) => send({ type: "sourceError", source: "JobsDB", detail: String(e?.message ?? e) }))
+          );
+        }
+        if (picked.has("JOBTHAI")) {
+          tasks.push(
+            withTimeout(jobthaiCandidates(jobQuery), SOURCE_TIMEOUT_MS)
+              .then((r) => handleSource("JobThai", r))
+              .catch((e) => send({ type: "sourceError", source: "JobThai", detail: String(e?.message ?? e) }))
           );
         }
 
