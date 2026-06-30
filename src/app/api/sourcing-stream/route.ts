@@ -31,8 +31,15 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
 
+      const EARLY_EXIT_COUNT = 5;  // rank immediately once we have this many
+      const SOURCE_TIMEOUT_MS = 20_000;
+
       const raw: RawCandidate[] = [];
       const seen = { urls: new Set<string>(), names: new Set<string>() };
+
+      // Resolves as soon as raw.length >= EARLY_EXIT_COUNT
+      let earlyResolve!: () => void;
+      const earlyExit = new Promise<void>((resolve) => { earlyResolve = resolve; });
 
       function dedup(list: RawCandidate[]): RawCandidate[] {
         const out: RawCandidate[] = [];
@@ -53,10 +60,9 @@ export async function POST(req: NextRequest) {
         if (fresh.length > 0) {
           raw.push(...fresh);
           send({ type: "raw", source: sourceName, candidates: fresh });
+          if (raw.length >= EARLY_EXIT_COUNT) earlyResolve();
         }
       }
-
-      const SOURCE_TIMEOUT_MS = 20_000;
 
       function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
         return Promise.race([
@@ -71,8 +77,6 @@ export async function POST(req: NextRequest) {
         const picked = new Set(plan.queries.map((q) => q.source));
         const firstQuery = plan.queries[0]?.query ?? jdText.slice(0, 120);
 
-        // Fan out all sources in parallel; each has its own timeout so a slow
-        // source doesn't block the ranking step.
         const tasks: Promise<void>[] = [];
 
         tasks.push(
@@ -126,8 +130,8 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // Wait for all sources (or their timeouts) before ranking
-        await Promise.all(tasks);
+        // Race: either we collect EARLY_EXIT_COUNT candidates OR all sources finish/timeout
+        await Promise.race([earlyExit, Promise.all(tasks)]);
 
         if (raw.length === 0) {
           send({ type: "error", message: "ไม่พบผู้สมัครจากคำค้นนี้ ลองปรับ JD หรือคำค้น" });
