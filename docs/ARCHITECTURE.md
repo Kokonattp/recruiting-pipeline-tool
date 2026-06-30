@@ -43,7 +43,7 @@
 
 ```
 job_descriptions   id, title, department, seniority, raw_text,
-                   required_skills[], nice_to_have[], created_at
+                   required_skills[], nice_to_have[], poster_base64, created_at
 candidates         id, name, email, phone, source(enum), source_url, headline,
                    raw_profile(jsonb), normalized(jsonb),
                    review_status(enum: pending|approved|rejected), created_at
@@ -134,8 +134,8 @@ design token เป็น CSS variable (OKLCH) สอง set: `:root` (light) + 
 
 | ส่ง | สถานะ | ที่อยู่ |
 |-----|-------|--------|
-| GitHub repo + commit history อ่านได้ | บังคับ | commit ย่อยต่อ feature |
-| README.md (setup + architecture decision) | บังคับ | `/README.md` |
-| Demo video ~3 นาที ครบ 4 module | บังคับ | อัดท้ายงาน |
-| AI Log (.md บันทึกการทำงานกับ AI) | bonus | `/AI_LOG.md` |
-| Live URL (free tier) | bonus | Vercel + Cloud Run + Supabase |
+| GitHub repo + commit history อ่านได้ | ✅ | commit ย่อยต่อ feature |
+| README.md (setup + architecture decision) | ✅ | `/README.md` |
+| Demo video ~3 นาที ครบ 4 module | ⏳ | อัดท้ายงาน |
+| AI Log (.md บันทึกการทำงานกับ AI) | ✅ | `/AI_LOG.md` |
+| Live URL (free tier) | ✅ | Vercel + Supabase |
