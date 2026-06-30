@@ -188,7 +188,27 @@ export function ScreenerFlow({
         )}
       </div>
 
-      {result && (
+      {busy && (
+        <div className="border-t border-border pt-6 space-y-4" aria-busy="true" aria-label="AI กำลังประเมิน">
+          <div className="h-4 w-32 animate-pulse rounded bg-surface-2" />
+          <div className="grid grid-cols-3 gap-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="loga-card rounded-[var(--radius-card)] border bg-surface p-4 space-y-2">
+                <div className="h-3 w-20 animate-pulse rounded bg-surface-2" />
+                <div className="h-8 w-12 animate-pulse rounded bg-surface-2" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-3 animate-pulse rounded bg-surface-2" style={{ width: `${70 + i * 10}%` }} />
+            ))}
+          </div>
+          <p className="text-xs text-ink-3">AI กำลังอ่าน CV และประเมิน 3 มิติ…</p>
+        </div>
+      )}
+
+      {result && !busy && (
         <div className="border-t border-border pt-6">
           <ScoreCard screening={result} recommendation={recommendation ?? "CONSIDER"} jobTitle={jobs.find((j) => j.id === jobId)?.title} />
         </div>
