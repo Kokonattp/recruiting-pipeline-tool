@@ -45,10 +45,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body className="min-h-full">
         {user ? (
-          <div className="flex min-h-screen">
+          <div className="flex min-h-screen flex-col lg:flex-row">
             <NavLoading />
             <Sidebar userEmail={user.email} />
-            <main className="flex-1 overflow-x-hidden px-8 py-7">{children}</main>
+            <main className="flex-1 overflow-x-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-7">{children}</main>
           </div>
         ) : (
           children

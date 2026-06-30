@@ -22,6 +22,9 @@ export function SchedulerFlow({
   const [applicationId, setApplicationId] = useState(candidates[0]?.id ?? "");
   const [datetime, setDatetime] = useState("");
   const [duration, setDuration] = useState(30);
+  // Off by default: the calendar event is still created, but no email invite goes to the
+  // candidate — so testing/demo never disturbs a real person sourced from the web.
+  const [notifyCandidate, setNotifyCandidate] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -58,7 +61,7 @@ export function SchedulerFlow({
       description: cand.screening
         ? `คำถามแนะนำ:\n${cand.screening.prescreenQuestions.map((q) => `• ${q}`).join("\n")}`
         : "",
-      attendeeEmails: cand.candidate.email ? [cand.candidate.email] : [],
+      attendeeEmails: notifyCandidate && cand.candidate.email ? [cand.candidate.email] : [],
     });
     setBusy(false);
     if (r.ok) {
@@ -151,6 +154,19 @@ export function SchedulerFlow({
             {msg.text}
           </div>
         )}
+
+        <label className="flex items-start gap-2 rounded-[var(--radius-card)] border border-border bg-surface px-3 py-2.5 text-sm">
+          <input
+            type="checkbox"
+            checked={notifyCandidate}
+            onChange={(e) => setNotifyCandidate(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+          />
+          <span className="text-ink-2">
+            ส่งอีเมล invite ให้ผู้สมัคร
+            <span className="block text-xs text-ink-3">ปิดไว้ตอนทดสอบ — นัดจะถูกสร้างในปฏิทินคุณ แต่ไม่ส่งเมลรบกวนผู้สมัคร</span>
+          </span>
+        </label>
 
         <button
           type="button"
