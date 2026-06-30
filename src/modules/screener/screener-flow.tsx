@@ -175,8 +175,9 @@ export function ScreenerFlow({
           type="button"
           disabled={!canRun}
           onClick={onScreen}
-          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+          className="inline-flex items-center gap-2 h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
         >
+          {busy && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
           {busy ? "AI กำลังประเมิน…" : "ประเมินด้วย AI"}
         </button>
         {!canRun && !busy && (

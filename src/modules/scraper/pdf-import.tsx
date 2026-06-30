@@ -145,8 +145,9 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
         type="button"
         disabled={busy || files.length === 0 || jdText.trim().length < 20}
         onClick={onRank}
-        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-40"
+        className="inline-flex items-center gap-2 h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-40"
       >
+        {busy && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
         {busy ? "AI กำลังอ่าน Resume…" : `จัดอันดับด้วย AI (${files.length} ไฟล์)`}
       </button>
 
@@ -188,8 +189,9 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
             type="button"
             disabled={approving || selected.size === 0}
             onClick={onApprove}
-            className="h-10 w-full rounded-[var(--radius-card)] btn-primary text-sm font-semibold disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-2 h-10 w-full rounded-[var(--radius-card)] btn-primary text-sm font-semibold disabled:opacity-40"
           >
+            {approving && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
             {approving ? "กำลังเพิ่ม…" : `อนุมัติ ${selected.size} คน → Tracker`}
           </button>
         </div>

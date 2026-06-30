@@ -176,8 +176,9 @@ export function SchedulerFlow({
           type="button"
           disabled={!canBook}
           onClick={book}
-          className="h-10 w-full rounded-[var(--radius-card)] btn-primary text-sm font-semibold"
+          className="inline-flex items-center justify-center gap-2 h-10 w-full rounded-[var(--radius-card)] btn-primary text-sm font-semibold"
         >
+          {busy && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
           {busy ? "กำลังสร้างนัด…" : "สร้างนัด + Google Meet"}
         </button>
       </div>
@@ -363,8 +364,9 @@ function InterviewRow({ iv, name }: { iv: Interview; name?: string }) {
             type="button"
             disabled={busy || !newAt}
             onClick={saveReschedule}
-            className="h-9 rounded-[var(--radius-card)] btn-primary px-3 text-sm font-semibold"
+            className="inline-flex items-center gap-2 h-9 rounded-[var(--radius-card)] btn-primary px-3 text-sm font-semibold"
           >
+            {busy && <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
             {busy ? "กำลังเลื่อน…" : "ยืนยันเวลาใหม่"}
           </button>
           {error && <span className="w-full text-xs text-[var(--danger)]">{error}</span>}

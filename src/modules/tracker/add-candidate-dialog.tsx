@@ -130,8 +130,9 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
             type="button"
             disabled={busy || !form.name.trim() || (mode === "add" && !form.jobId)}
             onClick={submit}
-            className="h-9 rounded-[var(--radius-card)] btn-primary px-4 text-sm font-semibold"
+            className="inline-flex items-center gap-2 h-9 rounded-[var(--radius-card)] btn-primary px-4 text-sm font-semibold"
           >
+            {busy && <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
             {busy ? "กำลังบันทึก…" : "บันทึก"}
           </button>
         </div>
