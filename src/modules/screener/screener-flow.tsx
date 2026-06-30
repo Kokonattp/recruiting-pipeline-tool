@@ -170,14 +170,23 @@ export function ScreenerFlow({
         </div>
       )}
 
-      <button
-        type="button"
-        disabled={!canRun}
-        onClick={onScreen}
-        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
-      >
-        {busy ? "AI กำลังประเมิน…" : "ประเมินด้วย AI"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={!canRun}
+          onClick={onScreen}
+          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+        >
+          {busy ? "AI กำลังประเมิน…" : "ประเมินด้วย AI"}
+        </button>
+        {!canRun && !busy && (
+          <span className="text-xs text-ink-3">
+            {jdText.trim().length < 20
+              ? "← เลือก/วาง Job Description ก่อน"
+              : "← ใส่ CV ผู้สมัคร (วางข้อความ ≥40 ตัวอักษร หรืออัปโหลด PDF) ก่อนถึงจะประเมินได้"}
+          </span>
+        )}
+      </div>
 
       {result && (
         <div className="border-t border-border pt-6">
