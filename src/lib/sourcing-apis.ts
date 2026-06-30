@@ -12,7 +12,7 @@ import type { RawCandidate } from "@/modules/scraper/types";
  */
 
 const GH_MAX = 10;
-const APIFY_MAX = 10; // capped at 10 per source per run
+const APIFY_MAX = 5; // Apify is pay-per-event — keep low
 
 /**
  * Apify costs money per run (pay-per-event), so it's OFF unless explicitly enabled.
