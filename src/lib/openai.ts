@@ -34,7 +34,7 @@ export async function generatePosterImage(
       model: IMAGE_MODEL,
       prompt,
       size,
-      quality: "ultra_high",
+      quality: "high",
       n: 1,
     }),
   });

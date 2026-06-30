@@ -271,8 +271,9 @@ function JdStep({
           type="button"
           disabled={busy || jdText.trim().length < 20 || sources.length === 0}
           onClick={onNext}
-          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-60 inline-flex items-center gap-2"
         >
+          {busy && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
           {busy ? "AI กำลังสร้างคำค้นหา…" : "สร้างคำค้นหาด้วย AI →"}
         </button>
         {!busy && (jdText.trim().length < 20 || sources.length === 0) && (
@@ -337,14 +338,28 @@ function PlanStep({
           type="button"
           disabled={busy}
           onClick={onRun}
-          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+          className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-60 inline-flex items-center gap-2"
         >
+          {busy && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
           {busy ? "กำลังค้นหาทุกแหล่ง & จัดอันดับ…" : "เริ่มค้นหาผู้สมัคร →"}
         </button>
       </div>
-      <p className="text-xs text-ink-3">
-        คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน (เว็บไซต์งาน + AI web search) แล้วให้ AI จัดอันดับรวมให้ — อาจใช้เวลาสักครู่ (30–90 วินาที)
-      </p>
+      {busy ? (
+        <div className="rounded-[var(--radius-card)] border-2 border-border bg-surface p-4 space-y-2 animate-pulse">
+          <p className="text-xs font-semibold text-ink-2">ระบบกำลังทำงาน…</p>
+          {["GitHub", "AI Web Search", "JobsDB", "JobThai"].map((s) => (
+            <div key={s} className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-xs text-ink-3">ค้นหาจาก {s}…</span>
+            </div>
+          ))}
+          <p className="text-xs text-ink-3 pt-1">อาจใช้เวลา 30–90 วินาที — กำลังดึงข้อมูลและให้ AI จัดอันดับ</p>
+        </div>
+      ) : (
+        <p className="text-xs text-ink-3">
+          คลิกเดียว ระบบจะค้นหาทุกแหล่งพร้อมกัน (เว็บไซต์งาน + AI web search) แล้วให้ AI จัดอันดับรวมให้ — อาจใช้เวลาสักครู่ (30–90 วินาที)
+        </p>
+      )}
     </div>
   );
 }

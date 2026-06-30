@@ -82,10 +82,33 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
         type="button"
         disabled={busy || keywords.trim().length < 5}
         onClick={onGenerate}
-        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+        className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-60 inline-flex items-center gap-2"
       >
+        {busy && (
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />
+        )}
         {busy ? "AI กำลังสร้าง JD…" : "สร้าง Job Description ด้วย AI"}
       </button>
+
+      {busy && (
+        <div className="loga-card space-y-3 rounded-[var(--radius-card)] border-2 border-border bg-surface p-4 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-48 rounded bg-surface-2" />
+            <div className="h-4 w-24 rounded bg-surface-2" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-full rounded bg-surface-2" />
+            <div className="h-3 w-4/5 rounded bg-surface-2" />
+            <div className="h-3 w-3/5 rounded bg-surface-2" />
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {[80, 60, 90, 70].map((w) => (
+              <div key={w} className="h-6 rounded-md bg-surface-2" style={{ width: w }} />
+            ))}
+          </div>
+          <p className="text-xs text-ink-3 text-center pt-1">Claude กำลังร่าง JD ให้… (~15–20 วิ)</p>
+        </div>
+      )}
 
       {jd && (
         <div className="loga-card space-y-3 rounded-[var(--radius-card)] border bg-surface p-4">
