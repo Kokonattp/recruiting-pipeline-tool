@@ -15,29 +15,25 @@ export default async function ScreenerPage({
   searchParams: Promise<{ cand?: string; job?: string }>;
 }) {
   const { cand, job } = await searchParams;
-  const jobs = await getJobs();
+  const [jobs, apps] = await Promise.all([getJobs(), getApplications()]);
 
-  // When arriving from a Tracker card ("คัดกรอง"), pre-select that candidate's job and
-  // show whose CV is being screened. HR then just attaches the CV.
-  let candidateName: string | undefined;
-  let applicationId: string | undefined;
-  if (cand) {
-    const apps = await getApplications();
-    const app = apps.find((a) => a.candidate.id === cand);
-    if (app) {
-      candidateName = app.candidate.name;
-      applicationId = app.id;
-    }
-  }
+  // Candidates HR can screen — pick one (or arrive from a Tracker card) to map the score
+  // to that person. Active funnel only (not hired/rejected).
+  const candidates = apps
+    .filter((a) => a.stage !== "HIRED" && a.stage !== "REJECTED")
+    .map((a) => ({ applicationId: a.id, candidateId: a.candidate.id, name: a.candidate.name, jobId: a.job.id }));
+
+  // Arriving from a card ("คัดกรอง"): pre-select that candidate.
+  const fromCard = cand ? candidates.find((c) => c.candidateId === cand) : undefined;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader module={meta.module} title="AI Resume Screener" description={meta.description} icon={<ScreenerIcon />} />
       <ScreenerFlow
         jobs={jobs}
-        initialJobId={job}
-        candidateName={candidateName}
-        applicationId={applicationId}
+        candidates={candidates}
+        initialApplicationId={fromCard?.applicationId}
+        initialJobId={fromCard?.jobId ?? job}
       />
     </div>
   );

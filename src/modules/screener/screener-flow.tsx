@@ -11,20 +11,30 @@ import type { Screening, Recommendation } from "./types";
  * pasted text or an uploaded PDF, runs the AI screening, and reviews the score card.
  * One client container owns form + result state.
  */
+type CandidateOption = { applicationId: string; candidateId: string; name: string; jobId: string };
+
 export function ScreenerFlow({
   jobs,
+  candidates,
+  initialApplicationId,
   initialJobId,
-  candidateName,
-  applicationId,
 }: {
   jobs: JobDescription[];
+  candidates: CandidateOption[];
+  initialApplicationId?: string;
   initialJobId?: string;
-  candidateName?: string;
-  applicationId?: string;
 }) {
   const startJob = jobs.find((j) => j.id === initialJobId) ?? jobs[0];
   const [jobId, setJobId] = useState(startJob?.id ?? "");
   const [jdText, setJdText] = useState(startJob?.rawText ?? "");
+  // Which candidate this screening maps to (empty = not saved to anyone).
+  const [applicationId, setApplicationId] = useState(initialApplicationId ?? "");
+
+  function pickCandidate(appId: string) {
+    setApplicationId(appId);
+    const c = candidates.find((x) => x.applicationId === appId);
+    if (c) pickJob(c.jobId); // align the JD to the candidate's job
+  }
   const [cvText, setCvText] = useState("");
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
@@ -71,10 +81,20 @@ export function ScreenerFlow({
 
   return (
     <div className="space-y-6">
-      {candidateName && (
-        <div className="loga-card flex items-center gap-2 rounded-[var(--radius-card)] border bg-primary-soft px-4 py-2.5 text-sm">
-          <span className="font-semibold text-ink">คัดกรองให้: {candidateName}</span>
-          <span className="text-ink-2">— เลือก JD ให้แล้ว แค่แนบ CV แล้วกดประเมิน (คะแนนจะบันทึกเข้าผู้สมัครนี้)</span>
+      {candidates.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-sm font-medium text-ink">ผู้สมัคร:</label>
+          <select
+            value={applicationId}
+            onChange={(e) => pickCandidate(e.target.value)}
+            className="h-9 min-w-56 rounded-[var(--radius-card)] field px-2.5 text-sm text-ink"
+          >
+            <option value="">— ไม่ผูกกับใคร (โหมดทดสอบ ไม่บันทึก) —</option>
+            {candidates.map((c) => (
+              <option key={c.applicationId} value={c.applicationId}>{c.name}</option>
+            ))}
+          </select>
+          {applicationId && <span className="text-xs text-[var(--success)]">✓ คะแนนจะบันทึกเข้าผู้สมัครนี้</span>}
         </div>
       )}
       <div className="grid gap-4 lg:grid-cols-2">
