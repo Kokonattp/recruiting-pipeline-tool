@@ -72,42 +72,43 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
           <div key={job.id} className={["loga-card rounded-[var(--radius-card)] border-2 p-4 space-y-3", isEditing ? "border-ink" : "border-border"].join(" ")}>
             {isEditing && draft ? (
               <>
-                <div className="grid gap-3 sm:grid-cols-3">
+                {/* ชื่อตำแหน่งกว้างกว่า — col-span-2, แผนก+ระดับแบ่ง 1 */}
+                <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
                   <EditField label="ชื่อตำแหน่ง" value={draft.title} onChange={(v) => patch(job.id, { title: v })} />
                   <EditField label="แผนก" value={draft.department} onChange={(v) => patch(job.id, { department: v })} />
                   <EditField label="ระดับ" value={draft.seniority} onChange={(v) => patch(job.id, { seniority: v })} />
                 </div>
-                <EditArea
-                  label="ทักษะที่ต้องมี (บรรทัดละ 1 ข้อ)"
-                  value={draft.requiredSkills.join("\n")}
-                  rows={3}
-                  onChange={(v) => patch(job.id, { requiredSkills: v.split("\n").map((s) => s.trim()).filter(Boolean) })}
-                />
-                <EditArea
-                  label="จะดีมากถ้ามี (บรรทัดละ 1 ข้อ)"
-                  value={draft.niceToHave.join("\n")}
-                  rows={2}
-                  onChange={(v) => patch(job.id, { niceToHave: v.split("\n").map((s) => s.trim()).filter(Boolean) })}
-                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <EditArea
+                    label="ทักษะที่ต้องมี (บรรทัดละ 1 ข้อ)"
+                    value={draft.requiredSkills.join("\n")}
+                    onChange={(v) => patch(job.id, { requiredSkills: v.split("\n").map((s) => s.trim()).filter(Boolean) })}
+                  />
+                  <EditArea
+                    label="จะดีมากถ้ามี (บรรทัดละ 1 ข้อ)"
+                    value={draft.niceToHave.join("\n")}
+                    onChange={(v) => patch(job.id, { niceToHave: v.split("\n").map((s) => s.trim()).filter(Boolean) })}
+                  />
+                </div>
                 <EditArea
                   label="JD ฉบับเต็ม"
                   value={draft.rawText}
-                  rows={6}
                   onChange={(v) => patch(job.id, { rawText: v })}
+                  tall
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-1">
                   <button
                     type="button"
                     disabled={isBusy || !draft.title.trim()}
                     onClick={() => onSave(job.id)}
-                    className="h-9 rounded-[var(--radius-card)] btn-primary px-4 text-sm font-semibold disabled:opacity-40"
+                    className="h-9 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-40"
                   >
                     {isBusy ? "กำลังบันทึก…" : "บันทึก"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditing(null)}
-                    className="h-9 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 hover:bg-surface-2"
+                    className="h-9 rounded-[var(--radius-card)] border-2 border-border px-4 text-sm font-semibold text-ink-2 hover:border-ink hover:bg-surface-2"
                   >
                     ยกเลิก
                   </button>
@@ -179,15 +180,16 @@ function EditField({ label, value, onChange }: { label: string; value: string; o
   );
 }
 
-function EditArea({ label, value, rows, onChange }: { label: string; value: string; rows: number; onChange: (v: string) => void }) {
+function EditArea({ label, value, onChange, tall }: { label: string; value: string; onChange: (v: string) => void; tall?: boolean }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-ink-2">{label}</span>
       <textarea
         value={value}
-        rows={rows}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-[var(--radius-card)] field p-2.5 text-sm text-ink"
+        rows={tall ? 8 : 4}
+        ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
+        onChange={(e) => { onChange(e.target.value); e.currentTarget.style.height = "auto"; e.currentTarget.style.height = e.currentTarget.scrollHeight + "px"; }}
+        className="w-full resize-none overflow-hidden rounded-[var(--radius-card)] field p-2.5 text-sm text-ink"
       />
     </label>
   );
