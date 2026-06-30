@@ -26,10 +26,11 @@ export function CandidateActions({
 }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   async function onDelete() {
-    if (!window.confirm(`ลบ "${candidate.name}" ออกจากระบบ?`)) return;
+    setConfirmDelete(false);
     setBusy(true);
     await deleteCandidate(candidate.id);
     setBusy(false);
@@ -43,7 +44,7 @@ export function CandidateActions({
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="relative flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
         {/* Mobile stage-move select — shown on touch devices where drag is awkward */}
         {applicationId && currentStage && (
           <select
@@ -81,7 +82,7 @@ export function CandidateActions({
           type="button"
           aria-label="ลบผู้สมัคร"
           disabled={busy}
-          onClick={onDelete}
+          onClick={() => setConfirmDelete(true)}
           className="rounded p-1 text-ink-3 hover:bg-danger-soft hover:text-[var(--danger)] disabled:opacity-40"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -89,6 +90,15 @@ export function CandidateActions({
             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
           </svg>
         </button>
+        {confirmDelete && (
+          <div className="absolute right-0 top-7 z-10 w-52 rounded-[var(--radius-card)] border-2 border-ink bg-bg p-3 shadow-[3px_3px_0px_0px_var(--ink)]">
+            <p className="text-xs font-medium text-ink mb-2">ลบ "{candidate.name}"?<br/><span className="font-normal text-ink-3">ไม่สามารถกู้คืนได้</span></p>
+            <div className="flex gap-2">
+              <button type="button" onClick={onDelete} className="flex-1 h-7 rounded-[var(--radius-card)] bg-[var(--danger)] text-xs font-semibold text-white">ลบ</button>
+              <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 h-7 rounded-[var(--radius-card)] border border-border text-xs font-semibold text-ink-2 hover:bg-surface-2">ยกเลิก</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {editing && (
