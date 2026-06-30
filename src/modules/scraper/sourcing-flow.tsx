@@ -211,11 +211,11 @@ function JdStep({
         <label className="mb-1.5 block text-sm font-medium text-ink">Job Description</label>
         <textarea
           value={jdText}
-          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
-          onChange={(e) => { onJd(e.target.value); e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
-          rows={5}
+          onChange={(e) => onJd(e.target.value)}
+          rows={8}
           placeholder="วางรายละเอียดตำแหน่งที่ต้องการหา เช่น Senior AI Workflow & Automation Engineer — ทักษะ, ประสบการณ์, สิ่งที่ต้องมี…"
-          className="w-full resize-none overflow-hidden rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3"
+          className="w-full resize-y rounded-[var(--radius-card)] field p-3 text-sm text-ink placeholder:text-ink-3"
+          style={{ maxHeight: "280px" }}
         />
       </div>
 
