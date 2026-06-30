@@ -1,5 +1,7 @@
 # Recruiting Pipeline Tool
 
+🔗 **Live demo:** https://recruiting-pipeline-tool.vercel.app/
+
 เครื่องมือช่วยทีม HR จัดการกระบวนการสรรหาบุคลากรครบวงจรใน codebase เดียว — ตั้งแต่ค้นหาผู้สมัคร, คัดกรองด้วย AI, ติดตามสถานะ, ไปจนถึงนัดสัมภาษณ์ — สำหรับการหาผู้สมัครตำแหน่ง **Senior AI Workflow & Automation Engineer**.
 
 > Take-home assignment (Full Stack Developer). รายละเอียดการออกแบบเชิงลึกอยู่ใน [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -101,4 +103,4 @@ AI_LOG.md        บันทึกการทำงานกับ AI
 - **AI ผ่าน tool-use (ไม่ใช่ free text)** — บังคับ structured output, validate ด้วย zod กัน hallucination พังระบบ
 - **Design system (impeccable) + dark mode** — token เดียวทั้งระบบ กัน UI ไม่สม่ำเสมอ / AI-slop
 
-_(เอกสารนี้จะอัปเดตเมื่องานคืบ — รวม live URL ตอน deploy)_
+🔗 **Live:** https://recruiting-pipeline-tool.vercel.app/
