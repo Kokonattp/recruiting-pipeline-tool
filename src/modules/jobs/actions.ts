@@ -32,6 +32,34 @@ export async function generateJobDescription(input: { keywords: string }): Promi
 
 export type SaveResult = { ok: true; jobId: string } | { ok: false; error: string };
 
+export type DeleteJobResult = { ok: true } | { ok: false; error: string };
+
+export async function deleteJobDescription(id: string): Promise<DeleteJobResult> {
+  const { error } = await supabaseAdmin().from("job_descriptions").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/scraper");
+  return { ok: true };
+}
+
+export type UpdateJobResult = { ok: true } | { ok: false; error: string };
+
+export async function updateJobDescription(id: string, jd: GeneratedJD): Promise<UpdateJobResult> {
+  const { error } = await supabaseAdmin()
+    .from("job_descriptions")
+    .update({
+      title: jd.title,
+      department: jd.department,
+      seniority: jd.seniority,
+      raw_text: jd.rawText,
+      required_skills: jd.requiredSkills,
+      nice_to_have: jd.niceToHave,
+    })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/scraper");
+  return { ok: true };
+}
+
 /** Persist a (possibly HR-edited) JD as a job_description row. */
 export async function saveJobDescription(jd: GeneratedJD): Promise<SaveResult> {
   const { data, error } = await supabaseAdmin()
