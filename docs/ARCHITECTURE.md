@@ -111,7 +111,62 @@ recruiting-tool/
 design token เป็น CSS variable (OKLCH) สอง set: `:root` (light) + `[data-theme="dark"]`.
 ทุก component อ้าง token เท่านั้น (ไม่ฮาร์ดโค้ดสี) → สลับ theme = สลับ data-attribute. มี toggle + จำค่าใน localStorage + เคารพ `prefers-color-scheme`.
 
-## 6. AI Integration (เกณฑ์ 15% — prompt ดี, structured, ไม่ generic)
+## 6. Module 1 — Sourcing Flow & Streaming Logic
+
+### ขั้นตอน
+
+```
+HR กรอก JD → สร้าง query plan (Claude) → เริ่มค้นหา → แสดงผล realtime → rank → อนุมัติ
+```
+
+### Streaming Architecture (`/api/sourcing-stream` — SSE)
+
+การค้นหาไม่ใช่ Server Action ธรรมดา แต่เป็น **Route Handler ที่ stream ผ่าน SSE** เพราะต้องส่ง candidate กลับมาทีละคนขณะที่แต่ละ source ยังทำงานอยู่
+
+```
+Client (sourcing-flow.tsx)
+  POST /api/sourcing-stream
+  ├── read SSE stream
+  │     data: { type: "raw", source, candidates[] }   ← แสดงทันที
+  │     data: { type: "ranking" }                      ← spinner
+  │     data: { type: "ranked", shortlist[] }          ← เปลี่ยนหน้า
+  │     data: { type: "error", message }
+  │     data: { type: "done" }
+  └── render ทุก chunk ทันที ไม่รอ response เสร็จ
+
+Server (route.ts)
+  ├── fan-out ทุก source พร้อมกัน (Promise.all)
+  ├── แต่ละ source: withTimeout(sourceCall, 20s)
+  ├── handleSource() → dedup → push raw[] → send "raw" event → check earlyExit
+  └── race: earlyExit vs Promise.all(tasks)
+```
+
+### Early-Exit Logic
+
+```
+ได้ candidate ≥ 5 คน (dedup แล้ว)
+  → earlyResolve() fires
+  → Promise.race ออกทันที
+  → rank ทันที ไม่รอ source ที่เหลือ
+
+ยังไม่ครบ 5 คน
+  → รอ Promise.all(tasks) — ทุก source ตอบหรือ timeout ภายใน 20s
+  → rank ด้วยทุกคนที่หาได้
+
+source ไหน timeout หรือ error
+  → send { type: "sourceError" } แล้วไปต่อ (ไม่ล้ม flow)
+```
+
+### ขอบเขตเวลา (Vercel Hobby — limit 60s)
+
+| ขั้นตอน | เวลาสูงสุด |
+|---------|-----------|
+| Query plan (Claude) | ~5s |
+| Source fan-out | 20s (per-source timeout) |
+| Rank (Claude) | ~10s |
+| รวม worst-case | ~35s ✅ |
+
+## 7. AI Integration (เกณฑ์ 15% — prompt ดี, structured, ไม่ generic)
 
 - **Module 2 (หัวใจ):** Claude ให้คะแนน 3 ด้าน + reasoning ผ่าน **tool-use schema** (บังคับ JSON เป๊ะ) ไม่ใช่ free text. iterate prompt กับ CV จริง บันทึกลง AI_LOG.md
 - **Module 1:** Claude แปลง JD → search query ต่อแหล่ง, และ normalize+rank candidate พร้อมเหตุผล
