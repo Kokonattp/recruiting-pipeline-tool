@@ -85,7 +85,27 @@
 
 ---
 
-## STEP 5 — OpenAI (poster, optional) 🖼️
+## STEP 5 — Apify (LinkedIn + Facebook sources, optional) 🔗
+
+ทำให้ Module 1 ค้น **LinkedIn profiles + Facebook job-groups** ได้จริง. รันใน Vercel
+(ไม่ต้อง deploy scraper) — เป็น API call ไม่ใช่ browser. ข้ามได้ถ้าใช้แค่ GitHub/Web Search.
+
+1. สมัคร [apify.com](https://apify.com) (free tier ~$5 เครดิต/เดือน)
+2. **Settings → Integrations → API tokens** → copy token (`apify_api_...`)
+3. Vercel → Environment Variables:
+   - `APIFY_TOKEN` = token จากข้อ 2
+   - (optional) `APIFY_LINKEDIN_ACTOR` = actor id อื่น ถ้า default ใช้ไม่ได้ (หาใน apify.com/store → "linkedin profile")
+4. **Redeploy**
+
+**วิธีใช้:**
+- **LinkedIn** — ค้นจาก keyword ไม่ต้องระบุกลุ่ม. เลือก LinkedIn ในหน้า Sourcing แล้วค้นได้เลย.
+- **Facebook** — ต้องระบุกลุ่ม. เลือก Facebook → ช่องกรอกจะโผล่ → วาง **group URL** (บรรทัดละ 1) ที่เป็นกลุ่มหางาน เช่น `https://www.facebook.com/groups/<id>`. เว้นว่าง = ข้าม FB.
+
+> ดึงทีละ ~10 คน/ครั้ง (คุม free tier). LinkedIn actor แพงกว่า FB — $5 ฟรีได้ ~100-300 profile.
+
+---
+
+## STEP 6 — OpenAI (poster, optional) 🖼️
 
 ปุ่ม "สร้างรูปประกาศ" ใน JD Generator. ข้ามได้ถ้าไม่ใช้.
 
@@ -93,10 +113,9 @@
 
 ---
 
-## STEP 6 — Scraper service (optional) 🔍
+## STEP 7 — Scraper service (optional, ไม่จำเป็นแล้ว) 🔍
 
-Module 1 ใช้ได้ผ่าน **AI Web Search** (ในตัว, แค่มี `ANTHROPIC_API_KEY`) + **CSV import** โดยไม่ต้อง deploy scraper.
-ถ้าต้องการ scrape เว็บไซต์งานจริงบน live ค่อย deploy:
+Module 1 ค้นได้ครบบน Vercel แล้ว — **AI Web Search + GitHub + LinkedIn/Facebook (Apify)** รันใน Vercel ทั้งหมด (แค่มี `ANTHROPIC_API_KEY` + `APIFY_TOKEN`). scraper service เหลือหน้าที่เดียวคือ **scrape job board (JobsDB/JobThai) ด้วย Playwright** — deploy เฉพาะถ้าต้องการ:
 
 ```bash
 cd scraper
