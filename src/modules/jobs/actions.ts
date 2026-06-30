@@ -32,6 +32,18 @@ export async function generateJobDescription(input: { keywords: string }): Promi
 
 export type SaveResult = { ok: true; jobId: string } | { ok: false; error: string };
 
+export type SavePosterResult = { ok: true } | { ok: false; error: string };
+
+export async function savePoster(id: string, base64: string): Promise<SavePosterResult> {
+  const { error } = await supabaseAdmin()
+    .from("job_descriptions")
+    .update({ poster_base64: base64 })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/scraper");
+  return { ok: true };
+}
+
 export type DeleteJobResult = { ok: true } | { ok: false; error: string };
 
 export async function deleteJobDescription(id: string): Promise<DeleteJobResult> {

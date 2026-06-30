@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { JobDescription } from "@/lib/types";
 import type { GeneratedJD } from "./ai";
-import { deleteJobDescription, updateJobDescription } from "./actions";
+import { deleteJobDescription, updateJobDescription, savePoster } from "./actions";
 import { generateJobPoster } from "./poster-actions";
 
 function toGeneratedJD(job: JobDescription): GeneratedJD {
@@ -25,7 +25,10 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
   const [busy, setBusy] = useState<string | null>(null);
   // Set-based so multiple jobs can generate poster simultaneously without clobbering each other
   const [posterBusy, setPosterBusy] = useState<Set<string>>(new Set());
-  const [posters, setPosters] = useState<Record<string, string>>({}); // jobId → base64
+  // Init from DB — posterBase64 null means no poster yet
+  const [posters, setPosters] = useState<Record<string, string>>(
+    Object.fromEntries(jobs.filter((j) => j.posterBase64).map((j) => [j.id, j.posterBase64!]))
+  );
   const [error, setError] = useState<string | null>(null);
 
   function startEdit(job: JobDescription) {
@@ -52,9 +55,13 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
     setPosterBusy((prev) => new Set(prev).add(job.id));
     setError(null);
     const r = await generateJobPoster(toGeneratedJD(job));
+    if (r.ok) {
+      setPosters((prev) => ({ ...prev, [job.id]: r.base64 }));
+      await savePoster(job.id, r.base64); // persist to DB so it survives refresh
+    } else {
+      setError(r.error);
+    }
     setPosterBusy((prev) => { const s = new Set(prev); s.delete(job.id); return s; });
-    if (r.ok) setPosters((prev) => ({ ...prev, [job.id]: r.base64 }));
-    else setError(r.error);
   }
 
   async function onDelete(job: JobDescription) {
