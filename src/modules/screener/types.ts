@@ -57,9 +57,9 @@ export const SCREENING_TOOL_SCHEMA = {
   additionalProperties: false,
   required: ["skillsFit", "expFit", "cultureFit", "reasoning", "confidence", "strengths", "prescreenQuestions", "summary"],
   properties: {
-    skillsFit: { type: "integer", minimum: 0, maximum: 10, description: "Hard-skill match vs JD" },
-    expFit: { type: "integer", minimum: 0, maximum: 10, description: "Seniority / years / domain match" },
-    cultureFit: { type: "integer", minimum: 0, maximum: 10, description: "Communication & culture signals" },
+    skillsFit: { type: "integer", description: "Hard-skill match vs JD 0-10" },
+    expFit: { type: "integer", description: "Seniority / years / domain match 0-10" },
+    cultureFit: { type: "integer", description: "Communication & culture signals 0-10" },
     reasoning: {
       type: "object",
       additionalProperties: false,
