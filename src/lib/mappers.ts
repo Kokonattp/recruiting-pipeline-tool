@@ -41,7 +41,6 @@ export function toJob(r: Row): JobDescription {
     rawText: r.raw_text as string,
     requiredSkills: (r.required_skills as string[]) ?? [],
     niceToHave: (r.nice_to_have as string[]) ?? [],
-    posterBase64: (r.poster_base64 as string) ?? null,
     createdAt: r.created_at as string,
   };
 }

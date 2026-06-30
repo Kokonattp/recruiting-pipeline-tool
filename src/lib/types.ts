@@ -113,7 +113,6 @@ export interface JobDescription {
   rawText: string;
   requiredSkills: string[];
   niceToHave: string[];
-  posterBase64: string | null;
   createdAt: string;
 }
 

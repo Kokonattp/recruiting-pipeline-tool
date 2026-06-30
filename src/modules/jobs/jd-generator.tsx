@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { generateJobDescription, saveJobDescription } from "./actions";
-import { generateJobPoster } from "./poster-actions";
 import type { GeneratedJD } from "./ai";
 
 /**
@@ -17,19 +16,6 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [poster, setPoster] = useState<string | null>(null);
-  const [posterBusy, setPosterBusy] = useState(false);
-
-  async function onPoster() {
-    if (!jd) return;
-    setPosterBusy(true);
-    setError(null);
-    const r = await generateJobPoster(jd);
-    setPosterBusy(false);
-    if (r.ok) setPoster(`data:image/png;base64,${r.base64}`);
-    else setError(r.error);
-  }
-
   /** Patch one field of the draft JD (used by the edit form). */
   function patch(p: Partial<GeneratedJD>) {
     setJd((prev) => (prev ? { ...prev, ...p } : prev));
@@ -39,7 +25,6 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
     setBusy(true);
     setError(null);
     setEditing(false);
-    setPoster(null);
     const r = await generateJobDescription({ keywords });
     setBusy(false);
     if (r.ok) setJd(r.jd);
@@ -152,41 +137,11 @@ export function JDGenerator({ onSaved }: { onSaved?: (jobId: string) => void }) 
             >
               {saving ? "กำลังบันทึก…" : "บันทึกตำแหน่งนี้"}
             </button>
-            <button
-              type="button"
-              disabled={posterBusy || !jd.title.trim()}
-              onClick={onPoster}
-              className="h-9 rounded-[var(--radius-card)] border border-border px-4 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2 disabled:opacity-40"
-            >
-              {posterBusy ? "AI กำลังสร้างรูป…" : "🖼️ สร้างรูปประกาศ (AI)"}
-            </button>
             {!jd.title.trim() && (
-              <span className="text-xs text-ink-3">← ใส่ชื่อตำแหน่งก่อนบันทึก / สร้างรูป</span>
+              <span className="text-xs text-ink-3">← ใส่ชื่อตำแหน่งก่อนบันทึก</span>
             )}
           </div>
 
-          {poster && (
-            <div className="space-y-2 border-t border-border pt-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={poster}
-                alt={`รูปประกาศรับสมัคร: ${jd.title}`}
-                className="mx-auto w-full max-w-sm rounded-[var(--radius-card)] border border-border"
-              />
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-ink-3">
-                  ⚠️ ข้อความบนรูปที่ AI สร้างอาจไม่ถูกต้อง (โดยเฉพาะภาษาไทย) — ใช้เป็นภาพประกอบ, ยึด JD ที่บันทึกเป็นหลัก
-                </p>
-                <a
-                  href={poster}
-                  download={`hiring-${jd.title.replace(/\s+/g, "-")}.png`}
-                  className="shrink-0 text-xs font-medium text-primary hover:underline"
-                >
-                  ดาวน์โหลด
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
