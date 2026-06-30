@@ -113,16 +113,60 @@
 
 ---
 
-## STEP 7 — Scraper service (optional, ไม่จำเป็นแล้ว) 🔍
+## STEP 7 — Scraper service บน Cloud Run (optional) 🔍
 
-Module 1 ค้นได้ครบบน Vercel แล้ว — **AI Web Search + GitHub + LinkedIn/Facebook (Apify)** รันใน Vercel ทั้งหมด (แค่มี `ANTHROPIC_API_KEY` + `APIFY_TOKEN`). scraper service เหลือหน้าที่เดียวคือ **scrape job board (JobsDB/JobThai) ด้วย Playwright** — deploy เฉพาะถ้าต้องการ:
+> Module 1 ค้นได้ครบบน Vercel แล้ว (Web Search + GitHub + LinkedIn/Facebook ผ่าน Apify).
+> scraper service เหลือหน้าที่เดียว = **scrape job board (JobsDB/JobThai) ด้วย Playwright**
+> ซึ่งรันบน Vercel ไม่ได้ (browser หนัก). deploy บน **Google Cloud Run** เฉพาะถ้าต้องการแหล่งนี้.
 
+### เตรียม (ครั้งเดียว)
+1. ติดตั้ง **gcloud CLI** → [cloud.google.com/sdk/docs/install](https://cloud.google.com/sdk/docs/install)
+2. login + เลือก project (ใช้ project เดียวกับ Calendar API ได้):
+   ```bash
+   gcloud auth login
+   gcloud config set project <PROJECT_ID>
+   ```
+3. เปิด services ที่ต้องใช้:
+   ```bash
+   gcloud services enable run.googleapis.com cloudbuild.googleapis.com
+   ```
+
+### Deploy
+รันจากโฟลเดอร์ `scraper/` (มี Dockerfile อยู่แล้ว):
 ```bash
-cd scraper
-gcloud run deploy recruiting-scraper --source . --region asia-southeast1 \
-  --allow-unauthenticated --set-env-vars SCRAPER_INGEST_SECRET=<secret>
+cd recruiting-tool/scraper
+gcloud run deploy recruiting-scraper \
+  --source . \
+  --region asia-southeast1 \
+  --allow-unauthenticated \
+  --memory 1Gi \
+  --cpu 1 \
+  --timeout 120 \
+  --set-env-vars SCRAPER_INGEST_SECRET=<ตั้ง secret มั่ว ๆ>,APIFY_TOKEN=<ถ้าจะใช้ผ่าน scraper ด้วย>
 ```
-แล้วใส่ `SCRAPER_SERVICE_URL` (Cloud Run URL) + `SCRAPER_INGEST_SECRET` ใน Vercel.
+> 🔴 **memory 1Gi จำเป็น** — Playwright เปิด Chromium จริง ถ้าน้อยกว่านี้ crash.
+> Build รอบแรก ~3-5 นาที (build Docker image). เสร็จแล้ว gcloud โชว์ **Service URL**.
+
+### เชื่อมกับ Vercel
+ใส่ env 2 ตัว (Vercel → Environment Variables) แล้ว **Redeploy**:
+| Key | Value |
+|-----|-------|
+| `SCRAPER_SERVICE_URL` | Service URL จาก Cloud Run (เช่น `https://recruiting-scraper-xxx.run.app`) |
+| `SCRAPER_INGEST_SECRET` | secret เดียวกับตอน deploy (ต้องตรงกันเป๊ะ!) |
+
+### ทดสอบ
+```bash
+curl <SERVICE_URL>/health        # ควรได้ {"ok":true,...}
+```
+แล้วในหน้า Sourcing → เลือก JobsDB/JobThai → ค้นหา → ดู tally bar ว่า "Scraper (เว็บไซต์งาน)" มีผล
+
+### จุดพลาดบ่อย
+| อาการ | สาเหตุ | แก้ |
+|------|--------|-----|
+| `/scrape` คืน 401 | secret ไม่ตรง | เทียบ `SCRAPER_INGEST_SECRET` 2 ที่ให้ตรง |
+| scrape คืน 0 ทุกครั้ง | cold start / selector เปลี่ยน | ลองใหม่ (cold start ~10 วิ), เว็บอาจเปลี่ยน markup |
+| deploy fail OOM | memory น้อย | ใส่ `--memory 1Gi` |
+| ค่า Cloud Run | scale-to-zero — ไม่ใช้ไม่เสีย | free tier ครอบคลุม demo |
 
 ---
 
