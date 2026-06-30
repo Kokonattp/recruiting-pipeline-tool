@@ -57,18 +57,36 @@ const SUBMIT_TOOL = {
   },
 } as const;
 
-export async function webSearchCandidates(jdText: string): Promise<WebSearchCandidate[]> {
+/**
+ * @param siteHints  optional site: filters to steer the search, e.g.
+ *   ["linkedin.com/in", "facebook.com"]. This is how we reach LinkedIn/Facebook
+ *   *legitimately*: we don't scrape their site (ToS/login), we ask web search for their
+ *   PUBLIC, already-Google-indexed profile pages — same as a person typing the query.
+ */
+export async function webSearchCandidates(
+  jdText: string,
+  siteHints: string[] = [],
+): Promise<WebSearchCandidate[]> {
+  const siteLine =
+    siteHints.length > 0
+      ? `Prioritize results from these sites using site: filters — ${siteHints
+          .map((s) => `site:${s}`)
+          .join(", ")}. Also search the open web for portfolios/GitHub.`
+      : "";
+
   const response = await client().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 4096,
     system: [
       "You are a technical sourcer. Use web search to find real, public candidate profiles or",
-      "people who match the job description: portfolios, GitHub, personal sites, public résumés,",
-      "conference/meetup speaker pages, or job-board profiles. Prefer specific people over articles.",
+      "people who match the job description: LinkedIn/Facebook public profiles, portfolios,",
+      "GitHub, personal sites, public résumés, conference/meetup speaker pages, or job-board profiles.",
+      "Prefer specific people over articles.",
+      siteLine,
       "CRITICAL: never invent a person. Only submit candidates that appear in actual search results,",
       "each with the real result URL. If a result is a company/listing rather than a person, still",
       "include it with its URL and a clear headline. Submit 5-12 of the most relevant results.",
-    ].join("\n"),
+    ].filter(Boolean).join("\n"),
     tools: [
       { type: "web_search_20250305", name: "web_search", max_uses: 4 } as Anthropic.Messages.ToolUnion,
       SUBMIT_TOOL as unknown as Anthropic.Messages.Tool,

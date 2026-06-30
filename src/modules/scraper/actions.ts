@@ -87,7 +87,13 @@ export async function runSourcing(input: {
   })();
 
   const webPromise: Promise<RawCandidate[]> = (async () => {
-    const found = await webSearchCandidates(input.jdText);
+    // LinkedIn/Facebook can't be scraped (ToS/login) — but if HR picked them, steer web
+    // search at their PUBLIC indexed profiles via site: filters (legitimate, no login).
+    const picked = new Set(input.plan.queries.map((q) => q.source));
+    const siteHints: string[] = [];
+    if (picked.has("LINKEDIN")) siteHints.push("linkedin.com/in");
+    if (picked.has("FACEBOOK")) siteHints.push("facebook.com");
+    const found = await webSearchCandidates(input.jdText, siteHints);
     return found.map((c) => ({
       source: "WEB" as const,
       sourceUrl: c.sourceUrl,

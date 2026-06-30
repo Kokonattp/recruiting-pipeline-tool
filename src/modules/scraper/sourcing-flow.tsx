@@ -173,8 +173,9 @@ function JdStep({
   busy: boolean;
   onNext: () => void;
 }) {
-  // sources that require a logged-in session aren't wired yet — disable to avoid confusion
-  const sessionGated: Source[] = ["LINKEDIN", "FACEBOOK"];
+  // LinkedIn/Facebook can't be scraped directly (ToS + login), but AI web search CAN
+  // reach their PUBLIC, Google-indexed profiles via site: filters — so they're enabled.
+  const sessionGated: Source[] = [];
   return (
     <div className="space-y-5">
       {jobs.length > 0 && (
@@ -207,7 +208,7 @@ function JdStep({
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">ค้นหาจากแหล่ง</legend>
         <div className="flex flex-wrap gap-2">
-          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL").map((s) => {
+          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK").map((s) => {
             const gated = sessionGated.includes(s);
             const on = sources.includes(s);
             return (
