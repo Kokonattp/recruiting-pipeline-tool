@@ -51,11 +51,14 @@ export async function runScreening(input: {
     let cv: { text: string } | { pdfBase64: string };
     if (parsed.data.cvPdfBase64) {
       const extracted = await extractPdfText(parsed.data.cvPdfBase64);
+      console.log(`[screener] PDF extraction: ${extracted ? `${extracted.length} chars → text mode` : "no text → native PDF mode"}`);
       cv = extracted ? { text: extracted } : { pdfBase64: parsed.data.cvPdfBase64 };
     } else {
       cv = { text: parsed.data.cvText ?? "" };
     }
+    const t0 = Date.now();
     const { screening, recommendation, model } = await screenResume(parsed.data.jdText, cv);
+    console.log(`[screener] screenResume took ${Date.now() - t0}ms (model: ${model})`);
 
     // Persist only when tied to an application (upsert: one screening per application).
     if (parsed.data.applicationId) {
