@@ -13,16 +13,26 @@
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 /** Default to gpt-image-1 (the current OpenAI image model). Override via env if OpenAI
  *  ships a newer one — no code change needed, just set OPENAI_IMAGE_MODEL. */
-export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
+export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "dall-e-3";
 
-export type PosterSize = "1024x1024" | "1024x1536" | "1536x1024";
+export type PosterSize = "1024x1024" | "1792x1024" | "1024x1792";
 
 export async function generatePosterImage(
   prompt: string,
-  size: PosterSize = "1024x1024",
+  size: PosterSize = "1024x1792",
 ): Promise<{ base64: string }> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("Missing OPENAI_API_KEY. Add it to .env.local.");
+
+  const body: Record<string, unknown> = {
+    model: IMAGE_MODEL,
+    prompt,
+    size,
+    n: 1,
+    response_format: "b64_json",
+  };
+  // dall-e-3 doesn't support quality param the same way; gpt-image-* does
+  if (IMAGE_MODEL.startsWith("gpt-image")) body.quality = "medium";
 
   const res = await fetch(OPENAI_IMAGE_URL, {
     method: "POST",
@@ -30,13 +40,7 @@ export async function generatePosterImage(
       "Content-Type": "application/json",
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model: IMAGE_MODEL,
-      prompt,
-      size,
-      quality: "medium",
-      n: 1,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
