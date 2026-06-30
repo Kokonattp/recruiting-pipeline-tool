@@ -56,34 +56,47 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      const SOURCE_TIMEOUT_MS = 20_000;
+
+      function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+        return Promise.race([
+          p,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), ms)
+          ),
+        ]);
+      }
+
       try {
         const picked = new Set(plan.queries.map((q) => q.source));
         const firstQuery = plan.queries[0]?.query ?? jdText.slice(0, 120);
 
-        // Fan out all sources in parallel, stream each as it resolves
+        // Fan out all sources in parallel; each has its own timeout so a slow
+        // source doesn't block the ranking step.
         const tasks: Promise<void>[] = [];
 
         tasks.push(
-          webSearchCandidates(jdText, ["github.com"]).then((found) =>
-            handleSource("AI Web Search", found.map((c) => ({
-              source: "WEB" as const,
-              sourceUrl: c.sourceUrl,
-              name: c.name,
-              headline: c.headline,
-              snippet: c.snippet,
-            })))
-          ).catch(() => send({ type: "sourceError", source: "AI Web Search" }))
+          withTimeout(webSearchCandidates(jdText, ["github.com"]), SOURCE_TIMEOUT_MS)
+            .then((found) =>
+              handleSource("AI Web Search", found.map((c) => ({
+                source: "WEB" as const,
+                sourceUrl: c.sourceUrl,
+                name: c.name,
+                headline: c.headline,
+                snippet: c.snippet,
+              })))
+            ).catch(() => send({ type: "sourceError", source: "AI Web Search" }))
         );
 
         tasks.push(
-          githubCandidates(firstQuery)
+          withTimeout(githubCandidates(firstQuery), SOURCE_TIMEOUT_MS)
             .then((r) => handleSource("GitHub", r))
             .catch(() => send({ type: "sourceError", source: "GitHub" }))
         );
 
         if (picked.has("LINKEDIN")) {
           tasks.push(
-            linkedinCandidates(firstQuery)
+            withTimeout(linkedinCandidates(firstQuery), SOURCE_TIMEOUT_MS)
               .then((r) => handleSource("LinkedIn", r))
               .catch(() => send({ type: "sourceError", source: "LinkedIn" }))
           );
@@ -91,7 +104,7 @@ export async function POST(req: NextRequest) {
 
         if (picked.has("FACEBOOK") && facebookGroups.length > 0) {
           tasks.push(
-            facebookCandidates(firstQuery, facebookGroups)
+            withTimeout(facebookCandidates(firstQuery, facebookGroups), SOURCE_TIMEOUT_MS)
               .then((r) => handleSource("Facebook", r))
               .catch(() => send({ type: "sourceError", source: "Facebook" }))
           );
@@ -100,18 +113,20 @@ export async function POST(req: NextRequest) {
         const serviceUrl = process.env.SCRAPER_SERVICE_URL;
         if (serviceUrl) {
           tasks.push(
-            fetch(`${serviceUrl}/scrape`, {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ secret: process.env.SCRAPER_INGEST_SECRET, queries: plan.queries }),
-            })
-              .then((res) => res.ok ? res.json() : Promise.reject(new Error(`scraper ${res.status}`)))
-              .then((data: { candidates: RawCandidate[] }) => handleSource("Scraper", data.candidates))
-              .catch(() => send({ type: "sourceError", source: "Scraper" }))
+            withTimeout(
+              fetch(`${serviceUrl}/scrape`, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ secret: process.env.SCRAPER_INGEST_SECRET, queries: plan.queries }),
+              })
+                .then((res) => res.ok ? res.json() : Promise.reject(new Error(`scraper ${res.status}`)))
+                .then((data: { candidates: RawCandidate[] }) => handleSource("Scraper", data.candidates)),
+              SOURCE_TIMEOUT_MS
+            ).catch(() => send({ type: "sourceError", source: "Scraper" }))
           );
         }
 
-        // Race: stream raw as sources land
+        // Wait for all sources (or their timeouts) before ranking
         await Promise.all(tasks);
 
         if (raw.length === 0) {
