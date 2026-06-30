@@ -1,6 +1,6 @@
 # สถานะโปรเจกต์ (handoff — สำหรับเริ่มแชทใหม่)
 
-> อัปเดตล่าสุด: 29 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
+> อัปเดตล่าสุด: 30 มิ.ย. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
 > **ล่าสุด:** Google login gate (Supabase Auth), Sourcing fan-out (scraper + Claude web search พร้อมกัน), **rebrand Hotel Plus (เหลือง+ดำ, LOGA cards, H+ logo/favicon)**, dark mode, RLS, **model tiering** (Opus เฉพาะ rank+websearch / Sonnet 4.6 = JD+query+screen), poster (gpt-image, env-configurable). **เหลือ: ตั้งค่า key/Supabase/Google ตาม `docs/SETUP.md` → redeploy → e2e → demo.**
 
@@ -8,7 +8,7 @@
 
 โค้ดครบ + feature เพิ่มตามภาพ idea เสร็จหมด build ผ่าน — **เหลือแค่เสียบ ENV + deploy + demo video** (ทำเองไม่ได้ ต้องการ key/การกระทำผู้ใช้).
 
-**เพิ่มล่าสุด:** JD Generator (keyword→JD), Search Query Pack, Tracker stat bar + add-candidate modal + LOGA accents (ขอบการ์ดหนา/pill คะแนน/count สี), Screener PDF upload + JD picker, Scheduler Google OAuth + Calendar/Meet จริง + stage sync + cancel, CLAUDE.md/TODO.md.
+**เพิ่มล่าสุด:** JD Generator (keyword→JD), Search Query Pack, Tracker stat bar + add-candidate modal + LOGA accents (ขอบการ์ดหนา/pill คะแนน/count สี), Screener PDF upload + JD picker, Scheduler Google OAuth + Calendar/Meet จริง + stage sync + reschedule/cancel, CLAUDE.md/TODO.md.
 
 ## ✅ เสร็จแล้ว
 
@@ -19,14 +19,14 @@
 - **Module 4 Scheduler:** form สร้างนัด + agenda + conflict detection (pure fn) + google.ts (Calendar+Meet helper). `src/modules/scheduler/`.
 - **Scraper service** (agent ทำ): `scraper/` — Playwright+Express+Docker. WEB(Bing)/JobsDB/JobThai ใช้ได้, LinkedIn/FB/JobBKK stub. **ทดสอบ e2e 29 มิ.ย.: ยิง /scrape จริง → WEB 10 + JobsDB 20 + JobThai 20 = 50 candidate, LinkedIn skip โดยไม่ crash, auth/health ผ่าน** (ดู AI_LOG รอบที่ 6).
 - **Wiring DB:** `src/lib/mappers.ts` + queries จริง (tracker/scheduler/jobs) + CRUD actions + `/api/scrape-ingest` + seed JD. graceful empty เมื่อไม่มี env.
-- **AI:** ทุกจุดใช้ `lib/claude.structured()` (tool-use + zod), รองรับ PDF (`pdfBlock`). model `claude-opus-4-8`.
+- **AI:** ทุกจุดใช้ `lib/claude.structured()` (tool-use + zod), รองรับ PDF (`pdfBlock`). model tiering: Opus 4.8 เฉพาะ rank/web-search, Sonnet 4.6 สำหรับ JD/query/screening.
 
-## ⏳ เหลือทำ (พรุ่งนี้)
+## ⏳ เหลือทำ (ต้องใช้บัญชี/ENV)
 
 > ✅ **ทำเสร็จแล้ว (29 มิ.ย.)** — UI ที่เคยค้างทำครบ: add-candidate modal, JD picker (Sourcing+Screener), approve→Tracker, Screener PDF upload. scraper ทดสอบยิงจริงแล้ว.
 
 1. **เสียบ ENV** (ดูด้านล่าง) → ลง `.env.local` ← *ต้องการ key จากผู้ใช้*
-2. **รัน SQL ใน Supabase:** `supabase/migrations/0001_init.sql` + `0002_seed_job.sql` + สร้าง bucket `resumes` ← *ต้องการ project จากผู้ใช้*
+2. **รัน SQL ใน Supabase:** `supabase/migrations/0001_init.sql` + `0002_seed_job.sql` + `0003_enable_rls.sql` + `0004_screening_confidence.sql` + สร้าง bucket `resumes` ← *ต้องการ project จากผู้ใช้*
 3. **ทดสอบ data จริงไหล** ครบ pipeline (e2e) หลังเสียบ ENV: JD→scrape→rank→approve→tracker→screener→scheduler
 4. **Deploy:** Vercel + Cloud Run (`gcloud run deploy` ใน scraper/) + ใส่ env บน Vercel
 5. **Demo video ~3 นาที** + อัปเดต README ใส่ live URL

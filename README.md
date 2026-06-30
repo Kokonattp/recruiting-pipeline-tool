@@ -45,7 +45,7 @@ SUPABASE (Postgres + Storage + Auth)
 ```bash
 npm install
 cp .env.example .env.local   # เติมค่า (ดู docs/SETUP.md)
-# รัน SQL ใน supabase/migrations/ (0001, 0002, 0003) + สร้าง bucket resumes
+# รัน SQL ใน supabase/migrations/ (0001, 0002, 0003, 0004) + สร้าง bucket resumes
 npm run dev                  # http://localhost:3000
 ```
 
@@ -60,7 +60,11 @@ npm run dev                  # http://localhost:3000
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service key (server actions) |
 | `ANTHROPIC_API_KEY` | Claude API (Module 1, 2) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (Module 4) |
+| `GOOGLE_REDIRECT_URI` | Calendar OAuth callback URL |
 | `SCRAPER_INGEST_SECRET` | shared secret ให้ scraper push ข้อมูลเข้า app |
+| `SCRAPER_SERVICE_URL` | Cloud Run scraper URL (optional, for JobsDB/JobThai) |
+| `ENABLE_APIFY` / `APIFY_TOKEN` | LinkedIn/Facebook via Apify (optional, off by default) |
+| `OPENAI_API_KEY` | Hiring poster generation (optional) |
 
 ## Scraper service (Module 1)
 
