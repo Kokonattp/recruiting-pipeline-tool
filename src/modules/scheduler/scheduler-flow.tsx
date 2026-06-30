@@ -202,7 +202,7 @@ function UpcomingPanel({ interviews, nameByApp }: { interviews: Interview[]; nam
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-medium text-ink">นัดสัมภาษณ์ ({upcoming.length})</h3>
-        <div className="inline-flex rounded-[var(--radius-card)] border-2 border-border-strong p-0.5">
+        <div className="inline-flex gap-1 rounded-[var(--radius-card)] border-2 border-ink bg-bg p-0.5 shadow-[2px_2px_0px_0px_var(--ink)]">
           {(["calendar", "list"] as const).map((v) => (
             <button
               key={v}
@@ -210,8 +210,8 @@ function UpcomingPanel({ interviews, nameByApp }: { interviews: Interview[]; nam
               onClick={() => setView(v)}
               aria-pressed={view === v}
               className={[
-                "rounded-[calc(var(--radius-card)-3px)] px-3 py-1 text-xs font-semibold transition-colors",
-                view === v ? "bg-primary text-primary-ink" : "text-ink-2 hover:text-ink",
+                "rounded-[calc(var(--radius-card)-4px)] px-3 py-1 text-xs font-bold transition-colors",
+                view === v ? "bg-[var(--primary)] text-ink shadow-[1px_1px_0px_0px_var(--ink)]" : "text-ink-2 hover:text-ink",
               ].join(" ")}
             >
               {v === "calendar" ? "ปฏิทิน" : "รายการ"}
@@ -221,7 +221,7 @@ function UpcomingPanel({ interviews, nameByApp }: { interviews: Interview[]; nam
       </div>
 
       {upcoming.length === 0 ? (
-        <div className="rounded-[var(--radius-card)] border border-dashed border-border bg-surface-2/60 px-4 py-10 text-center text-sm text-ink-3">
+        <div className="loga-card rounded-[var(--radius-card)] border-2 border-dashed border-border bg-surface px-4 py-10 text-center text-sm text-ink-3 hover:border-ink transition-colors">
           ยังไม่มีนัดสัมภาษณ์ — สร้างนัดแรกจากฟอร์มด้านซ้าย
         </div>
       ) : view === "calendar" ? (
