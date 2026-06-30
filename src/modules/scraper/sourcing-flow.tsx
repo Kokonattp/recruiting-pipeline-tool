@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SOURCE_LABELS, SOURCES, type JobDescription, type Source } from "@/lib/types";
 import {
   approveCandidates,
@@ -34,6 +34,14 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   const [tally, setTally] = useState<SourceTally>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Warn before navigating away while a search is in progress
+  useEffect(() => {
+    if (!busy) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [busy]);
 
   function toggleSource(s: Source) {
     setSources((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
