@@ -19,7 +19,7 @@ export type PosterSize = "1024x1024" | "1024x1536" | "1536x1024";
 
 export async function generatePosterImage(
   prompt: string,
-  size: PosterSize = "1024x1536",
+  size: PosterSize = "1024x1024",
 ): Promise<{ base64: string }> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("Missing OPENAI_API_KEY. Add it to .env.local.");
