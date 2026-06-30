@@ -11,9 +11,20 @@ import type { Screening, Recommendation } from "./types";
  * pasted text or an uploaded PDF, runs the AI screening, and reviews the score card.
  * One client container owns form + result state.
  */
-export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
-  const [jobId, setJobId] = useState(jobs[0]?.id ?? "");
-  const [jdText, setJdText] = useState(jobs[0]?.rawText ?? "");
+export function ScreenerFlow({
+  jobs,
+  initialJobId,
+  candidateName,
+  applicationId,
+}: {
+  jobs: JobDescription[];
+  initialJobId?: string;
+  candidateName?: string;
+  applicationId?: string;
+}) {
+  const startJob = jobs.find((j) => j.id === initialJobId) ?? jobs[0];
+  const [jobId, setJobId] = useState(startJob?.id ?? "");
+  const [jdText, setJdText] = useState(startJob?.rawText ?? "");
   const [cvText, setCvText] = useState("");
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
@@ -45,6 +56,7 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
       jdText,
       cvText: pdfBase64 ? undefined : cvText,
       cvPdfBase64: pdfBase64 ?? undefined,
+      applicationId, // when set (from a Tracker card), the score saves to that candidate
     });
     setBusy(false);
     if (r.ok) {
@@ -59,6 +71,12 @@ export function ScreenerFlow({ jobs }: { jobs: JobDescription[] }) {
 
   return (
     <div className="space-y-6">
+      {candidateName && (
+        <div className="loga-card flex items-center gap-2 rounded-[var(--radius-card)] border bg-primary-soft px-4 py-2.5 text-sm">
+          <span className="font-semibold text-ink">คัดกรองให้: {candidateName}</span>
+          <span className="text-ink-2">— เลือก JD ให้แล้ว แค่แนบ CV แล้วกดประเมิน (คะแนนจะบันทึกเข้าผู้สมัครนี้)</span>
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* JD side */}
         <div className="space-y-2">

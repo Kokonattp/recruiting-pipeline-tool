@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Candidate } from "@/lib/types";
 import { EditCandidateDialog } from "./add-candidate-dialog";
 import { deleteCandidate } from "./actions";
 
 /**
- * Per-card edit/delete affordance. Lives in its own client component so the card
- * itself can stay a server component. Edit opens the shared candidate dialog in
- * edit mode; delete confirms before removing (cascades to applications).
+ * Per-card screen/edit/delete affordance. Lives in its own client component so the card
+ * itself can stay a server component. "คัดกรอง" jumps to Module 2 pre-selecting this
+ * candidate + their job, so HR only has to attach the CV. Edit opens the shared dialog;
+ * delete confirms before removing (cascades to applications).
  */
-export function CandidateActions({ candidate }: { candidate: Candidate }) {
+export function CandidateActions({ candidate, jobId }: { candidate: Candidate; jobId?: string }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -24,6 +26,16 @@ export function CandidateActions({ candidate }: { candidate: Candidate }) {
   return (
     <>
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <Link
+          href={`/screener?cand=${candidate.id}${jobId ? `&job=${jobId}` : ""}`}
+          aria-label="คัดกรอง CV"
+          title="คัดกรอง CV ด้วย AI"
+          className="rounded p-1 text-ink-3 hover:bg-surface-2 hover:text-primary"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M9 13l2 2 4-4" />
+          </svg>
+        </Link>
         <button
           type="button"
           aria-label="แก้ไขผู้สมัคร"

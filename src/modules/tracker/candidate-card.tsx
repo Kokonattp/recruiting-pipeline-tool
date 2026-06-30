@@ -35,7 +35,7 @@ export function CandidateCard({ application, dragHandle }: CandidateCardProps) {
             <p className="truncate text-xs text-ink-2">{candidate.headline}</p>
           )}
         </div>
-        <CandidateActions candidate={candidate} />
+        <CandidateActions candidate={candidate} jobId={application.job.id} />
         {dragHandle}
       </div>
 
