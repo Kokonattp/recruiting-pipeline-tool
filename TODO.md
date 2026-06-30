@@ -26,28 +26,10 @@
 - [ ] STEP 3: เปิด Google provider ใน Supabase (login gate)
 - [ ] STEP 4: Google Calendar OAuth (Module 4)
 - [ ] ทดสอบ e2e ครบ pipeline + เติม AI_LOG (Module 2 prompt iteration จริง)
-- [ ] Deploy scraper service บน Cloud Run (optional, JobsDB/JobThai) — ดู `docs/SETUP.md` STEP 7
-- [ ] เปิด Apify สำหรับ LinkedIn/Facebook (optional, pay-per-event) — ดู `docs/SETUP.md` STEP 5
+- [ ] Deploy scraper service บน Cloud Run (optional, JobsDB/JobThai)
+- [ ] เปิด Apify สำหรับ LinkedIn/Facebook (optional, pay-per-event)
 - [ ] อัปเดต README ใส่ live URL หลัง deploy
 - [ ] Demo video ~3 นาที (ใส่ candidate จริงให้ board เต็มก่อนอัด)
-
-## วิธีทำ optional ที่ยังเลือกไว้
-
-### Deploy scraper service (Cloud Run)
-1. ติดตั้ง/ล็อกอิน `gcloud` และเลือก Google Cloud project เดียวกับ Calendar API
-2. เปิด service: `run.googleapis.com` และ `cloudbuild.googleapis.com`
-3. รัน deploy จากโฟลเดอร์ `scraper/` พร้อม `SCRAPER_INGEST_SECRET`
-4. เอา Cloud Run Service URL ไปใส่ Vercel env `SCRAPER_SERVICE_URL`
-5. ใส่ `SCRAPER_INGEST_SECRET` ค่าเดียวกันใน Vercel แล้ว redeploy
-6. เช็ก `/health` และทดสอบ Sourcing โดยเลือก JobsDB/JobThai
-
-### เปิด Apify (LinkedIn/Facebook)
-1. สมัคร/เข้า Apify แล้ว copy Personal API token
-2. ใส่ Vercel env `ENABLE_APIFY=true` และ `APIFY_TOKEN=<token>`
-3. ถ้าต้อง override LinkedIn actor ให้ใส่ `APIFY_LINKEDIN_ACTOR`
-4. Redeploy Vercel
-5. ตอนใช้ LinkedIn เลือก source LinkedIn ใน Sourcing; ตอนใช้ Facebook ต้องใส่ group URL
-6. หลัง demo แนะนำปิด `ENABLE_APIFY` เพราะ actor คิดเงินต่อครั้ง
 
 ## ตัดแล้ว (ไม่ทำ — เหตุผล)
 - JobBKK scrape — ต้อง employer login, stub ไว้พร้อมคำอธิบาย

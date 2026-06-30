@@ -3,7 +3,7 @@
 สิ่งที่ผู้ใช้ต้องทำเอง (ต้องการ key/บัญชี) เพื่อให้ระบบทำงานครบ. โค้ดพร้อมแล้วทั้งหมด.
 
 > ลำดับความสำคัญ: **STEP 1-2 (Supabase + Anthropic)** ทำให้ 3/4 module ใช้ได้ →
-> **STEP 3 (Auth)** login → **STEP 4 (Calendar)** Module 4 → **STEP 5/6/7** optional.
+> **STEP 3 (Auth)** login → **STEP 4 (Calendar)** Module 4 → **STEP 5/6** optional.
 
 ---
 
@@ -109,7 +109,6 @@
 - **Facebook** — ต้องระบุกลุ่ม. เลือก Facebook → ช่องกรอกจะโผล่ → วาง **group URL** (บรรทัดละ 1).
 
 > ดึงทีละ **5 คน/ครั้ง** (คุม cost). actor LinkedIn เป็น pay-per-event — เปิดเฉพาะตอน demo แล้วปิด ($5 ฟรี ~40-50 ครั้ง).
-> หลัง demo แนะนำปิดโดยลบ/เปลี่ยน `ENABLE_APIFY` ไม่ให้เป็น `true` แล้ว redeploy เพื่อกันค่าใช้จ่าย.
 
 ---
 
@@ -150,11 +149,10 @@ gcloud run deploy recruiting-scraper \
   --memory 1Gi \
   --cpu 1 \
   --timeout 120 \
-  --set-env-vars SCRAPER_INGEST_SECRET=<ตั้ง secret มั่ว ๆ>
+  --set-env-vars SCRAPER_INGEST_SECRET=<ตั้ง secret มั่ว ๆ>,APIFY_TOKEN=<ถ้าจะใช้ผ่าน scraper ด้วย>
 ```
 > 🔴 **memory 1Gi จำเป็น** — Playwright เปิด Chromium จริง ถ้าน้อยกว่านี้ crash.
 > Build รอบแรก ~3-5 นาที (build Docker image). เสร็จแล้ว gcloud โชว์ **Service URL**.
-> ถ้าต้องการให้ scraper service เรียก LinkedIn/Facebook ผ่าน Apify ด้วย ค่อยเพิ่ม `APIFY_TOKEN` เป็น env ของ Cloud Run; JobsDB/JobThai ไม่ต้องใช้ Apify.
 
 ### เชื่อมกับ Vercel
 ใส่ env 2 ตัว (Vercel → Environment Variables) แล้ว **Redeploy**:

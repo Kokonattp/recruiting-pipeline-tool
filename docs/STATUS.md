@@ -28,7 +28,7 @@
 1. **เสียบ ENV** (ดูด้านล่าง) → ลง `.env.local` ← *ต้องการ key จากผู้ใช้*
 2. **รัน SQL ใน Supabase:** `supabase/migrations/0001_init.sql` + `0002_seed_job.sql` + `0003_enable_rls.sql` + `0004_screening_confidence.sql` + สร้าง bucket `resumes` ← *ต้องการ project จากผู้ใช้*
 3. **ทดสอบ data จริงไหล** ครบ pipeline (e2e) หลังเสียบ ENV: JD→scrape→rank→approve→tracker→screener→scheduler
-4. **Deploy:** Vercel + Cloud Run optional (`gcloud run deploy` ใน scraper/) + ใส่ env บน Vercel
+4. **Deploy:** Vercel + Cloud Run (`gcloud run deploy` ใน scraper/) + ใส่ env บน Vercel
 5. **Demo video ~3 นาที** + อัปเดต README ใส่ live URL
 
 ## 🚀 Deploy: 1 repo → 2 service แยก (สำคัญ — เคยงงจุดนี้)
@@ -53,9 +53,6 @@ gcloud run deploy recruiting-scraper \
   --source .                  # "." = แค่โฟลเดอร์ scraper, ไม่เห็น src/
   --region asia-southeast1 \
   --allow-unauthenticated \
-  --memory 1Gi \
-  --cpu 1 \
-  --timeout 120 \
   --set-env-vars SCRAPER_INGEST_SECRET=<secret ที่ตั้ง>
 ```
 Cloud Run คืน URL → เอาไปใส่ใน Vercel env `SCRAPER_SERVICE_URL=https://...run.app`
@@ -77,9 +74,6 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/google/callback
 SCRAPER_INGEST_SECRET=   (ตั้งเอง, ต้องตรงกับฝั่ง scraper service)
 SCRAPER_SERVICE_URL=     (URL ของ Cloud Run scraper, หรือ http://localhost:4000 ตอน dev)
-ENABLE_APIFY=            (optional: true เฉพาะตอนใช้ LinkedIn/Facebook ผ่าน Apify)
-APIFY_TOKEN=             (optional: token จาก Apify, pay-per-event)
-APIFY_LINKEDIN_ACTOR=    (optional: default harvestapi/linkedin-profile-search)
 ```
 
 ## กฎการทำงาน (อย่าลืม)
