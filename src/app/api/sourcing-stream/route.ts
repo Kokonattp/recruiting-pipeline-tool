@@ -76,11 +76,13 @@ export async function POST(req: NextRequest) {
       try {
         const picked = new Set(plan.queries.map((q) => q.source));
         const firstQuery = plan.queries[0]?.query ?? jdText.slice(0, 120);
+        // Use the WEB query from plan if available, otherwise first query
+        const webQuery = plan.queries.find((q) => q.source === "WEB")?.query ?? firstQuery;
 
         const tasks: Promise<void>[] = [];
 
         tasks.push(
-          withTimeout(webSearchCandidates(jdText, ["github.com"]), SOURCE_TIMEOUT_MS)
+          withTimeout(webSearchCandidates(jdText, ["github.com"], webQuery), SOURCE_TIMEOUT_MS)
             .then((found) =>
               handleSource("AI Web Search", found.map((c) => ({
                 source: "WEB" as const,

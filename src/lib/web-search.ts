@@ -66,6 +66,7 @@ const SUBMIT_TOOL = {
 export async function webSearchCandidates(
   jdText: string,
   siteHints: string[] = [],
+  searchQuery?: string, // pre-built query from AI query plan; falls back to deriving from JD
 ): Promise<WebSearchCandidate[]> {
   const siteLine =
     siteHints.length > 0
@@ -74,15 +75,20 @@ export async function webSearchCandidates(
           .join(", ")}. Also search the open web for portfolios/GitHub.`
       : "";
 
+  const queryHint = searchQuery
+    ? `Use this pre-built search query as your first search (already tailored to the role): "${searchQuery}"`
+    : "";
+
   const response = await client().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 2000,
     system: [
-      "You are a technical sourcer. Use web search to find real, public candidate profiles or",
-      "people who match the job description: LinkedIn/Facebook public profiles, portfolios,",
-      "GitHub, personal sites, public résumés, conference/meetup speaker pages, or job-board profiles.",
-      "Prefer specific people over articles.",
+      "You are a technical sourcer. Use web search to find real, public candidate profiles.",
+      "Search ONLY in English — even if the job description is in Thai, translate skills/role to English for searching.",
+      "Target: LinkedIn public profiles, GitHub profiles, personal portfolios, public résumés, job-board profiles.",
+      "Prefer specific people over job listings or articles.",
       siteLine,
+      queryHint,
       "CRITICAL: never invent a person. Only submit candidates that appear in actual search results,",
       "each with the real result URL. If a result is a company/listing rather than a person, still",
       "include it with its URL and a clear headline.",
