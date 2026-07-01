@@ -13,24 +13,27 @@ export function DraggableCard({ application }: { application: ApplicationWithRel
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform) }}
-      className={isDragging ? "opacity-40" : undefined}
+      className={[
+        "cursor-grab touch-none active:cursor-grabbing",
+        isDragging ? "opacity-40" : "",
+      ].join(" ")}
+      {...listeners}
+      {...attributes}
     >
       <CandidateCard
         application={application}
         dragHandle={
-          <button
-            type="button"
-            aria-label="ลากเพื่อย้าย stage"
-            className="shrink-0 cursor-grab touch-none rounded p-1 text-ink-3 opacity-0 transition-opacity hover:bg-surface-2 hover:text-ink-2 group-hover:opacity-100 active:cursor-grabbing"
-            {...listeners}
-            {...attributes}
+          <span
+            aria-hidden
+            title="ลากการ์ดนี้เพื่อย้าย stage"
+            className="shrink-0 rounded p-1 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
               <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
               <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
               <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
             </svg>
-          </button>
+          </span>
         }
       />
     </div>

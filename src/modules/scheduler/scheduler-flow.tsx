@@ -247,55 +247,122 @@ function UpcomingPanel({ interviews, nameByApp }: { interviews: Interview[]; nam
   );
 }
 
-/** Day-grouped agenda: a header per date, then the interviews that day with who + time
- *  range + duration. Reads like a calendar's day column without a full month grid
- *  (HR cares "who's next", and the real month view lives in Google Calendar). */
+const WEEKDAY_LABELS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function dayKey(d: Date): string {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+/** Full month grid (LOGA style) with prev/next navigation, so HR sees the whole month's
+ *  load before picking a slot — not just a scrolling agenda of upcoming days. */
 function CalendarView({ interviews, nameByApp }: { interviews: Interview[]; nameByApp: NameByApp }) {
+  const [cursor, setCursor] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+
   const byDay = useMemo(() => {
-    const groups = new Map<string, Interview[]>();
+    const map = new Map<string, Interview[]>();
     for (const iv of interviews) {
-      const key = new Date(iv.scheduledAt).toLocaleDateString("th-TH", { dateStyle: "full" });
-      (groups.get(key) ?? groups.set(key, []).get(key)!).push(iv);
+      const key = dayKey(new Date(iv.scheduledAt));
+      (map.get(key) ?? map.set(key, []).get(key)!).push(iv);
     }
-    return [...groups.entries()];
+    return map;
   }, [interviews]);
 
+  const weeks = useMemo(() => {
+    const year = cursor.getFullYear();
+    const month = cursor.getMonth();
+    const startOffset = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells: (Date | null)[] = [];
+    for (let i = 0; i < startOffset; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+    while (cells.length % 7 !== 0) cells.push(null);
+    const rows: (Date | null)[][] = [];
+    for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+    return rows;
+  }, [cursor]);
+
+  const today = new Date();
+
   return (
-    <div className="space-y-4">
-      {byDay.map(([day, items]) => (
-        <div key={day} className="loga-card rounded-[var(--radius-card)] border bg-surface p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <span aria-hidden className="h-4 w-1.5 rounded-full bg-primary" />
-            <h4 className="text-sm font-bold text-ink">{day}</h4>
-            <span className="ml-auto text-xs font-semibold text-ink-3">{items.length} นัด</span>
-          </div>
-          <ul className="space-y-1.5">
-            {items.map((iv) => {
-              const start = new Date(iv.scheduledAt);
-              const end = new Date(start.getTime() + iv.durationMin * 60_000);
-              const range = `${start.toLocaleTimeString("th-TH", { timeStyle: "short" })}–${end.toLocaleTimeString("th-TH", { timeStyle: "short" })}`;
-              return (
-                <li key={iv.id} className="flex items-center gap-3 rounded-md bg-bg px-2.5 py-2">
-                  <span className="shrink-0 text-xs font-bold tabular-nums text-primary-ink rounded bg-primary px-1.5 py-0.5">
-                    {start.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-ink">
-                      {nameByApp.get(iv.applicationId) ?? "ผู้สมัคร"}
-                    </div>
-                    <div className="text-xs text-ink-3">{range} · {iv.durationMin} นาที</div>
-                  </div>
-                  {iv.meetLink && (
-                    <a href={iv.meetLink} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-semibold text-primary hover:underline">
-                      Meet
-                    </a>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+    <div className="loga-card rounded-[var(--radius-card)] border bg-surface p-3">
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
+          aria-label="เดือนก่อนหน้า"
+          className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-card)] border border-border text-ink-2 hover:bg-surface-2"
+        >
+          ‹
+        </button>
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-bold text-ink">
+            {cursor.toLocaleDateString("th-TH", { month: "long", year: "numeric" })}
+          </h4>
+          {!isSameDay(cursor, new Date(today.getFullYear(), today.getMonth(), 1)) && (
+            <button
+              type="button"
+              onClick={() => setCursor(new Date(today.getFullYear(), today.getMonth(), 1))}
+              className="rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-ink-2 hover:bg-surface-2"
+            >
+              วันนี้
+            </button>
+          )}
         </div>
-      ))}
+        <button
+          type="button"
+          onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
+          aria-label="เดือนถัดไป"
+          className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-card)] border border-border text-ink-2 hover:bg-surface-2"
+        >
+          ›
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 pb-1 text-center text-[11px] font-semibold text-ink-3">
+        {WEEKDAY_LABELS.map((d) => (
+          <div key={d}>{d}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {weeks.flatMap((row, ri) =>
+          row.map((day, di) => {
+            if (!day) return <div key={`${ri}-${di}`} className="min-h-[4.5rem]" />;
+            const items = byDay.get(dayKey(day)) ?? [];
+            const isToday = isSameDay(day, today);
+            return (
+              <div
+                key={`${ri}-${di}`}
+                className={[
+                  "flex min-h-[4.5rem] flex-col gap-0.5 rounded-md border p-1 text-left",
+                  isToday ? "border-primary bg-primary-soft" : "border-border bg-bg",
+                ].join(" ")}
+              >
+                <span className={["text-[11px] font-semibold", isToday ? "text-primary-ink" : "text-ink-3"].join(" ")}>
+                  {day.getDate()}
+                </span>
+                {items.slice(0, 2).map((iv) => (
+                  <span
+                    key={iv.id}
+                    title={`${nameByApp.get(iv.applicationId) ?? "ผู้สมัคร"} — ${new Date(iv.scheduledAt).toLocaleTimeString("th-TH", { timeStyle: "short" })}`}
+                    className="truncate rounded bg-primary/20 px-1 text-[10px] font-medium text-ink"
+                  >
+                    {new Date(iv.scheduledAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} {nameByApp.get(iv.applicationId) ?? "ผู้สมัคร"}
+                  </span>
+                ))}
+                {items.length > 2 && <span className="text-[10px] text-ink-3">+{items.length - 2} อื่นๆ</span>}
+              </div>
+            );
+          }),
+        )}
+      </div>
     </div>
   );
 }
