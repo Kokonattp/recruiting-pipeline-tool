@@ -34,6 +34,15 @@ export function deriveRecommendation(
   return "WEAK";
 }
 
+/** One named sub-attribute under an axis (e.g. "SQL/Data Tools": 8/10) — an FM-style
+ *  attribute breakdown explaining WHY the axis landed where it did, not a second
+ *  scoring layer: the axis score is independent and does not derive from these. */
+const SubAttributeSchema = z.object({
+  label: z.string(),
+  score: z.number().int().min(0).max(10),
+});
+export type SubAttribute = z.infer<typeof SubAttributeSchema>;
+
 export const ScreeningSchema = z.object({
   skillsFit: z.number().int().min(0).max(10),
   expFit: z.number().int().min(0).max(10),
@@ -43,6 +52,14 @@ export const ScreeningSchema = z.object({
     experience: z.string(),
     culture: z.string(),
   }),
+  /** 3 sub-attributes per axis, scored independently of the axis total. Skills labels are
+   *  drawn from the JD's own must-haves (varies per role); exp/culture labels are fixed
+   *  so HR sees the same breakdown shape across every candidate for a given axis. */
+  subAttributes: z.object({
+    skills: z.array(SubAttributeSchema).length(3),
+    experience: z.array(SubAttributeSchema).length(3),
+    culture: z.array(SubAttributeSchema).length(3),
+  }),
   /** How well the CV supported a confident judgment (thin CVs => LOW, say so openly). */
   confidence: z.enum(["HIGH", "MEDIUM", "LOW"]),
   strengths: z.array(z.string()),
@@ -51,11 +68,21 @@ export const ScreeningSchema = z.object({
 });
 export type Screening = z.infer<typeof ScreeningSchema>;
 
+const SUB_ATTRIBUTE_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["label", "score"],
+  properties: {
+    label: { type: "string" },
+    score: { type: "integer" },
+  },
+} as const;
+
 /** JSON-schema fed to Claude's tool — kept beside the zod schema so they evolve together. */
 export const SCREENING_TOOL_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["skillsFit", "expFit", "cultureFit", "reasoning", "confidence", "strengths", "prescreenQuestions", "summary"],
+  required: ["skillsFit", "expFit", "cultureFit", "reasoning", "subAttributes", "confidence", "strengths", "prescreenQuestions", "summary"],
   properties: {
     skillsFit: { type: "integer", description: "Hard-skill match vs JD 0-10" },
     expFit: { type: "integer", description: "Seniority / years / domain match 0-10" },
@@ -68,6 +95,35 @@ export const SCREENING_TOOL_SCHEMA = {
         skills: { type: "string" },
         experience: { type: "string" },
         culture: { type: "string" },
+      },
+    },
+    subAttributes: {
+      type: "object",
+      additionalProperties: false,
+      required: ["skills", "experience", "culture"],
+      description: "3 named sub-attributes per axis (0-10 each), scored independently of the axis total — explains what's behind the number.",
+      properties: {
+        skills: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: SUB_ATTRIBUTE_JSON_SCHEMA,
+          description: "3 of the JD's own must-have skills/tools, each scored on evidence in the CV.",
+        },
+        experience: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: SUB_ATTRIBUTE_JSON_SCHEMA,
+          description: "Fixed labels: Seniority/Scope, Domain Match, Track Record.",
+        },
+        culture: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: SUB_ATTRIBUTE_JSON_SCHEMA,
+          description: "Fixed labels: Collaboration, Communication, Leadership/Mentorship.",
+        },
       },
     },
     confidence: {

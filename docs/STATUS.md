@@ -2,7 +2,7 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart สรุปภาพรวม 3 แกนใน score card (Module 2)
+> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart + FM-style sub-attribute breakdown ใน score card (Module 2) — **ต้องรัน migration 0007 ก่อน deploy ใช้จริง**
 
 ## ความคืบหน้า ~98%
 
@@ -28,6 +28,7 @@
 ### Module 2 — Screener
 - Form paste CV + JD → Claude Sonnet score 3 ด้าน (skills/exp/culture) + reasoning + prescreen Q
 - **Score card:** radar triangle (SVG, zero-dependency) สรุปภาพรวม 3 แกนเป็นรูปทรงเดียว ก่อนอ่านการ์ดรายละเอียด + สีเปลี่ยนแดงอัตโนมัติถ้าทุกแกนต่ำ (ไม่ตรงสายชัดเจน) — ไม่พิมพ์ลง PDF report (เน้นข้อความ)
+- **Sub-attribute breakdown (FM attribute-sheet style):** แต่ละแกนมี 3 sub-attribute (0-10) อธิบายว่าทำไมถึงได้คะแนนนั้น — Skills เป็น label แบบ dynamic ตาม must-have ของ JD, Experience/Culture เป็น label คงที่ (Seniority/Scope, Domain Match, Track Record · Collaboration, Communication, Leadership/Mentorship) ให้คะแนนโดย AI อิสระจากคะแนนแกนหลัก (ไม่ใช่ที่มาของคะแนนรวม) — ผลเก่าก่อน migration 0007 ไม่มี breakdown นี้ (แสดงแค่การ์ดปกติ)
 - PDF upload ส่งเป็น base64 ตรงผ่าน Server Action — extract text ก่อนด้วย `pdf-parse` (ถูกกว่า), fallback เป็น Claude native PDF read (`pdfBlock()`) เฉพาะ CV แบบ scan/รูป
 - JD picker จาก saved jobs
 - เลือกผู้สมัครจาก dropdown → ผล screening บันทึกเข้าโปรไฟล์นั้นอัตโนมัติพร้อมกับประเมิน (ปุ่มเดียว), มี banner ยืนยันชัดเจนหลังบันทึกสำเร็จ vs โหมดทดสอบ (ไม่ผูกใคร = ไม่บันทึก)
@@ -66,11 +67,15 @@
 | 0003_enable_rls.sql | Row Level Security |
 | 0004_screening_confidence.sql | confidence + recommendation columns |
 | 0005_job_poster.sql | poster_base64 column (migration ยังอยู่ใน DB แต่ feature ถูกปิดแล้ว) |
+| 0006_sourcing_shown.sql | ตาราง `sourcing_shown` (dedupe candidate ที่เคยแสดงแล้ว) |
+| 0007_screening_sub_attributes.sql | `screening_results.sub_attributes` (jsonb, default `'{}'`) — FM-style breakdown ต่อแกน |
 
 ## ⏳ เหลือทำ
 
-1. **รัน migration 0005** ใน Supabase SQL Editor:
+1. **รัน migration 0005–0007** ใน Supabase SQL Editor (ยังไม่ได้รันใน production DB):
    ```sql
+   -- เปิดไฟล์ supabase/migrations/0005_job_poster.sql, 0006_sourcing_shown.sql,
+   -- 0007_screening_sub_attributes.sql แล้วรันตามลำดับใน Supabase SQL Editor
    ```
 2. **Demo video ~3 นาที** — M1→M3→M2→M4 happy path (ต้องทำเอง)
 

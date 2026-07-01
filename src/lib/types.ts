@@ -139,6 +139,13 @@ export interface Application {
   sourceTag: string | null;
 }
 
+/** One named sub-attribute under an axis (e.g. "SQL/Data Tools": 8/10) — explains WHY
+ *  the axis landed where it did. Scored independently of the axis total, not derived from it. */
+export interface SubAttribute {
+  label: string;
+  score: number; // 0-10
+}
+
 export interface ScreeningResult {
   id: string;
   applicationId: string;
@@ -146,6 +153,8 @@ export interface ScreeningResult {
   expFit: number; // 0-10
   cultureFit: number; // 0-10
   reasoning: { skills: string; experience: string; culture: string };
+  /** Optional: older rows (pre sub-attribute migration) have no breakdown. */
+  subAttributes?: { skills: SubAttribute[]; experience: SubAttribute[]; culture: SubAttribute[] };
   confidence: "HIGH" | "MEDIUM" | "LOW";
   recommendation: "STRONG" | "CONSIDER" | "WEAK";
   strengths: string[];

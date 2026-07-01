@@ -57,6 +57,14 @@ export function toApplication(r: Row): Application {
 }
 
 export function toScreening(r: Row): ScreeningResult {
+  // Rows predating the sub_attributes migration default to '{}' — treat that (or any
+  // axis missing its array) as "no breakdown available" rather than a shape mismatch.
+  const rawSub = r.sub_attributes as ScreeningResult["subAttributes"] | Record<string, never> | null | undefined;
+  const subAttributes =
+    rawSub && "skills" in rawSub && "experience" in rawSub && "culture" in rawSub
+      ? (rawSub as ScreeningResult["subAttributes"])
+      : undefined;
+
   return {
     id: r.id as string,
     applicationId: r.application_id as string,
@@ -64,6 +72,7 @@ export function toScreening(r: Row): ScreeningResult {
     expFit: r.exp_fit as number,
     cultureFit: r.culture_fit as number,
     reasoning: r.reasoning as ScreeningResult["reasoning"],
+    subAttributes,
     confidence: (r.confidence as ScreeningResult["confidence"]) ?? "MEDIUM",
     recommendation: (r.recommendation as ScreeningResult["recommendation"]) ?? "CONSIDER",
     strengths: (r.strengths as string[]) ?? [],

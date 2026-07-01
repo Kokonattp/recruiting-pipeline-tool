@@ -1,7 +1,26 @@
 "use client";
 
 import { scoreBand } from "@/lib/types";
-import type { Screening, Recommendation } from "./types";
+import type { Recommendation } from "./types";
+
+/** Structural shape both `Screening` (fresh AI result) and `ScreeningResult` (loaded
+ *  from the DB, where subAttributes may be absent on rows predating that column)
+ *  satisfy — lets one component render either without a type mismatch. */
+interface ScoreCardData {
+  skillsFit: number;
+  expFit: number;
+  cultureFit: number;
+  reasoning: { skills: string; experience: string; culture: string };
+  subAttributes?: {
+    skills: { label: string; score: number }[];
+    experience: { label: string; score: number }[];
+    culture: { label: string; score: number }[];
+  };
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+  strengths: string[];
+  prescreenQuestions: string[];
+  summary: string;
+}
 
 const BAND_BG: Record<"low" | "mid" | "high", string> = {
   low: "bg-[var(--score-low)]",
@@ -115,8 +134,34 @@ function RadarTriangle({ skills, exp, culture }: { skills: number; exp: number; 
   );
 }
 
-/** One axis: label + a band badge, a big band-colored score, a 0-10 bar, and reasoning. */
-function Axis({ label, score, reason }: { label: string; score: number; reason: string }) {
+/** One sub-attribute row, FM-attribute-sheet style: label, a short filled bar, the number. */
+function SubAttributeRow({ label, score }: { label: string; score: number }) {
+  const band = scoreBand(score);
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-28 shrink-0 truncate text-[11px] text-ink-3" title={label}>{label}</span>
+      <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-2">
+        <div className={`h-full rounded-full ${BAND_BG[band]}`} style={{ width: `${score * 10}%` }} />
+      </div>
+      <span className="w-6 shrink-0 text-right text-[11px] font-semibold tabular-nums text-ink-2">{score}</span>
+    </div>
+  );
+}
+
+/** One axis: label + a band badge, a big band-colored score, a 0-10 bar, reasoning, and
+ *  (if present) the 3 named sub-attributes behind the number — an FM-style breakdown of
+ *  WHY it landed here, not a second scoring layer (these don't derive the axis score). */
+function Axis({
+  label,
+  score,
+  reason,
+  subAttributes,
+}: {
+  label: string;
+  score: number;
+  reason: string;
+  subAttributes?: { label: string; score: number }[];
+}) {
   const band = scoreBand(score);
   const badge = AXIS_BADGE[band];
   return (
@@ -138,6 +183,13 @@ function Axis({ label, score, reason }: { label: string; score: number; reason: 
         <div className={`h-full rounded-full ${BAND_BG[band]}`} style={{ width: `${score * 10}%` }} />
       </div>
       <p className="mt-2 text-xs leading-relaxed text-ink-2">{reason}</p>
+      {subAttributes && subAttributes.length > 0 && (
+        <div className="mt-3 space-y-1.5 border-t border-border pt-2.5">
+          {subAttributes.map((sub) => (
+            <SubAttributeRow key={sub.label} label={sub.label} score={sub.score} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -151,7 +203,7 @@ export function ScoreCard({
   candidateName,
   jobTitle,
 }: {
-  screening: Screening;
+  screening: ScoreCardData;
   recommendation: Recommendation;
   candidateName?: string;
   jobTitle?: string;
@@ -183,9 +235,24 @@ export function ScoreCard({
           <RadarTriangle skills={screening.skillsFit} exp={screening.expFit} culture={screening.cultureFit} />
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Axis label="Skills Fit" score={screening.skillsFit} reason={screening.reasoning.skills} />
-          <Axis label="Experience Fit" score={screening.expFit} reason={screening.reasoning.experience} />
-          <Axis label="Culture Fit" score={screening.cultureFit} reason={screening.reasoning.culture} />
+          <Axis
+            label="Skills Fit"
+            score={screening.skillsFit}
+            reason={screening.reasoning.skills}
+            subAttributes={screening.subAttributes?.skills}
+          />
+          <Axis
+            label="Experience Fit"
+            score={screening.expFit}
+            reason={screening.reasoning.experience}
+            subAttributes={screening.subAttributes?.experience}
+          />
+          <Axis
+            label="Culture Fit"
+            score={screening.cultureFit}
+            reason={screening.reasoning.culture}
+            subAttributes={screening.subAttributes?.culture}
+          />
         </div>
       </div>
 

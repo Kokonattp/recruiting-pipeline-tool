@@ -72,6 +72,7 @@ export async function runScreening(input: {
             exp_fit: screening.expFit,
             culture_fit: screening.cultureFit,
             reasoning: screening.reasoning,
+            sub_attributes: screening.subAttributes,
             confidence: screening.confidence,
             recommendation,
             strengths: screening.strengths,
