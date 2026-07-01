@@ -6,6 +6,7 @@ import {
   type ApplicationWithRelations,
 } from "@/lib/types";
 import { SourcePill } from "@/components/ui/source-pill";
+import { ScreeningDetailButton } from "./screening-detail-dialog";
 
 const BAND_TEXT: Record<"low" | "mid" | "high", string> = {
   low: "text-[var(--score-low)]",
@@ -33,6 +34,7 @@ export function ListView({ applications }: { applications: ApplicationWithRelati
             <th className="px-3 py-2.5 text-center font-medium" title="Culture fit">Culture</th>
             <th className="px-3 py-2.5 font-medium">Source</th>
             <th className="px-3 py-2.5 font-medium">Applied</th>
+            <th className="px-3 py-2.5 font-medium"></th>
           </tr>
         </thead>
         <tbody>
@@ -66,6 +68,15 @@ export function ListView({ applications }: { applications: ApplicationWithRelati
               <td className="px-3 py-2.5"><SourcePill source={app.candidate.source} /></td>
               <td className="px-3 py-2.5 text-ink-2">
                 {formatDistanceToNowStrict(new Date(app.appliedAt), { addSuffix: true })}
+              </td>
+              <td className="px-3 py-2.5">
+                {app.screening && (
+                  <ScreeningDetailButton
+                    screening={app.screening}
+                    candidateName={app.candidate.name}
+                    jobTitle={app.job.title}
+                  />
+                )}
               </td>
             </tr>
           ))}

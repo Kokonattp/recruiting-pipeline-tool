@@ -81,7 +81,7 @@ export async function webSearchCandidates(
 
   const response = await client().messages.create({
     model: CLAUDE_MODEL,
-    max_tokens: 2000,
+    max_tokens: 4000, // more searches + more results per call needs more room than before
     system: [
       "You are a technical sourcer. Use web search to find real, public candidate profiles.",
       "Search ONLY in English — even if the job description is in Thai, translate skills/role to English for searching.",
@@ -92,11 +92,16 @@ export async function webSearchCandidates(
       "CRITICAL: never invent a person. Only submit candidates that appear in actual search results,",
       "each with the real result URL. If a result is a company/listing rather than a person, still",
       "include it with its URL and a clear headline.",
-      "Run exactly 2 focused searches only. Stop immediately after you have 4+ candidates.",
-      "Submit at most 6 results — quality over quantity.",
+      "Run up to 4 focused searches covering different angles — e.g. LinkedIn public profiles,",
+      "GitHub profiles, personal portfolios/blogs, and Thai-market job boards. Vary the query each",
+      "time rather than repeating the same search. Aim for at least 8-10 distinct candidates before",
+      "you stop searching.",
+      "Submit up to 15 results — more real, distinct candidates is better than fewer.",
     ].filter(Boolean).join("\n"),
     tools: [
-      { type: "web_search_20250305", name: "web_search", max_uses: 2 } as Anthropic.Messages.ToolUnion,
+      // 20260209: dynamic filtering — better relevance per search, which matters more now
+      // that we're running more searches and asking for more results per call.
+      { type: "web_search_20260209", name: "web_search", max_uses: 4 } as Anthropic.Messages.ToolUnion,
       SUBMIT_TOOL as unknown as Anthropic.Messages.Tool,
     ],
     messages: [
@@ -121,5 +126,5 @@ export async function webSearchCandidates(
     if (!/^https?:\/\//.test(c.sourceUrl) || seen.has(c.sourceUrl)) return false;
     seen.add(c.sourceUrl);
     return true;
-  }).slice(0, 6);
+  }).slice(0, 15);
 }

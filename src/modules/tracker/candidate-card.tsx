@@ -3,6 +3,7 @@ import type { ApplicationWithRelations } from "@/lib/types";
 import { ScoreChip } from "@/components/ui/score-chip";
 import { SourcePill } from "@/components/ui/source-pill";
 import { CandidateActions } from "./candidate-actions";
+import { ScreeningDetailButton } from "./screening-detail-dialog";
 
 /** Initials for the avatar — handles Thai (no spaces) and Latin names. */
 function initials(name: string): string {
@@ -39,10 +40,15 @@ export function CandidateCard({ application, dragHandle }: CandidateCardProps) {
       </div>
 
       {screening && (
-        <div className="mt-2.5 flex flex-wrap gap-1">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1">
           <ScoreChip label="Skills" score={screening.skillsFit} />
           <ScoreChip label="Exp" score={screening.expFit} />
           <ScoreChip label="Culture" score={screening.cultureFit} />
+          <ScreeningDetailButton
+            screening={screening}
+            candidateName={candidate.name}
+            jobTitle={application.job.title}
+          />
         </div>
       )}
 
