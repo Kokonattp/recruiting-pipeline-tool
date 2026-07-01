@@ -2,7 +2,7 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart + FM-style sub-attribute breakdown ใน score card (Module 2) — **ต้องรัน migration 0007 ก่อน deploy ใช้จริง**
+> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart + FM-style sub-attribute breakdown ใน score card (Module 2) — **migration 0007 รันบน production Supabase แล้ว**
 
 ## ความคืบหน้า ~98%
 
@@ -72,12 +72,7 @@
 
 ## ⏳ เหลือทำ
 
-1. **รัน migration 0005–0007** ใน Supabase SQL Editor (ยังไม่ได้รันใน production DB):
-   ```sql
-   -- เปิดไฟล์ supabase/migrations/0005_job_poster.sql, 0006_sourcing_shown.sql,
-   -- 0007_screening_sub_attributes.sql แล้วรันตามลำดับใน Supabase SQL Editor
-   ```
-2. **Demo video ~3 นาที** — M1→M3→M2→M4 happy path (ต้องทำเอง)
+1. **Demo video ~3 นาที** — M1→M3→M2→M4 happy path (ต้องทำเอง)
 
 ## 📊 ประเมินคะแนน (self-audit)
 
