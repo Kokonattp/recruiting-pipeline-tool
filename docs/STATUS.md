@@ -2,11 +2,11 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart + FM-style sub-attribute breakdown ใน score card (Module 2) — **migration 0007 รันบน production Supabase แล้ว**
+> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart + FM-style sub-attribute breakdown ใน score card (Module 2) — migration 0005–0007 รันบน production Supabase ครบแล้ว, **demo video ส่งแล้ว**
 
-## ความคืบหน้า ~98%
+## ความคืบหน้า 100% — งานส่งครบแล้ว
 
-โค้ดครบ + feature เพิ่มตามภาพ idea เสร็จหมด build ผ่าน — **เหลือแค่ demo video + รัน migration SQL ใน Supabase**
+โค้ดครบ + feature เพิ่มตามภาพ idea เสร็จหมด build ผ่าน + migration รันครบบน production + demo video ส่งเรียบร้อย ไม่มีงานค้าง.
 
 ## ✅ เสร็จแล้ว
 
@@ -66,13 +66,9 @@
 | 0002_seed_job.sql | seed JD ตัวอย่าง |
 | 0003_enable_rls.sql | Row Level Security |
 | 0004_screening_confidence.sql | confidence + recommendation columns |
-| 0005_job_poster.sql | poster_base64 column (migration ยังอยู่ใน DB แต่ feature ถูกปิดแล้ว) |
-| 0006_sourcing_shown.sql | ตาราง `sourcing_shown` (dedupe candidate ที่เคยแสดงแล้ว) |
-| 0007_screening_sub_attributes.sql | `screening_results.sub_attributes` (jsonb, default `'{}'`) — FM-style breakdown ต่อแกน |
-
-## ⏳ เหลือทำ
-
-1. **Demo video ~3 นาที** — M1→M3→M2→M4 happy path (ต้องทำเอง)
+| 0005_job_poster.sql | poster_base64 column (migration ยังอยู่ใน DB แต่ feature ถูกปิดแล้ว) — รันบน production แล้ว |
+| 0006_sourcing_shown.sql | ตาราง `sourcing_shown` (dedupe candidate ที่เคยแสดงแล้ว) — รันบน production แล้ว |
+| 0007_screening_sub_attributes.sql | `screening_results.sub_attributes` (jsonb, default `'{}'`) — FM-style breakdown ต่อแกน — รันบน production แล้ว |
 
 ## 📊 ประเมินคะแนน (self-audit)
 
@@ -82,7 +78,7 @@
 | Code Quality & Architecture 30% | **27/30** | แยกชั้น actions/queries/components, zod ทุก input/AI output, commit ย่อย, naming ชัด |
 | UX & Usability 25% | **23/25** | spinner ทุกปุ่ม, inline confirm, empty states, LOGA consistent, beforeunload guard |
 | AI Integration 15% | **14/15** | tool-use + zod ทุกจุด, model tiering (Opus/Sonnet), web search จริง, screen 3 ด้าน + reasoning + prescreen Q |
-| **รวม** | **~94/100** | ขาด demo video (~3 คะแนน) |
+| **รวม** | **~94/100** | ครบทุกส่วนรวม demo video — คะแนนที่เหลือขึ้นกับกรรมการประเมิน ไม่ใช่งานค้างฝั่งเรา |
 
 ## 🚀 Deploy: 1 repo → 2 service
 
