@@ -92,8 +92,8 @@ export async function webSearchCandidates(
       "CRITICAL: never invent a person. Only submit candidates that appear in actual search results,",
       "each with the real result URL. If a result is a company/listing rather than a person, still",
       "include it with its URL and a clear headline.",
-      "Run exactly 2 focused searches only. Stop immediately after you have 4+ candidates.",
-      "Submit at most 6 results — quality over quantity.",
+      "Run exactly 2 focused searches only. Stop immediately after you have 8+ candidates.",
+      "Submit at most 10 results — quality over quantity.",
     ].filter(Boolean).join("\n"),
     tools: [
       { type: "web_search_20250305", name: "web_search", max_uses: 2 } as Anthropic.Messages.ToolUnion,
@@ -121,5 +121,5 @@ export async function webSearchCandidates(
     if (!/^https?:\/\//.test(c.sourceUrl) || seen.has(c.sourceUrl)) return false;
     seen.add(c.sourceUrl);
     return true;
-  }).slice(0, 6);
+  }).slice(0, 10);
 }

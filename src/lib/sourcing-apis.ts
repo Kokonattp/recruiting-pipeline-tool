@@ -12,8 +12,10 @@ import type { RawCandidate } from "@/modules/scraper/types";
  */
 
 const GH_MAX = 10;
-const APIFY_MAX = 5;       // Apify is pay-per-event — keep low
-const JOBBOARD_MAX = 10;   // job listings per board
+const APIFY_MAX = 10;      // LinkedIn (Short mode) bills per search page regardless of
+                           // profile count up to 25/page, so this is free to raise; the
+                           // JobsDB/JobThai/Facebook actors are ~$0.001-0.01 each, negligible.
+const JOBBOARD_MAX = 15;  // job listings per board
 
 /**
  * Apify costs money per run (pay-per-event), so it's OFF unless explicitly enabled.

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { webSearchCandidates } from "@/lib/web-search";
 import { githubCandidates, linkedinCandidates, facebookCandidates, jobsdbCandidates, jobthaiCandidates } from "@/lib/sourcing-apis";
 import { rankCandidates } from "@/modules/scraper/ai";
+import { supabaseAdmin } from "@/lib/supabase";
 import type { RawCandidate, QueryPlan } from "@/modules/scraper/types";
 
 export const maxDuration = 55; // Vercel Hobby limit
@@ -31,11 +32,29 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
 
-      const EARLY_EXIT_COUNT = 5;  // rank immediately once we have this many
+      const EARLY_EXIT_COUNT = 10;  // rank immediately once we have this many
       const SOURCE_TIMEOUT_MS = 20_000;
 
       const raw: RawCandidate[] = [];
       const seen = { urls: new Set<string>(), names: new Set<string>() };
+
+      // Pre-seed dedup with everyone already in the DB (any job) so a repeat search
+      // doesn't resurface someone HR already reviewed/approved before.
+      try {
+        const { data: existing } = await supabaseAdmin()
+          .from("candidates")
+          .select("name, source_url");
+        for (const c of existing ?? []) {
+          const url = (c.source_url as string | null)
+            ?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "").toLowerCase();
+          const name = (c.name as string | null)?.trim().toLowerCase();
+          if (url) seen.urls.add(url);
+          if (name) seen.names.add(name);
+        }
+      } catch {
+        // Best-effort — if this fails, fall back to no cross-run dedup rather than
+        // blocking the search entirely.
+      }
 
       // Resolves as soon as raw.length >= EARLY_EXIT_COUNT
       let earlyResolve!: () => void;
