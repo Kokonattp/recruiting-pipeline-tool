@@ -515,16 +515,45 @@ function ShortlistBody({
   const [approved, setApproved] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [sourceFilter, setSourceFilter] = useState<Source | "ALL">("ALL");
+  // Index into result.shortlist — candidates have no stable id, but the array
+  // itself never reorders, so index is a safe selection key here.
+  const [selected, setSelected] = useState<Set<number>>(
+    () => new Set(result.shortlist.map((_, i) => i)), // all selected by default
+  );
+
+  // Sources actually present in this shortlist — only show filter pills that do something.
+  const sourcesPresent = Array.from(new Set(result.shortlist.map((c) => c.source)));
+
+  // Filter first (keeping each candidate's original index for selection), then paginate.
+  const filtered = result.shortlist
+    .map((c, index) => ({ c, index }))
+    .filter(({ c }) => sourceFilter === "ALL" || c.source === sourceFilter);
 
   const PAGE_SIZE = 10;
-  const pageCount = Math.ceil(result.shortlist.length / PAGE_SIZE);
-  const pageItems = result.shortlist.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const pageStart = page * PAGE_SIZE;
+  const pageItems = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+
+  function toggle(index: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
 
   async function doApprove() {
+    const picked = result.shortlist.filter((_, i) => selected.has(i));
+    if (picked.length === 0) {
+      setErr("เลือกผู้สมัครอย่างน้อย 1 คนก่อนอนุมัติ");
+      return;
+    }
     setApproving(true);
     setErr(null);
     try {
-      const error = await onApprove(result.shortlist);
+      const error = await onApprove(picked);
       if (error) setErr(error);
       else setApproved(true);
     } catch {
@@ -536,35 +565,99 @@ function ShortlistBody({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-ink-2">
-        AI จัดอันดับ {result.shortlist.length} ผู้สมัคร — ตรวจแล้วเลือกอนุมัติเข้า Tracker
-        {pageCount > 1 && ` (แสดง ${page * PAGE_SIZE + 1}-${Math.min((page + 1) * PAGE_SIZE, result.shortlist.length)})`}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-2">
+          AI จัดอันดับ {result.shortlist.length} ผู้สมัคร — ตรวจแล้วเลือกอนุมัติเข้า Tracker
+          {pageCount > 1 && ` (แสดง ${pageStart + 1}-${Math.min(pageStart + PAGE_SIZE, result.shortlist.length)})`}
+        </p>
+        <div className="flex gap-3 text-xs">
+          <button type="button" onClick={() => setSelected(new Set(result.shortlist.map((_, i) => i)))} className="font-medium text-primary hover:underline">
+            เลือกทั้งหมด
+          </button>
+          <button type="button" onClick={() => setSelected(new Set())} className="font-medium text-ink-3 hover:underline">
+            ไม่เลือกเลย
+          </button>
+        </div>
+      </div>
+
+      {sourcesPresent.length > 1 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-medium text-ink-3">กรองตามแหล่ง:</span>
+          <button
+            type="button"
+            onClick={() => { setSourceFilter("ALL"); setPage(0); }}
+            className={[
+              "rounded-full border px-2.5 py-1 text-xs font-medium",
+              sourceFilter === "ALL" ? "border-ink bg-primary text-primary-ink" : "border-border text-ink-2 hover:bg-surface-2",
+            ].join(" ")}
+          >
+            ทั้งหมด ({result.shortlist.length})
+          </button>
+          {sourcesPresent.map((s) => {
+            const count = result.shortlist.filter((c) => c.source === s).length;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => { setSourceFilter(s); setPage(0); }}
+                className={[
+                  "rounded-full border px-2.5 py-1 text-xs font-medium",
+                  sourceFilter === s ? "border-ink bg-primary text-primary-ink" : "border-border text-ink-2 hover:bg-surface-2",
+                ].join(" ")}
+              >
+                {SOURCE_LABELS[s]} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {filtered.length === 0 && (
+        <p className="text-sm text-ink-3">ไม่มีผู้สมัครจากแหล่งนี้ ลองเลือก &quot;ทั้งหมด&quot; หรือแหล่งอื่น</p>
+      )}
+
       <div className="space-y-3">
-        {pageItems.map((c, i) => (
-          <article key={page * PAGE_SIZE + i} className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-ink">{c.name}</h3>
-                <p className="text-xs text-ink-2">{c.headline}</p>
+        {pageItems.map(({ c, index }) => {
+          const checked = selected.has(index);
+          return (
+            <article
+              key={index}
+              className={[
+                "loga-card rounded-[var(--radius-card)] border bg-surface p-4 transition-opacity",
+                checked ? "" : "opacity-50",
+              ].join(" ")}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <label className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(index)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--primary)]"
+                  />
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">{c.name}</h3>
+                    <p className="text-xs text-ink-2">{c.headline}</p>
+                  </div>
+                </label>
+                <span className="shrink-0 rounded-md bg-primary-soft px-2 py-1 text-sm font-semibold tabular-nums text-ink">
+                  {c.fitScore}
+                  <span className="text-xs font-normal text-ink-3">/100</span>
+                </span>
               </div>
-              <span className="shrink-0 rounded-md bg-primary-soft px-2 py-1 text-sm font-semibold tabular-nums text-ink">
-                {c.fitScore}
-                <span className="text-xs font-normal text-ink-3">/100</span>
-              </span>
-            </div>
-            {c.reasons.length > 0 && (
-              <ul className="mt-2 list-inside list-disc text-xs text-ink-2">
-                {c.reasons.map((r, j) => (
-                  <li key={j}>{r}</li>
-                ))}
-              </ul>
-            )}
-            {c.concerns.length > 0 && (
-              <p className="mt-1.5 text-xs text-[var(--warning)]">ต้องเช็ค: {c.concerns.join(" · ")}</p>
-            )}
-          </article>
-        ))}
+              {c.reasons.length > 0 && (
+                <ul className="mt-2 list-inside list-disc text-xs text-ink-2">
+                  {c.reasons.map((r, j) => (
+                    <li key={j}>{r}</li>
+                  ))}
+                </ul>
+              )}
+              {c.concerns.length > 0 && (
+                <p className="mt-1.5 text-xs text-[var(--warning)]">ต้องเช็ค: {c.concerns.join(" · ")}</p>
+              )}
+            </article>
+          );
+        })}
       </div>
       {pageCount > 1 && (
         <div className="flex items-center justify-center gap-3">
@@ -603,11 +696,11 @@ function ShortlistBody({
           </button>
           <button
             type="button"
-            disabled={approving}
+            disabled={approving || selected.size === 0}
             onClick={doApprove}
-            className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold"
+            className="h-10 rounded-[var(--radius-card)] btn-primary px-5 text-sm font-semibold disabled:opacity-60"
           >
-            {approving ? "กำลังอนุมัติ…" : "อนุมัติทั้งหมดเข้า Tracker"}
+            {approving ? "กำลังอนุมัติ…" : `อนุมัติ ${selected.size} คนเข้า Tracker`}
           </button>
         </div>
       )}

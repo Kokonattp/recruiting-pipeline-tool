@@ -99,7 +99,7 @@ export async function rankCandidates(
             properties: {
               name: { type: "string" },
               headline: { type: "string" },
-              source: { type: "string", enum: ["LINKEDIN", "JOBSDB", "JOBBKK", "JOBTHAI", "FACEBOOK", "WEB", "REFERRAL", "MANUAL"] },
+              source: { type: "string", enum: ["LINKEDIN", "JOBSDB", "JOBBKK", "JOBTHAI", "FACEBOOK", "GITHUB", "WEB", "REFERRAL", "MANUAL"] },
               sourceUrl: { type: ["string", "null"] },
               email: { type: ["string", "null"] },
               fitScore: { type: "integer" },
