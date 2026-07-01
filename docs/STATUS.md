@@ -2,7 +2,7 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source)
+> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart สรุปภาพรวม 3 แกนใน score card (Module 2)
 
 ## ความคืบหน้า ~98%
 
@@ -27,6 +27,7 @@
 
 ### Module 2 — Screener
 - Form paste CV + JD → Claude Sonnet score 3 ด้าน (skills/exp/culture) + reasoning + prescreen Q
+- **Score card:** radar triangle (SVG, zero-dependency) สรุปภาพรวม 3 แกนเป็นรูปทรงเดียว ก่อนอ่านการ์ดรายละเอียด + สีเปลี่ยนแดงอัตโนมัติถ้าทุกแกนต่ำ (ไม่ตรงสายชัดเจน) — ไม่พิมพ์ลง PDF report (เน้นข้อความ)
 - PDF upload ส่งเป็น base64 ตรงผ่าน Server Action — extract text ก่อนด้วย `pdf-parse` (ถูกกว่า), fallback เป็น Claude native PDF read (`pdfBlock()`) เฉพาะ CV แบบ scan/รูป
 - JD picker จาก saved jobs
 - เลือกผู้สมัครจาก dropdown → ผล screening บันทึกเข้าโปรไฟล์นั้นอัตโนมัติพร้อมกับประเมิน (ปุ่มเดียว), มี banner ยืนยันชัดเจนหลังบันทึกสำเร็จ vs โหมดทดสอบ (ไม่ผูกใคร = ไม่บันทึก)

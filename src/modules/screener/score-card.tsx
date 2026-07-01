@@ -43,6 +43,78 @@ const AXIS_BADGE: Record<"low" | "mid" | "high", { label: string; color: string 
   low: { label: "อ่อน", color: "var(--score-low)" },
 };
 
+/** Triangle radar of the 3 fit axes — one glance at overall shape (balanced vs lopsided)
+ *  before reading the per-axis detail below. Pure SVG, no chart dependency. */
+function RadarTriangle({ skills, exp, culture }: { skills: number; exp: number; culture: number }) {
+  const SIZE = 168;
+  const CENTER = SIZE / 2;
+  const RADIUS = 62;
+  // 3 axes at 12 / 4 / 8 o'clock (top, bottom-right, bottom-left).
+  const ANGLES = [-90, 30, 150].map((deg) => (deg * Math.PI) / 180);
+
+  const pointAt = (value: number, angleIdx: number) => {
+    const r = (Math.max(0, Math.min(10, value)) / 10) * RADIUS;
+    const a = ANGLES[angleIdx];
+    return [CENTER + r * Math.cos(a), CENTER + r * Math.sin(a)] as const;
+  };
+
+  const values = [skills, exp, culture];
+  const dataPoints = values.map((v, i) => pointAt(v, i));
+  const dataPath = dataPoints.map((p) => p.join(",")).join(" ");
+
+  // Background grid rings at 25/50/75/100% for scale reference.
+  const rings = [0.25, 0.5, 0.75, 1];
+  const ringPoints = (frac: number) =>
+    ANGLES.map((a) => `${CENTER + RADIUS * frac * Math.cos(a)},${CENTER + RADIUS * frac * Math.sin(a)}`).join(" ");
+
+  const LABELS = ["Skills", "Exp", "Culture"];
+  const labelPos = ANGLES.map((a) => [CENTER + (RADIUS + 20) * Math.cos(a), CENTER + (RADIUS + 20) * Math.sin(a)] as const);
+
+  const overallLow = values.every((v) => v <= 3);
+  const fillColor = overallLow ? "var(--score-low)" : "var(--primary)";
+
+  return (
+    <div className="loga-card flex flex-col items-center gap-2 rounded-[var(--radius-card)] border bg-bg p-4">
+      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible">
+        {rings.map((frac) => (
+          <polygon key={frac} points={ringPoints(frac)} fill="none" stroke="var(--border)" strokeWidth={1} />
+        ))}
+        {ANGLES.map((a, i) => (
+          <line
+            key={i}
+            x1={CENTER}
+            y1={CENTER}
+            x2={CENTER + RADIUS * Math.cos(a)}
+            y2={CENTER + RADIUS * Math.sin(a)}
+            stroke="var(--border)"
+            strokeWidth={1}
+          />
+        ))}
+        <polygon points={dataPath} fill={fillColor} fillOpacity={0.22} stroke={fillColor} strokeWidth={2} strokeLinejoin="round" />
+        {dataPoints.map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={3.5} fill={fillColor} />
+        ))}
+        {LABELS.map((label, i) => {
+          const [x, y] = labelPos[i];
+          return (
+            <text
+              key={label}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-ink-2 text-[10px] font-semibold uppercase tracking-wide"
+            >
+              {label}
+            </text>
+          );
+        })}
+      </svg>
+      <p className="text-center text-[11px] text-ink-3">รูปยิ่งเต็ม/สมดุล ยิ่งตรงกับ JD ทุกด้าน</p>
+    </div>
+  );
+}
+
 /** One axis: label + a band badge, a big band-colored score, a 0-10 bar, and reasoning. */
 function Axis({ label, score, reason }: { label: string; score: number; reason: string }) {
   const band = scoreBand(score);
@@ -106,10 +178,15 @@ export function ScoreCard({
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Axis label="Skills Fit" score={screening.skillsFit} reason={screening.reasoning.skills} />
-        <Axis label="Experience Fit" score={screening.expFit} reason={screening.reasoning.experience} />
-        <Axis label="Culture Fit" score={screening.cultureFit} reason={screening.reasoning.culture} />
+      <div className="grid gap-3 sm:grid-cols-[168px_1fr] sm:items-stretch">
+        <div className="no-print">
+          <RadarTriangle skills={screening.skillsFit} exp={screening.expFit} culture={screening.cultureFit} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Axis label="Skills Fit" score={screening.skillsFit} reason={screening.reasoning.skills} />
+          <Axis label="Experience Fit" score={screening.expFit} reason={screening.reasoning.experience} />
+          <Axis label="Culture Fit" score={screening.cultureFit} reason={screening.reasoning.culture} />
+        </div>
       </div>
 
       <div className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
