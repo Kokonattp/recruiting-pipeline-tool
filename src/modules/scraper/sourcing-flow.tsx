@@ -544,6 +544,11 @@ function ShortlistBody({
   const [approving, setApproving] = useState(false);
   const [approved, setApproved] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+
+  const PAGE_SIZE = 10;
+  const pageCount = Math.ceil(result.shortlist.length / PAGE_SIZE);
+  const pageItems = result.shortlist.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   async function doApprove() {
     setApproving(true);
@@ -563,10 +568,11 @@ function ShortlistBody({
     <div className="space-y-4">
       <p className="text-sm text-ink-2">
         AI จัดอันดับ {result.shortlist.length} ผู้สมัคร — ตรวจแล้วเลือกอนุมัติเข้า Tracker
+        {pageCount > 1 && ` (แสดง ${page * PAGE_SIZE + 1}-${Math.min((page + 1) * PAGE_SIZE, result.shortlist.length)})`}
       </p>
       <div className="space-y-3">
-        {result.shortlist.map((c, i) => (
-          <article key={i} className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
+        {pageItems.map((c, i) => (
+          <article key={page * PAGE_SIZE + i} className="loga-card rounded-[var(--radius-card)] border bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-ink">{c.name}</h3>
@@ -590,6 +596,27 @@ function ShortlistBody({
           </article>
         ))}
       </div>
+      {pageCount > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="h-8 rounded-[var(--radius-card)] border border-border px-3 text-xs font-medium text-ink-2 hover:bg-surface-2 disabled:opacity-40"
+          >
+            ← ก่อนหน้า
+          </button>
+          <span className="text-xs text-ink-3">หน้า {page + 1} / {pageCount}</span>
+          <button
+            type="button"
+            disabled={page >= pageCount - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="h-8 rounded-[var(--radius-card)] border border-border px-3 text-xs font-medium text-ink-2 hover:bg-surface-2 disabled:opacity-40"
+          >
+            ถัดไป →
+          </button>
+        </div>
+      )}
       {err && <p className="text-sm text-[var(--danger)]">{err}</p>}
       {approved ? (
         <div className="rounded-[var(--radius-card)] border border-[var(--success)] bg-success-soft px-4 py-3 text-sm text-ink">
