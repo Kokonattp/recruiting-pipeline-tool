@@ -70,12 +70,19 @@ export function ListView({ applications }: { applications: ApplicationWithRelati
                 {formatDistanceToNowStrict(new Date(app.appliedAt), { addSuffix: true })}
               </td>
               <td className="px-3 py-2.5">
-                {app.screening && (
+                {app.screening ? (
                   <ScreeningDetailButton
                     screening={app.screening}
                     candidateName={app.candidate.name}
                     jobTitle={app.job.title}
                   />
+                ) : (
+                  <a
+                    href={`/screener?cand=${app.candidate.id}&job=${app.job.id}`}
+                    className="whitespace-nowrap text-xs font-medium text-ink-3 hover:text-primary hover:underline"
+                  >
+                    คัดกรองเลย →
+                  </a>
                 )}
               </td>
             </tr>

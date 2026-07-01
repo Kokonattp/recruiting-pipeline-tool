@@ -39,7 +39,7 @@ export function CandidateCard({ application, dragHandle }: CandidateCardProps) {
         {dragHandle}
       </div>
 
-      {screening && (
+      {screening ? (
         <div className="mt-2.5 flex flex-wrap items-center gap-1">
           <ScoreChip label="Skills" score={screening.skillsFit} />
           <ScoreChip label="Exp" score={screening.expFit} />
@@ -50,6 +50,13 @@ export function CandidateCard({ application, dragHandle }: CandidateCardProps) {
             jobTitle={application.job.title}
           />
         </div>
+      ) : (
+        <a
+          href={`/screener?cand=${candidate.id}&job=${application.job.id}`}
+          className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-ink-3 hover:text-primary hover:underline"
+        >
+          ยังไม่ได้คัดกรอง — คัดกรองเลย →
+        </a>
       )}
 
       <div className="mt-2.5 flex items-center justify-between">
