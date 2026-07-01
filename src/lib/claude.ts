@@ -16,16 +16,16 @@ import { z } from "zod";
 export const CLAUDE_MODEL = "claude-opus-4-8";
 
 /** Mid model for well-scoped generation that doesn't need Opus depth: writing a JD,
- *  drafting per-source search queries. Sonnet ~1/5 the cost of Opus, plenty for these. */
-export const CONTENT_MODEL = "claude-sonnet-4-6";
+ *  drafting per-source search queries, extracting fields from an uploaded CV. Sonnet 5
+ *  — near-Opus quality on extraction/coding-adjacent tasks at a fraction of the cost. */
+export const CONTENT_MODEL = "claude-sonnet-5";
 
 /**
- * Model for resume screening (Module 2). Sonnet 4.6 over Haiku: screening is a
- * *judgment* task (score + evidence-grounded reasoning), and Sonnet's judgment is
- * meaningfully better than Haiku's while staying far cheaper than Opus (~1/5). For a
- * decision that gates real candidates, the small extra cost per CV is worth the
- * sharper, more consistent reasoning. (Haiku is fine for pure extract/classify, not
- * for "is this person a fit".)
+ * Model for resume screening (Module 2). Kept on Sonnet 4.6 rather than Sonnet 5:
+ * screening scores must be deterministic (temperature: 0 — same CV → same score, not a
+ * dice roll). Sonnet 5 rejects any non-default temperature (400), so it can't honor
+ * that guarantee; Sonnet 4.6 still accepts it. Revisit if Sonnet 5 gains a deterministic
+ * mode, but don't swap this one blindly — it would silently break score reproducibility.
  */
 export const SCREENING_MODEL = "claude-sonnet-4-6";
 
@@ -56,13 +56,20 @@ interface StructuredOptions<T> {
   /** Override the model (defaults to CLAUDE_MODEL). e.g. SCREENING_MODEL for cheap, bounded tasks. */
   model?: string;
   /**
-   * Sampling temperature. Omit for the default (adaptive thinking, temp ~1). Set to 0
-   * for a *deterministic* scoring task — same input → same score, which is the whole
-   * point of resume screening (a candidate shouldn't pass or fail on the model's dice
-   * roll). Setting temperature disables extended thinking, since the two are mutually
-   * exclusive in the API.
+   * Sampling temperature. Omit for the default. Set to 0 for a *deterministic* scoring
+   * task — same input → same score (used by resume screening). Only send this on models
+   * that still accept sampling params (Sonnet 4.6 and older) — Opus 4.7+ and Sonnet 5
+   * reject any non-default temperature with a 400. For those models, use `thinking:
+   * "disabled"` below instead.
    */
   temperature?: number;
+  /**
+   * Explicitly turn off extended thinking without touching temperature/sampling params —
+   * safe on every model tier (Opus 4.7+ included, where temperature itself 400s). Use for
+   * bounded, schema-constrained tasks (ranking, extraction, drafting) that don't need
+   * deep reasoning, where adaptive thinking is pure added latency.
+   */
+  thinking?: "disabled";
 }
 
 /**
@@ -80,7 +87,9 @@ export async function structured<T>(opts: StructuredOptions<T>): Promise<T> {
     max_tokens: opts.maxTokens ?? 16000,
     ...(deterministic
       ? { temperature: opts.temperature }
-      : { thinking: { type: "adaptive" as const } }),
+      : opts.thinking === "disabled"
+        ? { thinking: { type: "disabled" as const } }
+        : { thinking: { type: "adaptive" as const } }),
     system: opts.system,
     tools: [
       {

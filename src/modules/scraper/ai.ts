@@ -57,6 +57,7 @@ export async function planQueries(
     },
     validate: QueryPlanSchema,
     model: CONTENT_MODEL, // drafting search queries doesn't need Opus
+    thinking: "disabled", // bounded drafting task — skip adaptive thinking, it's pure latency here
   });
 }
 
@@ -108,5 +109,12 @@ export async function rankCandidates(
       },
     },
     validate: RankResultSchema,
+    // Ranking against a fixed rubric doesn't need extended thinking — it's the single
+    // biggest latency source in the sourcing flow (Opus + adaptive thinking can run
+    // 20-40s on its own, on top of the source fan-out). This model defaults to Opus
+    // 4.8, which rejects a `temperature` override outright (sampling params were
+    // removed on Opus 4.7+) — disable thinking explicitly instead, which is safe on
+    // every model tier.
+    thinking: "disabled",
   });
 }

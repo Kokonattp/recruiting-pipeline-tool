@@ -54,6 +54,7 @@ export async function importPdfsAndRank(input: {
 }): Promise<ActionResult<RankResult>> {
   if (input.pdfs.length === 0) return { ok: false, error: "ยังไม่ได้เลือกไฟล์ PDF" };
   const { structured, pdfBlock, textBlock, CONTENT_MODEL } = await import("@/lib/claude");
+  const { extractPdfText } = await import("@/lib/pdf");
   const ExtractSchema = z.object({
     name: z.string(),
     headline: z.string().optional(),
@@ -61,19 +62,25 @@ export async function importPdfsAndRank(input: {
     snippet: z.string().optional(),
   });
   type ExtractedCandidate = z.infer<typeof ExtractSchema>;
-  // Extract each PDF in parallel
+  // Extract each PDF in parallel. Same token/latency optimization as the screener: pull
+  // text out server-side first (cheap, fast) and only fall back to native PDF reading
+  // (image tokens, pricier + slower) for scanned/image-only resumes.
   const extracted = await Promise.allSettled(
     input.pdfs.map(async (pdf): Promise<RawCandidate> => {
+      const text = await extractPdfText(pdf.base64);
       const result = await structured<ExtractedCandidate>({
-        system: "Extract candidate information from this resume PDF. Return a concise professional summary as snippet (2-3 sentences). Name is required; others fill from the document.",
-        user: [
-          textBlock(`Resume file: ${pdf.name}\nJob Description:\n"""${input.jdText}"""`),
-          pdfBlock(pdf.base64),
-        ],
+        system: "Extract candidate information from this resume. Return a concise professional summary as snippet (2-3 sentences). Name is required; others fill from the document.",
+        user: text
+          ? [textBlock(`Resume file: ${pdf.name}\nJob Description:\n"""${input.jdText}"""\n\nRESUME TEXT:\n"""${text}"""`)]
+          : [
+              textBlock(`Resume file: ${pdf.name}\nJob Description:\n"""${input.jdText}"""`),
+              pdfBlock(pdf.base64),
+            ],
         toolName: "extract_candidate",
         toolDescription: "Extract candidate info from resume",
         maxTokens: 1000,
         model: CONTENT_MODEL,
+        thinking: "disabled", // plain extraction — no thinking needed, and it's pure latency
         validate: ExtractSchema as ZodType<ExtractedCandidate>,
         inputSchema: {
           type: "object" as const,
