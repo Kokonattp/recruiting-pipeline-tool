@@ -28,6 +28,10 @@ export function CsvImport({ jobs }: { jobs: JobDescription[] }) {
   }
 
   async function onFile(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setError("ไฟล์ CSV ใหญ่เกินไป (จำกัด 5MB)");
+      return;
+    }
     const text = await file.text();
     const parsed = parseCsv(text);
     setRows(parsed);

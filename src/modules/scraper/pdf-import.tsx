@@ -24,16 +24,41 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
   }
 
   async function onFiles(picked: FileList) {
+    const incoming = Array.from(picked).filter(
+      (f) => f.type === "application/pdf" || f.name.endsWith(".pdf"),
+    );
+
+    // Server Action body limit is 10MB total (next.config.ts) — base64 inflates size
+    // ~33%, and this intake accepts *multiple* files at once, so a per-file cap alone
+    // isn't enough; reject oversized files individually and stop once the batch total
+    // would blow the budget, rather than letting the whole upload silently fail server-side.
+    const MAX_FILE_BYTES = 5 * 1024 * 1024;
+    const MAX_TOTAL_BYTES = 7 * 1024 * 1024;
+    const tooLarge = incoming.filter((f) => f.size > MAX_FILE_BYTES);
+    let runningTotal = files.reduce((sum, f) => sum + f.base64.length * 0.75, 0);
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_FILE_BYTES) continue;
+      if (runningTotal + f.size > MAX_TOTAL_BYTES) break;
+      runningTotal += f.size;
+      accepted.push(f);
+    }
+    if (tooLarge.length > 0 || accepted.length < incoming.length) {
+      setError(
+        tooLarge.length > 0
+          ? `ไฟล์ใหญ่เกินไป (จำกัด 5MB/ไฟล์): ${tooLarge.map((f) => f.name).join(", ")}`
+          : "รวมขนาดไฟล์เกิน 7MB — บางไฟล์ถูกข้าม ลองอัปโหลดเป็นชุดย่อยลง",
+      );
+    }
+
     const pdfs = await Promise.all(
-      Array.from(picked)
-        .filter((f) => f.type === "application/pdf" || f.name.endsWith(".pdf"))
-        .map(async (f) => {
-          const buf = await f.arrayBuffer();
-          const bytes = new Uint8Array(buf);
-          let binary = "";
-          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-          return { name: f.name, base64: btoa(binary) };
-        }),
+      accepted.map(async (f) => {
+        const buf = await f.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        return { name: f.name, base64: btoa(binary) };
+      }),
     );
     setFiles((prev) => {
       const names = new Set(prev.map((p) => p.name));
@@ -41,7 +66,7 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
     });
     setResult(null);
     setSelected(new Set());
-    setError(null);
+    if (tooLarge.length === 0 && accepted.length === incoming.length) setError(null);
   }
 
   function removeFile(name: string) {

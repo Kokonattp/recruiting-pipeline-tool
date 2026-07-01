@@ -51,6 +51,13 @@ export function ScreenerFlow({
   }
 
   async function onPdf(file: File) {
+    // Server Action body limit is 10MB (next.config.ts); base64 inflates size ~33%,
+    // so cap the source file well below that to leave room for the JD text alongside it.
+    if (file.size > 7 * 1024 * 1024) {
+      setError("ไฟล์ PDF ใหญ่เกินไป (จำกัด 7MB) กรุณาบีบอัดหรือใช้ไฟล์อื่น");
+      return;
+    }
+    setError(null);
     const buf = await file.arrayBuffer();
     const bytes = new Uint8Array(buf);
     let binary = "";
