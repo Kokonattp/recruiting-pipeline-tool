@@ -38,7 +38,9 @@ export const RankedCandidateSchema = z.object({
   name: z.string(),
   headline: z.string(),
   source: z.enum(SOURCES as [Source, ...Source[]]),
-  sourceUrl: z.string().url().nullable(),
+  // Claude sometimes returns "" instead of null when a MANUAL/PDF-sourced candidate has
+  // no real URL — treat blank as absent rather than failing validation on "Invalid URL".
+  sourceUrl: z.string().nullable().transform((v) => (v ? v : null)).pipe(z.string().url().nullable()),
   email: z.string().nullable(),
   fitScore: z.number().min(0).max(100), // overall fit 0-100
   reasons: z.array(z.string()), // why this person fits — HR's decision aid

@@ -18,7 +18,7 @@
 ## Tech Stack
 
 - **Next.js 16** (App Router, TypeScript) — full-stack ใน codebase เดียว, Server Actions, middleware auth gate
-- **Supabase** — Postgres (data, RLS) + Storage (ไฟล์ CV) + **Auth (Google login)**
+- **Supabase** — Postgres (data, RLS) + **Auth (Google login)**
 - **Claude API** (`@anthropic-ai/sdk`) — structured output ผ่าน tool-use
 - **Playwright + Docker** — scraper service (deploy แยก)
 - **googleapis** — Google Calendar + Meet (conferenceData)

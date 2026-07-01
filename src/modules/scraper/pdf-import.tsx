@@ -82,6 +82,9 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
       if (r.ok) {
         setResult(r.data);
         setSelected(new Set(r.data.shortlist.map((_, i) => i)));
+        if (r.data.shortlist.length === 0) {
+          setError("AI อ่านไฟล์สำเร็จแต่ไม่ได้ shortlist ใครเลย — อาจเป็นเพราะ AI มองว่าไม่ตรงกับ JD ที่เลือกไว้ ลองเปลี่ยนตำแหน่งหรือตรวจ CV อีกครั้ง");
+        }
       } else {
         setError(r.error);
       }

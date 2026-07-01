@@ -2,7 +2,7 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2)
+> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source)
 
 ## ความคืบหน้า ~98%
 
@@ -18,7 +18,8 @@
 - Wizard 3 step: JD → AI query plan → ranked shortlist → approve เข้า Tracker
 - **JD Generator:** keyword → Claude Sonnet สร้าง JD ฉบับเต็ม + spinner + skeleton loading
 - **JD Manager tab:** list/edit/delete JD ที่บันทึกไว้, inline edit form (title/dept/level/skills/fulltext)
-- **PDF Resume Intake:** drag & drop PDF → Claude อ่านแต่ละไฟล์ parallel (Promise.allSettled) → rank → approve
+- **PDF Resume Intake:** drag & drop PDF (จำกัด 5MB/ไฟล์, รวม 7MB) → Claude อ่านแต่ละไฟล์ parallel (Promise.allSettled) → rank → approve
+- **rankCandidates (ใช้ร่วมกัน CSV/PDF/live sourcing):** ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด — คะแนนต่ำได้ (fitScore <20 + เหตุผลใน concerns) แต่ทุกคนต้องปรากฏใน output เสมอ ให้ HR เห็นและตัดสินใจเอง ไม่ใช่ AI ซ่อนคนออกอย่างเงียบ ๆ
 - **Source toggle:** LOGA style (border-2 + shadow)
 - **JD textarea:** max-height 280px + resize-y กัน textarea ยาวผลักปุ่มออกนอกหน้าจอ
 - **beforeunload guard:** เตือนก่อนออกจากหน้าขณะค้นหาอยู่
