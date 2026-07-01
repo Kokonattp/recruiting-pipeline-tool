@@ -307,7 +307,7 @@ function JdStep({
                 key={s}
                 type="button"
                 onClick={() => onToggle(s)}
-                title={needsApify ? `ต้องเปิด Apify (ตั้ง ENABLE_APIFY=true + APIFY_TOKEN) — เลือกได้แต่คืน 0 ถ้าไม่ได้เปิด` : undefined}
+                title={needsApify ? `ต้องเชื่อมต่อบริการเพิ่มเติมก่อน — เลือกได้แต่จะไม่พบผลลัพธ์ถ้ายังไม่เชื่อมต่อ` : undefined}
                 className={[
                   "rounded-[var(--radius-card)] border-2 px-3 py-1.5 text-sm font-bold transition-all",
                   on
@@ -316,15 +316,14 @@ function JdStep({
                 ].join(" ")}
               >
                 {SOURCE_LABELS[s]}
-                {needsApify && <span className="ml-1 text-[10px] font-normal opacity-60">Apify</span>}
               </button>
             );
           })}
         </div>
         <p className="mt-1.5 text-xs text-ink-3">
-          Facebook ใช้ Apify — ต้องตั้ง <code className="font-mono">ENABLE_APIFY=true</code> ถึงจะดึงข้อมูลได้ (ไม่เปิด = คืน 0 เงียบ ๆ).
-          LinkedIn ไม่มีปุ่มแยกแล้ว — AI Web Search ครอบคลุม LinkedIn โปรไฟล์สาธารณะให้อัตโนมัติ (site:linkedin.com/in) ไม่ต้องเปิด Apify.
-          JobsDB/JobThai ซ่อนไว้ชั่วคราว — ทำงานผ่าน Apify เหมือนกัน (เครดิตหมด); มี Playwright scraper แยกที่ทำงานได้ฟรีแต่ยังไม่ deploy
+          Facebook ต้องเชื่อมต่อบริการดึงข้อมูลเพิ่มเติมก่อนถึงจะใช้งานได้จริง (ยังไม่เปิดใช้งาน).
+          LinkedIn ไม่มีปุ่มแยก — AI Web Search ครอบคลุมโปรไฟล์สาธารณะบน LinkedIn ให้อัตโนมัติอยู่แล้ว.
+          JobsDB/JobThai ซ่อนไว้ชั่วคราว รอเชื่อมต่อบริการเพิ่มเติมเช่นกัน
         </p>
 
         {/* Facebook needs specific group URLs */}
