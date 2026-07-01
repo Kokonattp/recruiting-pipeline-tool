@@ -27,6 +27,7 @@ export async function planQueries(
       "- LINKEDIN: a Google-style query targeting public profiles, e.g. site:linkedin.com/in \"AI Engineer\" LangChain Bangkok (these are reached via web search, not a logged-in scrape).",
       "- JOBSDB/JOBTHAI: short Thai/English keyword phrases a job board would match.",
       "- FACEBOOK: a Google-style query for public posts/profiles, e.g. site:facebook.com AI engineer สมัครงาน.",
+      "- GITHUB: this hits GitHub's REST user-search API directly (not a web search), which only supports the qualifiers language:, location:, repos:, followers:, created: — bare keywords only match a user's login/name/email, NOT their bio or repos. So do NOT stack multiple skill words as free text (e.g. 'dbt Snowflake Airflow Spark' will match almost nobody). Instead pick the ONE dominant programming language the role needs (e.g. language:python or language:go) plus optionally location:<city or country>, and keep it to just those 1-2 qualifiers.",
       "- WEB: a Google-style query, prefer site: filters (github.com, personal sites) or distinctive skill phrases.",
       "Keep queries realistic and specific — not generic. Explain each query's rationale briefly.",
     ].join("\n"),

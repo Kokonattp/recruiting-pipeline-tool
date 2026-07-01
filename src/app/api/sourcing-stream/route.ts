@@ -102,7 +102,10 @@ export async function POST(req: NextRequest) {
         const tasks: Promise<void>[] = [];
 
         tasks.push(
-          withTimeout(webSearchCandidates(jdText, ["github.com"], webQuery), SOURCE_TIMEOUT_MS)
+          withTimeout(
+            webSearchCandidates(jdText, ["github.com", "linkedin.com/in", "stackoverflow.com/users", "dev.to"], webQuery),
+            SOURCE_TIMEOUT_MS,
+          )
             .then((found) =>
               handleSource("AI Web Search", found.map((c) => ({
                 source: "WEB" as const,
