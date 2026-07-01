@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
 
-      const EARLY_EXIT_COUNT = 10;  // rank immediately once we have this many
+      const EARLY_EXIT_COUNT = 20;  // rank immediately once we have this many
       const SOURCE_TIMEOUT_MS = 20_000;
 
       const raw: RawCandidate[] = [];

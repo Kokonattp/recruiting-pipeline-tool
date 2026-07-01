@@ -11,7 +11,9 @@ import type { RawCandidate } from "@/modules/scraper/types";
  * gracefully. Counts are capped low to respect free tiers.
  */
 
-const GH_MAX = 10;
+const GH_MAX = 20;         // GitHub Search API is free and unmetered for this use — the
+                           // real constraint is just its per-endpoint rate limit, well
+                           // above what one sourcing round needs.
 const APIFY_MAX = 10;      // LinkedIn (Short mode) bills per search page regardless of
                            // profile count up to 25/page, so this is free to raise; the
                            // JobsDB/JobThai/Facebook actors are ~$0.001-0.01 each, negligible.
