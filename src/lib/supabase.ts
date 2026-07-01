@@ -18,6 +18,7 @@ interface Database {
       scrape_runs: Table;
       screening_results: Table;
       interviews: Table;
+      sourcing_shown: Table;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

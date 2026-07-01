@@ -56,6 +56,25 @@ export async function POST(req: NextRequest) {
         // blocking the search entirely.
       }
 
+      // Also pre-seed with everyone ever SHOWN before (not just approved) — otherwise
+      // re-running the same/similar JD keeps surfacing the same people, since GitHub
+      // and web search are deterministic for a near-identical query. Table may not
+      // exist yet if migration 0006 hasn't been run — degrade silently if so.
+      try {
+        const { data: shown } = await supabaseAdmin()
+          .from("sourcing_shown")
+          .select("name, source_url");
+        for (const c of shown ?? []) {
+          const url = (c.source_url as string | null)
+            ?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "").toLowerCase();
+          const name = (c.name as string | null)?.trim().toLowerCase();
+          if (url) seen.urls.add(url);
+          if (name) seen.names.add(name);
+        }
+      } catch {
+        // Best-effort — missing table (migration not run) shouldn't block search.
+      }
+
       // Resolves as soon as raw.length >= EARLY_EXIT_COUNT
       let earlyResolve!: () => void;
       const earlyExit = new Promise<void>((resolve) => { earlyResolve = resolve; });
@@ -163,6 +182,16 @@ export async function POST(req: NextRequest) {
           send({ type: "error", message: "ไม่พบผู้สมัครจากคำค้นนี้ ลองปรับ JD หรือคำค้น" });
           controller.close();
           return;
+        }
+
+        // Record everyone found this round so a future search (approved or not)
+        // won't resurface them — best-effort, missing table shouldn't fail the search.
+        try {
+          await supabaseAdmin()
+            .from("sourcing_shown")
+            .insert(raw.map((c) => ({ source_url: c.sourceUrl ?? null, name: c.name ?? null })));
+        } catch {
+          // ignore — table may not exist yet (migration 0006 not run)
         }
 
         // Rank after all sources done
