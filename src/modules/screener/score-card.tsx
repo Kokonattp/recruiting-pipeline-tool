@@ -119,7 +119,7 @@ export function ScoreCard({
 
       <div className="grid gap-4 md:grid-cols-2">
         {screening.strengths.length > 0 && (
-          <section>
+          <section className="loga-card rounded-[var(--radius-card)] border bg-bg p-4">
             <h4 className="mb-2 text-sm font-medium text-[var(--success)]">จุดแข็ง</h4>
             <ul className="space-y-1.5">
               {screening.strengths.map((s, i) => (
@@ -132,7 +132,7 @@ export function ScoreCard({
           </section>
         )}
         {screening.prescreenQuestions.length > 0 && (
-          <section>
+          <section className="loga-card rounded-[var(--radius-card)] border bg-bg p-4">
             <h4 className="mb-2 text-sm font-medium text-[var(--warning)]">ถามเพิ่มตอน prescreen</h4>
             <ul className="space-y-1.5">
               {screening.prescreenQuestions.map((q, i) => (
