@@ -55,7 +55,7 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
   }
 
   if (jobs.length === 0) {
-    return <p className="text-sm text-ink-3">ยังไม่มีตำแหน่งงานที่บันทึกไว้ — สร้างจาก tab "สร้างตำแหน่ง (JD)"</p>;
+    return <p className="text-sm text-ink-3">ยังไม่มีตำแหน่งงานที่บันทึกไว้ — สร้างจาก tab &ldquo;สร้างตำแหน่ง (JD)&rdquo;</p>;
   }
 
   return (
@@ -163,7 +163,7 @@ export function JDManager({ jobs, onRefresh }: { jobs: JobDescription[]; onRefre
                     {/* Inline confirm — replaces browser window.confirm */}
                     {confirmDelete === job.id && (
                       <div className="absolute right-0 top-8 z-10 w-56 rounded-[var(--radius-card)] border-2 border-ink bg-bg p-3 shadow-[3px_3px_0px_0px_var(--ink)]">
-                        <p className="text-xs font-medium text-ink mb-2">ลบ "{job.title}"?<br/><span className="font-normal text-ink-3">ผู้สมัครที่ผูกอยู่จะถูกลบด้วย</span></p>
+                        <p className="text-xs font-medium text-ink mb-2">ลบ &ldquo;{job.title}&rdquo;?<br/><span className="font-normal text-ink-3">ผู้สมัครที่ผูกอยู่จะถูกลบด้วย</span></p>
                         <div className="flex gap-2">
                           <button type="button" onClick={() => onDelete(job.id)} className="flex-1 h-7 rounded-[var(--radius-card)] bg-[var(--danger)] text-xs font-semibold text-white">ลบ</button>
                           <button type="button" onClick={() => setConfirmDelete(null)} className="flex-1 h-7 rounded-[var(--radius-card)] border border-border text-xs font-semibold text-ink-2 hover:bg-surface-2">ยกเลิก</button>

@@ -30,18 +30,30 @@ export function CandidateActions({
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function onDelete() {
     setConfirmDelete(false);
     setBusy(true);
-    await deleteCandidate(candidate.id);
-    setBusy(false);
-    if (applicationId) onDeleted(applicationId);
+    try {
+      const r = await deleteCandidate(candidate.id);
+      if (r.ok && applicationId) onDeleted(applicationId);
+      else if (!r.ok) setError(r.error);
+    } catch {
+      setError("ลบผู้สมัครไม่สำเร็จ ลองใหม่อีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function onMoveStage(stage: Stage) {
     if (!applicationId || stage === currentStage) return;
-    await updateStage({ applicationId, stage });
+    try {
+      const r = await updateStage({ applicationId, stage });
+      if (!r.ok) setError(r.error);
+    } catch {
+      setError("ย้าย stage ไม่สำเร็จ ลองใหม่อีกครั้ง");
+    }
   }
 
   return (
@@ -94,7 +106,7 @@ export function CandidateActions({
         </button>
         {confirmDelete && (
           <div className="absolute right-0 top-7 z-10 w-52 rounded-[var(--radius-card)] border-2 border-ink bg-bg p-3 shadow-[3px_3px_0px_0px_var(--ink)]">
-            <p className="text-xs font-medium text-ink mb-2">ลบ "{candidate.name}"?<br/><span className="font-normal text-ink-3">ไม่สามารถกู้คืนได้</span></p>
+            <p className="text-xs font-medium text-ink mb-2">ลบ &ldquo;{candidate.name}&rdquo;?<br/><span className="font-normal text-ink-3">ไม่สามารถกู้คืนได้</span></p>
             <div className="flex gap-2">
               <button type="button" onClick={onDelete} className="flex-1 h-7 rounded-[var(--radius-card)] bg-[var(--danger)] text-xs font-semibold text-white">ลบ</button>
               <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 h-7 rounded-[var(--radius-card)] border border-border text-xs font-semibold text-ink-2 hover:bg-surface-2">ยกเลิก</button>
@@ -113,6 +125,7 @@ export function CandidateActions({
         />
       )}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {error && <Toast message={error} onDone={() => setError(null)} />}
     </>
   );
 }

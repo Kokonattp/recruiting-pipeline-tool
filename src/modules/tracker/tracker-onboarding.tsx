@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PIPELINE_STAGES, STAGE_HUE, STAGE_LABELS } from "@/lib/types";
+import { PIPELINE_STAGES, STAGE_LABELS } from "@/lib/types";
 
 /**
  * First-run state for the Tracker. Instead of a hollow "no data" box, this teaches the

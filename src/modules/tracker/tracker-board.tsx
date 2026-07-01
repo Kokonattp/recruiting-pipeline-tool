@@ -87,13 +87,17 @@ export function TrackerBoard({ initial, jobs }: TrackerBoardProps) {
     const prevStage = apps.find((a) => a.id === id)?.stage;
     if (!prevStage || prevStage === overStage) return;
 
-    // Optimistic move, then persist. Roll back if the write fails.
+    // Optimistic move, then persist. Roll back if the write fails or throws.
     setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage: overStage } : a)));
-    updateStage({ applicationId: id, stage: overStage }).then((r) => {
-      if (!r.ok) {
+    updateStage({ applicationId: id, stage: overStage })
+      .then((r) => {
+        if (!r.ok) {
+          setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage: prevStage } : a)));
+        }
+      })
+      .catch(() => {
         setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage: prevStage } : a)));
-      }
-    });
+      });
   }
 
   function onDeleted(applicationId: string) {

@@ -43,9 +43,13 @@ export function SchedulerFlow({
   }, [candidates]);
 
   async function connect() {
-    const r = await getGoogleAuthUrl();
-    if (r.ok && r.data) window.location.href = r.data;
-    else setMsg({ kind: "err", text: r.ok ? "ไม่ได้ URL" : r.error });
+    try {
+      const r = await getGoogleAuthUrl();
+      if (r.ok && r.data) window.location.href = r.data;
+      else setMsg({ kind: "err", text: r.ok ? "ไม่ได้ URL" : r.error });
+    } catch {
+      setMsg({ kind: "err", text: "เชื่อมต่อ Google ไม่สำเร็จ ลองใหม่อีกครั้ง" });
+    }
   }
 
   async function book() {
@@ -53,21 +57,26 @@ export function SchedulerFlow({
     if (!cand) return;
     setBusy(true);
     setMsg(null);
-    const r = await createInterview({
-      applicationId,
-      startsAt: new Date(datetime).toISOString(),
-      durationMin: duration,
-      summary: `สัมภาษณ์: ${cand.candidate.name} — ${cand.job.title}`,
-      description: cand.screening
-        ? `คำถามแนะนำ:\n${cand.screening.prescreenQuestions.map((q) => `• ${q}`).join("\n")}`
-        : "",
-      attendeeEmails: notifyCandidate && cand.candidate.email ? [cand.candidate.email] : [],
-    });
-    setBusy(false);
-    if (r.ok) {
-      setMsg({ kind: "ok", text: "สร้างนัด + Google Meet สำเร็จ — sync เข้า Tracker แล้ว" });
-      setDatetime("");
-    } else setMsg({ kind: "err", text: r.error });
+    try {
+      const r = await createInterview({
+        applicationId,
+        startsAt: new Date(datetime).toISOString(),
+        durationMin: duration,
+        summary: `สัมภาษณ์: ${cand.candidate.name} — ${cand.job.title}`,
+        description: cand.screening
+          ? `คำถามแนะนำ:\n${cand.screening.prescreenQuestions.map((q) => `• ${q}`).join("\n")}`
+          : "",
+        attendeeEmails: notifyCandidate && cand.candidate.email ? [cand.candidate.email] : [],
+      });
+      if (r.ok) {
+        setMsg({ kind: "ok", text: "สร้างนัด + Google Meet สำเร็จ — sync เข้า Tracker แล้ว" });
+        setDatetime("");
+      } else setMsg({ kind: "err", text: r.error });
+    } catch {
+      setMsg({ kind: "err", text: "สร้างนัดไม่สำเร็จ ลองใหม่อีกครั้ง" });
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (!googleConnected) {
@@ -221,12 +230,12 @@ function UpcomingPanel({ interviews, nameByApp }: { interviews: Interview[]; nam
         </div>
       </div>
 
-      {upcoming.length === 0 ? (
-        <div className="loga-card rounded-[var(--radius-card)] border-2 border-dashed border-border bg-surface px-4 py-10 text-center text-sm text-ink-3 hover:border-ink transition-colors">
+      {view === "calendar" ? (
+        <CalendarView interviews={upcoming} nameByApp={nameByApp} />
+      ) : upcoming.length === 0 ? (
+        <div className="loga-card rounded-[var(--radius-card)] border-2 border-dashed border-border bg-surface px-4 py-10 text-center text-sm text-ink-3">
           ยังไม่มีนัดสัมภาษณ์ — สร้างนัดแรกจากฟอร์มด้านซ้าย
         </div>
-      ) : view === "calendar" ? (
-        <CalendarView interviews={upcoming} nameByApp={nameByApp} />
       ) : (
         <ul className="space-y-2">
           {upcoming.map((iv) => (
@@ -299,22 +308,32 @@ function InterviewRow({ iv, name }: { iv: Interview; name?: string }) {
 
   async function cancel() {
     setBusy(true);
-    await cancelInterview(iv.id, iv.googleEventId);
-    setBusy(false);
+    try {
+      await cancelInterview(iv.id, iv.googleEventId);
+    } catch {
+      setError("ยกเลิกนัดไม่สำเร็จ ลองใหม่อีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveReschedule() {
     setBusy(true);
     setError(null);
-    const r = await rescheduleInterview(
-      { interviewId: iv.id, startsAt: new Date(newAt).toISOString(), durationMin: iv.durationMin },
-      iv.googleEventId,
-    );
-    setBusy(false);
-    if (r.ok) {
-      setRescheduling(false);
-      setNewAt("");
-    } else setError(r.error);
+    try {
+      const r = await rescheduleInterview(
+        { interviewId: iv.id, startsAt: new Date(newAt).toISOString(), durationMin: iv.durationMin },
+        iv.googleEventId,
+      );
+      if (r.ok) {
+        setRescheduling(false);
+        setNewAt("");
+      } else setError(r.error);
+    } catch {
+      setError("เลื่อนนัดไม่สำเร็จ ลองใหม่อีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -369,9 +388,9 @@ function InterviewRow({ iv, name }: { iv: Interview; name?: string }) {
             {busy && <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--primary-ink)] border-t-transparent" aria-hidden />}
             {busy ? "กำลังเลื่อน…" : "ยืนยันเวลาใหม่"}
           </button>
-          {error && <span className="w-full text-xs text-[var(--danger)]">{error}</span>}
         </div>
       )}
+      {error && <p className="mt-2 text-xs text-[var(--danger)]">{error}</p>}
     </li>
   );
 }

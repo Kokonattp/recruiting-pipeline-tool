@@ -72,7 +72,8 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
   function toggleSelect(i: number) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
       return next;
     });
   }
@@ -114,7 +115,7 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
       <label
         className="block rounded-[var(--radius-card)] border-2 border-dashed border-border-strong bg-surface p-6 text-center transition-colors hover:border-ink hover:bg-surface-2 cursor-pointer"
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); e.dataTransfer.files && onFiles(e.dataTransfer.files); }}
+        onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files) onFiles(e.dataTransfer.files); }}
       >
         <div className="text-2xl mb-2">📄</div>
         <p className="text-sm font-medium text-ink">วาง PDF หรือคลิกเพื่อเลือกไฟล์</p>

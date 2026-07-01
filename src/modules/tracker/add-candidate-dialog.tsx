@@ -74,19 +74,24 @@ function CandidateForm({ mode, jobs, candidate, onClose }: FormProps) {
   async function submit() {
     setBusy(true);
     setError(null);
-    const r =
-      mode === "add"
-        ? await addCandidate(form)
-        : await editCandidate({
-            candidateId: candidate.id,
-            name: form.name,
-            email: form.email,
-            phone: form.phone,
-            source: form.source,
-          });
-    setBusy(false);
-    if (r.ok) onClose(true);
-    else setError(r.error);
+    try {
+      const r =
+        mode === "add"
+          ? await addCandidate(form)
+          : await editCandidate({
+              candidateId: candidate.id,
+              name: form.name,
+              email: form.email,
+              phone: form.phone,
+              source: form.source,
+            });
+      if (r.ok) onClose(true);
+      else setError(r.error);
+    } catch {
+      setError("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const content = (
