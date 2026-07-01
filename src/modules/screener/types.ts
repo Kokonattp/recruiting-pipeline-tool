@@ -103,26 +103,23 @@ export const SCREENING_TOOL_SCHEMA = {
       required: ["skills", "experience", "culture"],
       description: "3 named sub-attributes per axis (0-10 each), scored independently of the axis total — explains what's behind the number.",
       properties: {
+        // NOTE: Claude's tool-use array schema only supports minItems 0 or 1 (a 400
+        // "invalid_request_error" otherwise) — array length is enforced via the
+        // description here plus zod's `.length(3)` re-validation after the response.
         skills: {
           type: "array",
-          minItems: 3,
-          maxItems: 3,
           items: SUB_ATTRIBUTE_JSON_SCHEMA,
-          description: "3 of the JD's own must-have skills/tools, each scored on evidence in the CV.",
+          description: "EXACTLY 3 items: the JD's own most important must-have skills/tools, each scored on evidence in the CV.",
         },
         experience: {
           type: "array",
-          minItems: 3,
-          maxItems: 3,
           items: SUB_ATTRIBUTE_JSON_SCHEMA,
-          description: "Fixed labels: Seniority/Scope, Domain Match, Track Record.",
+          description: "EXACTLY 3 items with these fixed labels in order: Seniority/Scope, Domain Match, Track Record.",
         },
         culture: {
           type: "array",
-          minItems: 3,
-          maxItems: 3,
           items: SUB_ATTRIBUTE_JSON_SCHEMA,
-          description: "Fixed labels: Collaboration, Communication, Leadership/Mentorship.",
+          description: "EXACTLY 3 items with these fixed labels in order: Collaboration, Communication, Leadership/Mentorship.",
         },
       },
     },
