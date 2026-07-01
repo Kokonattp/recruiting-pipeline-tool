@@ -2,11 +2,11 @@
 
 > อัปเดตล่าสุด: 1 ก.ค. 2026 · repo: github.com/Kokonattp/recruiting-pipeline-tool (private) · build+deploy (Vercel) ผ่าน
 >
-> **ล่าสุด:** แก้ bug อัปโหลด CV/PDF พังเงียบเพราะ Server Action body limit (1MB→10MB) + เพิ่ม client-side size guard ทุกจุดอัปโหลด + banner ยืนยันหลังบันทึกผล screening สำเร็จ (Module 2) + rankCandidates ห้าม AI ตัดผู้สมัครออกจาก shortlist เด็ดขาด (Module 1, ทุก source) + radar chart + FM-style sub-attribute breakdown ใน score card (Module 2) — migration 0005–0007 รันบน production Supabase ครบแล้ว, **demo video ส่งแล้ว**
+> **ล่าสุด:** แก้ bug production ร้ายแรง — sub-attribute schema (`minItems: 3`) ทำให้ Claude API ปฏิเสธ request ด้วย 400 ทุกครั้ง (Screener ใช้งานไม่ได้เลยทั้งระบบ) แก้แล้ว deploy แล้ว ยืนยันใช้งานได้จริง
 
 ## ความคืบหน้า 100% — งานส่งครบแล้ว
 
-โค้ดครบ + feature เพิ่มตามภาพ idea เสร็จหมด build ผ่าน + migration รันครบบน production + demo video ส่งเรียบร้อย ไม่มีงานค้าง.
+โค้ดครบ + feature เพิ่มตามภาพ idea เสร็จหมด build ผ่าน + migration 0005–0007 รันครบบน production Supabase + demo video ส่งเรียบร้อย + production bug ล่าสุด (Claude tool schema 400) แก้และ verify แล้ว ไม่มีงานค้าง.
 
 ## ✅ เสร็จแล้ว
 

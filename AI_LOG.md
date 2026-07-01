@@ -360,3 +360,13 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 **ทดสอบก่อนส่ง:** ใช้ pattern เดิมจากรอบที่ 18 (preview route ชั่วคราว + Playwright screenshot ด้วยข้อมูล mock) ยืนยันภาพจริงว่า sub-attribute แสดงถูกต้องใต้แต่ละการ์ด ก่อนลบ scaffolding ทิ้งทั้งหมด.
 
 **บทเรียน:** ผู้ใช้ทวนคำถามเดิม ("อ่านจาก CV รู้ได้ยังไง") ซ้ำ 2 รอบก่อนจะเข้าใจตรงกันว่ากลไกคือ rubric ไม่ใช่การเดา — สะท้อนว่าอธิบาย "ทำไมตัวเลขนี้เชื่อถือได้" สำคัญพอๆ กับตัวฟีเจอร์เอง โดยเฉพาะ tool ที่ output เป็นตัวเลขตัดสินคน ถ้าผู้ใช้เองยังไม่มั่นใจว่าตัวเลขมาจากไหน ต่อให้ฟีเจอร์ทำงานถูกก็ไม่ควรส่งมอบโดยไม่อธิบายให้ชัดก่อน.
+
+## รอบที่ 20 — bug จริง: sub-attribute schema พัง Screener ทั้งระบบบน production (1 ก.ค. 2026)
+
+**อาการที่เจอ:** หลัง deploy รอบที่ 19 (sub-attribute breakdown) ไปแล้ว ทดสอบจริงบน production พบว่า "ประเมินด้วย AI" ล้มเหลว **ทุกครั้ง ไม่ว่า CV/JD อะไรก็ตาม** — error โชว์ตรง ๆ บนหน้าจอ: `400 {"type":"invalid_request_error","message":"tools.0.custom: For 'array' type, 'minItems' values other than 0 or 1 are not supported (got: [2, 5])"}`. ต่างจาก bug ก่อนหน้า (รอบ 15, 17) ตรงที่ครั้งนี้ error โผล่ตรงๆ ไม่ต้องไล่หา — Claude API เองเป็นคนบอกสาเหตุ.
+
+**สาเหตุ:** `SCREENING_TOOL_SCHEMA` (`types.ts`) ที่เพิ่งเพิ่มในรอบที่ 19 ใส่ `minItems: 3, maxItems: 3` ให้ array ของ sub-attribute ทั้ง 3 แกน (skills/experience/culture) เพื่อบังคับว่าต้องมีครบ 3 รายการเป๊ะ — แต่ **Claude's tool-use JSON schema รองรับ `minItems` แค่ค่า 0 หรือ 1 เท่านั้น** ค่าอื่นถูก reject ทันทีด้วย 400 ก่อนโมเดลจะเริ่มประมวลผลเลย ทำให้ `runScreening()` throw ทุกครั้ง ไม่ว่า input จะเป็นอะไร — เป็นข้อจำกัดของ API ที่ไม่ได้ระบุชัดใน docs ทั่วไป ต้องเจอ error จริงถึงจะรู้.
+
+**แก้:** เอา `minItems`/`maxItems` ออกจาก JSON schema ทั้ง 3 จุด — ย้ายการบังคับ "ต้องมีเป๊ะ 3 รายการ" ไปเป็น 2 ชั้นแทน (1) คำอธิบายในฟิลด์ `description` ของ schema เอง ("EXACTLY 3 items...") ให้ AI อ่านแล้วทำตาม (2) `zod` (`.length(3)`) ที่ `ScreeningSchema` re-validate ผลลัพธ์หลัง Claude ตอบกลับมาอยู่แล้วเป็นด่านสุดท้ายจับความผิดพลาดถ้า AI ไม่ทำตาม.
+
+**บทเรียน:** API ของ provider มีข้อจำกัดที่ไม่ได้ intuitive เสมอ (เช่น "ทำไม array ถึงบังคับความยาวไม่ได้") — เจอ 400 error ต้องอ่าน error message ให้ละเอียดก่อนเดา เพราะ Claude บอกสาเหตุตรง ๆ ในข้อความอยู่แล้ว (`minItems values other than 0 or 1 are not supported`) ไม่ต้อง debug อ้อม. และ feature ใหม่ที่เพิ่ง merge ควรทดสอบยิง production จริงทันทีหลัง deploy ก่อนจะประกาศว่า "เสร็จสมบูรณ์" — ในรอบที่แล้วบันทึกไว้ว่างานเสร็จ 100% ทั้งที่ยังไม่ได้ยืนยันว่า production ใช้งานได้จริงกับ feature ที่เพิ่งเพิ่ม (ทดสอบแค่ mock data ในเบราว์เซอร์ ไม่ใช่ end-to-end ผ่าน Claude จริง) — ช่องว่างนี้คือสิ่งที่ทำให้ bug หลุดไปถึงมือผู้ใช้.
