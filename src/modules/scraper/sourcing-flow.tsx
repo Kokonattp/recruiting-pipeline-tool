@@ -298,7 +298,7 @@ function JdStep({
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">ค้นหาจากแหล่ง</legend>
         <div className="flex flex-wrap gap-2">
-          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK").map((s) => {
+          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK" && s !== "LINKEDIN").map((s) => {
             const needsApify = APIFY_SOURCES.includes(s);
             const on = sources.includes(s);
             return (
@@ -321,10 +321,11 @@ function JdStep({
           })}
         </div>
         <p className="mt-1.5 text-xs text-ink-3">
-          LinkedIn / Facebook ใช้ Apify — ต้องตั้ง <code className="font-mono">ENABLE_APIFY=true</code> ถึงจะดึงข้อมูลได้ (ไม่เปิด = คืน 0 เงียบ ๆ)
+          Facebook ใช้ Apify — ต้องตั้ง <code className="font-mono">ENABLE_APIFY=true</code> ถึงจะดึงข้อมูลได้ (ไม่เปิด = คืน 0 เงียบ ๆ).
+          LinkedIn ไม่มีปุ่มแยกแล้ว — AI Web Search ครอบคลุม LinkedIn โปรไฟล์สาธารณะให้อัตโนมัติ (site:linkedin.com/in) ไม่ต้องเปิด Apify
         </p>
 
-        {/* Facebook needs specific group URLs; LinkedIn searches by keyword automatically */}
+        {/* Facebook needs specific group URLs */}
         {sources.includes("FACEBOOK") && (
           <div className="mt-3">
             <label className="mb-1.5 block text-xs font-medium text-ink-2">
@@ -337,7 +338,7 @@ function JdStep({
               placeholder={"https://www.facebook.com/groups/xxxxx\nhttps://www.facebook.com/groups/yyyyy"}
               className="w-full rounded-[var(--radius-card)] field p-2.5 text-sm text-ink placeholder:text-ink-3 "
             />
-            <p className="mt-1 text-xs text-ink-3">ต้องใส่อย่างน้อย 1 URL — ถ้าไม่ใส่จะบล็อกก่อนค้น (LinkedIn ไม่ต้องใส่กลุ่ม)</p>
+            <p className="mt-1 text-xs text-ink-3">ต้องใส่อย่างน้อย 1 URL — ถ้าไม่ใส่จะบล็อกก่อนค้น</p>
           </div>
         )}
       </fieldset>
