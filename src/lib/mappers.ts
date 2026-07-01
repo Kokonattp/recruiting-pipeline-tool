@@ -90,17 +90,22 @@ export function toInterview(r: Row): Interview {
 
 /**
  * The Tracker board needs application + candidate + job + latest screening in one shape.
- * `candidate` / `job` come from the embedded select; `screening` is a 0-or-1 relation
- * that supabase-js returns as an array, so we take the first row.
+ * `candidate` / `job` come from the embedded select. `screening` used to be treated as an
+ * array (`(r.screening as Row[] | null) ?? []`, take [0]) on the assumption that a 0-or-1
+ * relation always comes back as an array — but `screening_results.application_id` has a
+ * `unique` constraint, so PostgREST infers a one-to-one embed and returns it as a single
+ * object (or null), never an array. `.length` on that object is `undefined`, so the old
+ * code silently treated every screening as missing — scores never showed up on the
+ * Tracker even though they were saved correctly.
  */
 export function toApplicationWithRelations(r: Row): ApplicationWithRelations {
   const candidate = toCandidate(r.candidate as Row);
   const jobRow = r.job as Row;
-  const screeningRows = (r.screening as Row[] | null) ?? [];
+  const screeningRow = r.screening as Row | null;
   return {
     ...toApplication(r),
     candidate,
     job: { id: jobRow.id as string, title: jobRow.title as string },
-    screening: screeningRows.length > 0 ? toScreening(screeningRows[0]) : null,
+    screening: screeningRow ? toScreening(screeningRow) : null,
   };
 }
