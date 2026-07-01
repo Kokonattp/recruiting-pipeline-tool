@@ -11,8 +11,9 @@ import {
 type SourceTally = { name: string; found: number; ok: boolean }[];
 import type { QueryPlan, RankResult, RawCandidate } from "./types";
 
-/** Default sources to search — the public ones that work without login are pre-checked. */
-const DEFAULT_SOURCES: Source[] = ["WEB", "GITHUB", "JOBSDB", "JOBTHAI"];
+/** Default sources to search — the public ones that work without login are pre-checked.
+ *  JOBSDB/JOBTHAI are Apify-gated (no credits currently) — not defaulted on. */
+const DEFAULT_SOURCES: Source[] = ["WEB", "GITHUB"];
 
 type Step = "jd" | "plan" | "shortlist";
 
@@ -298,7 +299,7 @@ function JdStep({
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">ค้นหาจากแหล่ง</legend>
         <div className="flex flex-wrap gap-2">
-          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK" && s !== "LINKEDIN").map((s) => {
+          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK" && s !== "LINKEDIN" && s !== "JOBSDB" && s !== "JOBTHAI").map((s) => {
             const needsApify = APIFY_SOURCES.includes(s);
             const on = sources.includes(s);
             return (
@@ -322,7 +323,8 @@ function JdStep({
         </div>
         <p className="mt-1.5 text-xs text-ink-3">
           Facebook ใช้ Apify — ต้องตั้ง <code className="font-mono">ENABLE_APIFY=true</code> ถึงจะดึงข้อมูลได้ (ไม่เปิด = คืน 0 เงียบ ๆ).
-          LinkedIn ไม่มีปุ่มแยกแล้ว — AI Web Search ครอบคลุม LinkedIn โปรไฟล์สาธารณะให้อัตโนมัติ (site:linkedin.com/in) ไม่ต้องเปิด Apify
+          LinkedIn ไม่มีปุ่มแยกแล้ว — AI Web Search ครอบคลุม LinkedIn โปรไฟล์สาธารณะให้อัตโนมัติ (site:linkedin.com/in) ไม่ต้องเปิด Apify.
+          JobsDB/JobThai ซ่อนไว้ชั่วคราว — ทำงานผ่าน Apify เหมือนกัน (เครดิตหมด); มี Playwright scraper แยกที่ทำงานได้ฟรีแต่ยังไม่ deploy
         </p>
 
         {/* Facebook needs specific group URLs */}
