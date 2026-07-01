@@ -11,8 +11,7 @@ import {
 type SourceTally = { name: string; found: number; ok: boolean }[];
 import type { QueryPlan, RankResult, RawCandidate } from "./types";
 
-/** Default sources to search — the public ones that work without login are pre-checked.
- *  JOBSDB/JOBTHAI are Apify-gated (no credits currently) — not defaulted on. */
+/** Default sources to search — the ones that always work without extra setup. */
 const DEFAULT_SOURCES: Source[] = ["WEB", "GITHUB"];
 
 type Step = "jd" | "plan" | "shortlist";
@@ -28,7 +27,6 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
   const [jobId, setJobId] = useState<string>(jobs[0]?.id ?? "");
   const [jdText, setJdText] = useState(jobs[0]?.rawText ?? "");
   const [sources, setSources] = useState<Source[]>(DEFAULT_SOURCES);
-  const [fbGroups, setFbGroups] = useState(""); // Facebook group URLs (one per line)
   const [plan, setPlan] = useState<QueryPlan | null>(null);
   const [result, setResult] = useState<RankResult | null>(null);
   const [rawCandidates, setRawCandidates] = useState<RawCandidate[]>([]);
@@ -78,11 +76,6 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
 
   async function onRunScrape() {
     if (!plan) return;
-    const facebookGroups = fbGroups.split("\n").map((s) => s.trim()).filter(Boolean);
-    if (sources.includes("FACEBOOK") && facebookGroups.length === 0) {
-      setError("เลือก Facebook แต่ยังไม่ได้ใส่ URL กลุ่ม — ใส่ URL กลุ่มด้านล่าง หรือยกเลิกการเลือก Facebook ก่อนค้น");
-      return;
-    }
     setBusy(true);
     setError(null);
     setRawCandidates([]);
@@ -93,7 +86,7 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
       const res = await fetch("/api/sourcing-stream", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jdText, plan, facebookGroups }),
+        body: JSON.stringify({ jdText, plan }),
       });
 
       if (!res.ok || !res.body) {
@@ -184,8 +177,6 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
           onJd={setJdText}
           sources={sources}
           onToggle={toggleSource}
-          fbGroups={fbGroups}
-          onFbGroups={setFbGroups}
           busy={busy}
           onNext={onGeneratePlan}
         />
@@ -238,8 +229,8 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
-// Sources that require Apify (pay-per-event) — only usable when ENABLE_APIFY=true
-const APIFY_SOURCES: Source[] = ["LINKEDIN", "FACEBOOK"];
+// Sources that require Firecrawl (FIRECRAWL_API_KEY) — public job-board pages.
+const FIRECRAWL_SOURCES: Source[] = ["JOBSDB", "JOBTHAI"];
 
 function JdStep({
   jobs,
@@ -249,8 +240,6 @@ function JdStep({
   onJd,
   sources,
   onToggle,
-  fbGroups,
-  onFbGroups,
   busy,
   onNext,
 }: {
@@ -261,8 +250,6 @@ function JdStep({
   onJd: (v: string) => void;
   sources: Source[];
   onToggle: (s: Source) => void;
-  fbGroups: string;
-  onFbGroups: (v: string) => void;
   busy: boolean;
   onNext: () => void;
 }) {
@@ -299,15 +286,15 @@ function JdStep({
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">ค้นหาจากแหล่ง</legend>
         <div className="flex flex-wrap gap-2">
-          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK" && s !== "LINKEDIN" && s !== "JOBSDB" && s !== "JOBTHAI").map((s) => {
-            const needsApify = APIFY_SOURCES.includes(s);
+          {SOURCES.filter((s) => s !== "REFERRAL" && s !== "MANUAL" && s !== "JOBBKK" && s !== "LINKEDIN" && s !== "FACEBOOK").map((s) => {
+            const needsFirecrawl = FIRECRAWL_SOURCES.includes(s);
             const on = sources.includes(s);
             return (
               <button
                 key={s}
                 type="button"
                 onClick={() => onToggle(s)}
-                title={needsApify ? `ต้องเชื่อมต่อบริการเพิ่มเติมก่อน — เลือกได้แต่จะไม่พบผลลัพธ์ถ้ายังไม่เชื่อมต่อ` : undefined}
+                title={needsFirecrawl ? `ต้องตั้งค่า FIRECRAWL_API_KEY ก่อน — เลือกได้แต่จะไม่พบผลลัพธ์ถ้ายังไม่ตั้งค่า` : undefined}
                 className={[
                   "rounded-[var(--radius-card)] border-2 px-3 py-1.5 text-sm font-bold transition-all",
                   on
@@ -321,26 +308,8 @@ function JdStep({
           })}
         </div>
         <p className="mt-1.5 text-xs text-ink-3">
-          Facebook ต้องเชื่อมต่อบริการดึงข้อมูลเพิ่มเติมก่อนถึงจะใช้งานได้จริง (ยังไม่เปิดใช้งาน).
-          JobsDB/JobThai ซ่อนไว้ชั่วคราว รอเชื่อมต่อบริการเพิ่มเติมเช่นกัน
+          JobsDB/JobThai ต้องตั้งค่า FIRECRAWL_API_KEY ก่อนถึงจะใช้งานได้จริง
         </p>
-
-        {/* Facebook needs specific group URLs */}
-        {sources.includes("FACEBOOK") && (
-          <div className="mt-3">
-            <label className="mb-1.5 block text-xs font-medium text-ink-2">
-              Facebook group ที่จะค้น (วาง URL บรรทัดละ 1 กลุ่ม) <span className="text-[var(--danger)]">*จำเป็น</span>
-            </label>
-            <textarea
-              value={fbGroups}
-              onChange={(e) => onFbGroups(e.target.value)}
-              rows={2}
-              placeholder={"https://www.facebook.com/groups/xxxxx\nhttps://www.facebook.com/groups/yyyyy"}
-              className="w-full rounded-[var(--radius-card)] field p-2.5 text-sm text-ink placeholder:text-ink-3 "
-            />
-            <p className="mt-1 text-xs text-ink-3">ต้องใส่อย่างน้อย 1 URL — ถ้าไม่ใส่จะบล็อกก่อนค้น</p>
-          </div>
-        )}
       </fieldset>
 
       <div className="flex flex-wrap items-center gap-3">

@@ -2,8 +2,8 @@ import { z } from "zod";
 import { SOURCES, type Source } from "@/lib/types";
 
 /**
- * Contract shared by the three parts of Module 1:
- *   web app (gen query / rank / approve)  ⇄  scraper service (Playwright)  ⇄  DB
+ * Contract for Module 1 (sourcing): AI query generation → per-source fetch
+ * (GitHub API, Firecrawl for JobsDB/JobThai, Claude web search) → AI ranking → DB.
  * Everything that crosses a boundary is a zod schema so bad data fails loudly.
  */
 
@@ -50,11 +50,3 @@ export const RankResultSchema = z.object({
   shortlist: z.array(RankedCandidateSchema),
 });
 export type RankResult = z.infer<typeof RankResultSchema>;
-
-/** Body the scraper service POSTs to /api/scrape-ingest. */
-export const IngestPayloadSchema = z.object({
-  secret: z.string(),
-  jobId: z.string(),
-  candidates: z.array(RawCandidateSchema),
-});
-export type IngestPayload = z.infer<typeof IngestPayloadSchema>;

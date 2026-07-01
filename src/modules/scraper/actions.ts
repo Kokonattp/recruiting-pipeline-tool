@@ -6,13 +6,13 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { SOURCES, type Source } from "@/lib/types";
 import { planQueries, rankCandidates } from "./ai";
 import { webSearchCandidates } from "@/lib/web-search";
-import { githubCandidates, linkedinCandidates, facebookCandidates } from "@/lib/sourcing-apis";
+import { githubCandidates, jobsdbCandidates, jobthaiCandidates } from "@/lib/sourcing-apis";
 import type { QueryPlan, RankResult, RawCandidate } from "./types";
 
 /**
  * Server Actions driving the sourcing flow. They orchestrate AI + the scraper service;
- * Supabase persistence is wired in the linking phase (marked TODO). Each action validates
- * its input with zod before doing anything.
+ * Supabase persistence happens in `approveCandidates` (the human-in-the-loop gate) below.
+ * Each action validates its input with zod before doing anything.
  */
 
 const PlanInput = z.object({
@@ -131,31 +131,18 @@ export async function generateQueryPlan(input: {
 
 /**
  * One-click sourcing: fan out to every available source in PARALLEL, merge the raw
- * results, then rank once. Sources are independent — the scraper service (Playwright,
- * may be unconfigured/down) and Claude web search (always available with an API key)
- * run together; whichever returns results contributes. A source failing is logged in
- * `sources` and skipped, never failing the whole request. Returns the ranked shortlist
- * plus a per-source tally so HR can see where candidates came from.
+ * results, then rank once. Sources are independent — Claude web search (always
+ * available with an API key), GitHub (always available), and JobsDB/JobThai via
+ * Firecrawl (when FIRECRAWL_API_KEY is set) run together; whichever returns results
+ * contributes. A source failing is logged in `sources` and skipped, never failing
+ * the whole request. Returns the ranked shortlist plus a per-source tally so HR can
+ * see where candidates came from.
  */
 export async function runSourcing(input: {
   jdText: string;
   plan: QueryPlan;
-  facebookGroups?: string[];
 }): Promise<ActionResult<{ result: RankResult; sources: { name: string; found: number; ok: boolean }[] }>> {
   const sources: { name: string; found: number; ok: boolean }[] = [];
-
-  // Kick off both intake paths at once.
-  const scrapePromise: Promise<RawCandidate[]> = (async () => {
-    const serviceUrl = process.env.SCRAPER_SERVICE_URL;
-    if (!serviceUrl) throw new Error("scraper not configured");
-    const res = await fetch(`${serviceUrl}/scrape`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ secret: process.env.SCRAPER_INGEST_SECRET, queries: input.plan.queries }),
-    });
-    if (!res.ok) throw new Error(`scraper ${res.status}`);
-    return ((await res.json()) as { candidates: RawCandidate[] }).candidates;
-  })();
 
   const picked = new Set(input.plan.queries.map((q) => q.source));
   const firstQuery = input.plan.queries[0]?.query ?? input.jdText.slice(0, 120);
@@ -167,16 +154,15 @@ export async function runSourcing(input: {
     }));
   })();
 
-  // In-Vercel sources (plain APIs, no scraper service): GitHub always, LinkedIn/Facebook
-  // (Apify) when HR picked them and APIFY_TOKEN is set. Each runs in parallel.
+  // In-Vercel sources (plain HTTP APIs, no separate service to deploy): GitHub
+  // always, JobsDB/JobThai (Firecrawl) when HR picked them and FIRECRAWL_API_KEY
+  // is set. Each runs in parallel.
   const githubPromise = githubCandidates(firstQuery);
-  const linkedinPromise = picked.has("LINKEDIN") ? linkedinCandidates(firstQuery) : Promise.resolve([]);
-  const fbGroups = input.facebookGroups ?? [];
-  const facebookPromise =
-    picked.has("FACEBOOK") && fbGroups.length > 0 ? facebookCandidates(firstQuery, fbGroups) : Promise.resolve([]);
+  const jobsdbPromise = picked.has("JOBSDB") ? jobsdbCandidates(firstQuery) : Promise.resolve([]);
+  const jobthaiPromise = picked.has("JOBTHAI") ? jobthaiCandidates(firstQuery) : Promise.resolve([]);
 
-  const [scrapeRes, webRes, ghRes, liRes, fbRes] = await Promise.allSettled([
-    scrapePromise, webPromise, githubPromise, linkedinPromise, facebookPromise,
+  const [webRes, ghRes, jdbRes, jthRes] = await Promise.allSettled([
+    webPromise, githubPromise, jobsdbPromise, jobthaiPromise,
   ]);
 
   const raw: RawCandidate[] = [];
@@ -190,14 +176,12 @@ export async function runSourcing(input: {
   };
   tally("AI Web Search", webRes);
   tally("GitHub", ghRes);
-  if (picked.has("LINKEDIN")) tally("LinkedIn (Apify)", liRes);
-  if (picked.has("FACEBOOK")) tally("Facebook (Apify)", fbRes);
-  // Scraper service is optional (job boards via Playwright); only report it if configured.
-  if (process.env.SCRAPER_SERVICE_URL) tally("Scraper (เว็บไซต์งาน)", scrapeRes);
+  if (picked.has("JOBSDB")) tally("JobsDB (Firecrawl)", jdbRes);
+  if (picked.has("JOBTHAI")) tally("JobThai (Firecrawl)", jthRes);
 
   if (raw.length === 0) {
     const why = sources.every((s) => !s.ok)
-      ? "ทุกแหล่งค้นไม่สำเร็จ (ตรวจ ANTHROPIC_API_KEY / SCRAPER_SERVICE_URL)"
+      ? "ทุกแหล่งค้นไม่สำเร็จ (ตรวจ ANTHROPIC_API_KEY / FIRECRAWL_API_KEY)"
       : "ไม่พบผู้สมัครจากคำค้นนี้ ลองปรับ JD หรือคำค้น";
     return { ok: false, error: why };
   }

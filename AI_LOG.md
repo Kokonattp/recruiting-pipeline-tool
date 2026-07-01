@@ -218,9 +218,24 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 - total = skills+exp+culture (เต็ม 30) · ≥22 STRONG · 14-21 CONSIDER · <14 WEAK
 - **confidence LOW → CONSIDER เสมอ** (ไม่ว่าคะแนนเท่าไหร่) → คนต้องดู ตรงเจตนา human-in-the-loop
 
-**ผลที่ได้:** band นิ่ง 100% (เลขเดิม → band เดิม), โปร่งใส (อธิบาย HR ได้ว่ามาจากเกณฑ์ไหน), unit-test ผ่าน 6 เคส. LLM variance ถูกจำกัดไว้แค่ชั้นให้คะแนน (ซึ่ง temp 0 คุมแล้ว) ไม่ลามมาชั้นตัดสิน.
+**ผลที่ได้:** band นิ่ง 100% (เลขเดิม → band เดิม), โปร่งใส (อธิบาย HR ได้ว่ามาจากเกณฑ์ไหน). LLM variance ถูกจำกัดไว้แค่ชั้นให้คะแนน (ซึ่ง temp 0 คุมแล้ว) ไม่ลามมาชั้นตัดสิน. (อัปเดต 1 ก.ค.: เพิ่ม `vitest` + unit test จริงให้ `deriveRecommendation` แล้ว — 8 เคส ครอบคลุมทุก boundary รวม LOW-confidence override — ดู `src/modules/screener/types.test.ts`.)
 
 **บทเรียน:** "ให้ AI ทำให้หมด" เป็นกับดัก. งานที่เป็น **logic ตายตัว (mapping คะแนน→band)** ควรเป็นโค้ด ไม่ใช่ prompt — เร็วกว่า ถูกกว่า ตรวจสอบได้ และไม่มี variance. ขอบเขตที่ดี: AI = judgment (อ่าน/ประเมิน), โค้ด = rule (คำนวณ/ตัดสินใจตามเกณฑ์). ผู้ใช้ช่วยจับ inconsistency นี้ได้ดี.
+
+## รอบที่ 14 — Apify (LinkedIn/Facebook) → Firecrawl (JobsDB/JobThai): เลือกเครื่องมือให้ตรงกับปัญหาจริง (1 ก.ค. 2026)
+
+**คำถามที่จุดประเด็น:** ผู้ใช้เสนอ Firecrawl มาแทน Apify — ถามตรงๆ ว่า "ใช้แทนได้ไหม" ก่อนจะสมัคร Apify account ที่สอง.
+
+**วิเคราะห์ก่อนตัดสินใจ (สำคัญกว่าตัวเครื่องมือ):** ปัญหาของ LinkedIn/Facebook ไม่ใช่ "ขาดเครื่องมือ scrape ที่ดี" แต่คือ **login wall** — ทั้งสองแพลตฟอร์มต้อง authenticated session ถึงจะเห็นผล search จริง. Firecrawl เป็น generic scraper (ไม่มี session ของ LinkedIn/FB ให้) จึงเจอ login wall เหมือนที่ Playwright เจอ — เปลี่ยนเครื่องมือไม่ได้แก้ปัญหานี้. ส่วน Apify's `harvestapi/linkedin-profile-search` ใช้ได้เพราะเป็น specialized actor ที่มี session pool ของตัวเอง ไม่ใช่ generic scrape.
+
+ในทางกลับกัน **JobsDB/JobThai เป็นหน้า public job-search ไม่มี login wall** — โค้ด Playwright เดิม (`scraper/sources/jobsdb.ts`, `jobthai.ts`) แค่ `page.goto(url)` แล้วอ่าน DOM การ์ดผลลัพธ์เท่านั้น ไม่มี session ผูกไว้เลย. Firecrawl ทำสิ่งเดียวกันได้โดยไม่ต้องมี headless browser/Docker/Cloud Run deploy ของตัวเอง.
+
+**ตัดสินใจ:**
+1. **แทน Playwright scraper service ด้วย Firecrawl** สำหรับ JobsDB/JobThai — เรียก `/v2/scrape` ตรงจาก Next.js app (`src/lib/sourcing-apis.ts`), formats `["markdown","links"]`, regex จับ `[title](url)` ที่ href ตรงกับ host + `/job` — ลด architecture ทั้งก้อน (ไม่ต้อง deploy service แยกอีกต่อไป)
+2. **ตัด LinkedIn + Facebook ออกจากทุกที่** (ไม่ใช่แค่ปิด flag แบบเดิม) — ทั้ง UI toggle, `runSourcing()`, `/api/sourcing-stream`, และ prompt ของ `planQueries()` — เพราะไม่มีทางแก้ปัญหา login wall ด้วยเครื่องมือที่มีตอนนี้ การเก็บ toggle ที่กดแล้วไม่ทำงานไว้จะสับสนกว่าตัดออกตรงๆ
+3. เก็บโค้ด Playwright service เดิม (`scraper/`) ไว้เป็น reference ไม่ลบ แต่ระบุชัดใน README ว่าเป็น dead code ไม่ได้ deploy แล้ว
+
+**บทเรียน:** ก่อนเปลี่ยนเครื่องมือ ต้องแยกให้ออกว่าปัญหาคือ "เครื่องมือไม่ดีพอ" หรือ "โจทย์มีข้อจำกัดที่เครื่องมือประเภทนี้แก้ไม่ได้เลย" (login wall เป็นแบบหลัง) — ถ้าไม่แยก จะเสียเวลาสมัคร/ตั้งค่าเครื่องมือใหม่ซ้ำๆ โดยได้ผลลัพธ์เหมือนเดิม.
 
 ## รอบที่ 12 — ยอมรับว่า band เคลมเกินจริง (ผู้ใช้ท้วงตรง)
 

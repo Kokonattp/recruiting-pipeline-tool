@@ -63,14 +63,12 @@ npm run dev                  # http://localhost:3000
 | `ANTHROPIC_API_KEY` | Claude API (Module 1, 2) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (Module 4) |
 | `GOOGLE_REDIRECT_URI` | Calendar OAuth callback URL |
-| `SCRAPER_INGEST_SECRET` | shared secret ให้ scraper push ข้อมูลเข้า app |
-| `SCRAPER_SERVICE_URL` | Cloud Run scraper URL (optional, for JobsDB/JobThai) |
-| `ENABLE_APIFY` / `APIFY_TOKEN` | LinkedIn/Facebook via Apify (optional, off by default) |
+| `FIRECRAWL_API_KEY` | Firecrawl (optional, for JobsDB/JobThai) |
 | `OPENAI_API_KEY` | (ไม่จำเป็น — poster feature ถูกปิดแล้ว) |
 
-## Scraper service (Module 1)
+## Sourcing (Module 1)
 
-อยู่ใน `scraper/` — เป็น service แยก (Playwright + Docker) เพราะ headless browser รันบน Vercel serverless ไม่ได้. deploy บน **Google Cloud Run** (ใช้ Google account เดียวกับ Calendar API ใน Module 4). ดูวิธีรันใน `scraper/README.md`.
+JobsDB/JobThai ถูก scrape ตรงจาก Next.js app (ไม่มี service แยก) ผ่าน **Firecrawl** — เพราะเป็นหน้า public job-search ไม่มี login wall จึงไม่ต้องใช้ headless browser. (โค้ด Playwright/Docker เดิมยังอยู่ใน `scraper/` เป็น dead code ไม่ได้ deploy/เรียกใช้แล้ว)
 
 **สถานะแหล่งข้อมูล (ทดสอบยิงจริงแล้ว):**
 
@@ -78,9 +76,7 @@ npm run dev                  # http://localhost:3000
 |------|------|---------|
 | AI Web Search (Claude) | ✅ live | Claude ค้นเว็บ → สูงสุด 10 คน |
 | GitHub | ✅ live | GitHub Search API ฟรี → สูงสุด 10 คน |
-| LinkedIn | ✅ live (Apify) | `harvestapi/linkedin-profile-search` → 5 คน/รอบ (ต้อง `ENABLE_APIFY=true`) |
-| Facebook Groups | ✅ live (Apify) | `apify/facebook-groups-scraper` → 5 โพสต์/รอบ + HR กำหนด group URL ใน UI |
-| JobsDB / JobThai (Playwright) | 🔶 optional | Cloud Run scraper — deploy แยก, ทดสอบยิงจริงแล้ว (20 ผล/แหล่ง) |
+| JobsDB / JobThai (Firecrawl) | ✅ live | scrape หน้า public job-search ตรง → สูงสุด 15 ผล/แหล่ง (ต้อง `FIRECRAWL_API_KEY`) |
 | JobBKK | 🔶 stub | ติด login wall — ระบุชัดใน code, คืน `[]` ไม่ crash |
 
 > ออกแบบให้ source แยกไฟล์ละแหล่ง + per-source try/catch — แหล่งหนึ่งโดน anti-bot block จะคืน `[]` ไม่ล้มทั้ง request. (รายละเอียดการทดสอบ e2e: [`AI_LOG.md`](AI_LOG.md) รอบที่ 6)

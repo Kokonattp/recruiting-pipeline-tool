@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { webSearchCandidates } from "@/lib/web-search";
-import { githubCandidates, linkedinCandidates, facebookCandidates, jobsdbCandidates, jobthaiCandidates } from "@/lib/sourcing-apis";
+import { githubCandidates, jobsdbCandidates, jobthaiCandidates } from "@/lib/sourcing-apis";
 import { rankCandidates } from "@/modules/scraper/ai";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { RawCandidate, QueryPlan } from "@/modules/scraper/types";
@@ -8,7 +8,7 @@ import type { RawCandidate, QueryPlan } from "@/modules/scraper/types";
 export const maxDuration = 55; // Vercel Hobby limit
 
 /**
- * GET /api/sourcing-stream?jdText=...&plan=...&facebookGroups=...
+ * GET /api/sourcing-stream?jdText=...&plan=...
  * Streams sourcing results as Server-Sent Events.
  * Events:
  *   { type: "raw", source: string, candidates: RawCandidate[] }  — from each source as it lands
@@ -20,10 +20,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as {
     jdText: string;
     plan: QueryPlan;
-    facebookGroups?: string[];
   };
 
-  const { jdText, plan, facebookGroups = [] } = body;
+  const { jdText, plan } = body;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -142,23 +141,7 @@ export async function POST(req: NextRequest) {
             .catch((e) => send({ type: "sourceError", source: "GitHub", detail: String(e?.message ?? e) }))
         );
 
-        if (picked.has("LINKEDIN")) {
-          tasks.push(
-            withTimeout(linkedinCandidates(webQuery), SOURCE_TIMEOUT_MS)
-              .then((r) => handleSource("LinkedIn", r))
-              .catch((e) => send({ type: "sourceError", source: "LinkedIn", detail: String(e?.message ?? e) }))
-          );
-        }
-
-        if (picked.has("FACEBOOK") && facebookGroups.length > 0) {
-          tasks.push(
-            withTimeout(facebookCandidates(webQuery, facebookGroups), SOURCE_TIMEOUT_MS)
-              .then((r) => handleSource("Facebook", r))
-              .catch((e) => send({ type: "sourceError", source: "Facebook", detail: String(e?.message ?? e) }))
-          );
-        }
-
-        // JobsDB + JobThai via Apify actors (no Playwright needed)
+        // JobsDB + JobThai via Firecrawl (public listing pages, no Playwright needed)
         const jobQuery = plan.queries.find((q) => q.source === "JOBSDB" || q.source === "JOBTHAI")?.query ?? webQuery;
         if (picked.has("JOBSDB")) {
           tasks.push(
