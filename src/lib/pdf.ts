@@ -1,5 +1,3 @@
-import { PDFParse } from "pdf-parse";
-
 /**
  * Server-side PDF text extraction (token optimization for Module 2).
  *
@@ -13,6 +11,19 @@ import { PDFParse } from "pdf-parse";
  */
 export async function extractPdfText(base64: string): Promise<string | null> {
   try {
+    // pdf-parse's bundled pdfjs-dist constructs a module-scope `new DOMMatrix()`
+    // singleton the moment it's loaded — even for plain text extraction with no
+    // rendering — and DOMMatrix (a browser Canvas API) doesn't exist in Vercel's
+    // Node.js serverless runtime. pdfjs has its own polyfill-acceptance check for
+    // exactly this case (`globalThis.DOMMatrix || ...`), so provide one. Must import
+    // pdf-parse dynamically (not as a static top-level import) so this runs before
+    // its module evaluates — static ESM imports are hoisted ahead of any code in
+    // this file, which is what let the crash happen at all.
+    if (typeof globalThis.DOMMatrix === "undefined") {
+      const { default: DOMMatrixPolyfill } = await import("dommatrix");
+      (globalThis as unknown as { DOMMatrix: unknown }).DOMMatrix = DOMMatrixPolyfill;
+    }
+    const { PDFParse } = await import("pdf-parse");
     const buffer = Buffer.from(base64, "base64");
     const parser = new PDFParse({ data: buffer });
     const result = await parser.getText();

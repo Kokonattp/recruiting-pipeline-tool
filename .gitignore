@@ -44,3 +44,5 @@ next-env.d.ts
 
 # scraper session state (cookies) — never commit
 /scraper/auth/*.json
+
+.vercel
