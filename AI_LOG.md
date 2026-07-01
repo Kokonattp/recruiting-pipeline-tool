@@ -57,30 +57,25 @@
 
 ---
 
-> 🖊️ **ส่วนนี้รอเติมตอนรันจริง (ต้องมี ANTHROPIC_API_KEY).**
-> โครงด้านล่างเป็นร่าง — ‹...› คือช่องที่ **ต้องเติมด้วยคำของตัวเองหลังรัน** ไม่ใช่ให้ AI เขียนแทน.
-> โจทย์หน้า 3: *"ต้องการเห็นว่า**คุณ**คิดอย่างไร"* → เขียนดิบ ๆ ได้ ไม่ต้องเรียบเรียงสวย.
-
 ### Module 2 — prompt iteration จริง (v1 → v2 → v3)
 
-**รอบนี้ทดสอบด้วย CV จริง:** ‹ใส่ว่าใช้ CV ของใคร/ตำแหน่งอะไร — เช่น CV Senior AI Engineer เทียบ JD ที่ seed ไว้›
+**รอบนี้ทดสอบด้วย CV จริง:** CV ของตัวเอง (Nattawut Panjandee — Data Analyst, Supply Chain & Operations, ประสบการณ์ 7+ ปี ที่ Kerry Express / JD Central / CJ Express) เทียบกับ JD ที่จงใจเลือกให้ **ไม่ตรงสาย**: "Senior AI Workflow & Automation Engineer" (ต้องการ LLM orchestration, RAG, n8n/LangChain, event-driven integration) — อยากรู้ว่า AI จะ inflate คะแนนให้เพราะเห็นคำว่า Python/API/AI Agents ในสายที่ใกล้เคียงไหม หรือแยกออกจริงว่าไม่ใช่สายที่ JD ต้องการ.
 
-**v1 — ‹พาดหัวสั้น ๆ ว่า prompt v1 ลองอะไร›**
-- prompt: ‹สรุป prompt v1 ที่ใช้›
-- output ที่ได้: ‹Claude ตอบอะไรกลับมา — แปะตัวอย่างจริงสั้น ๆ›
-- ปัญหาที่เจอ: ‹มันแย่ตรงไหน — เช่น คะแนนลอย ไม่มีเหตุผล / แต่งประสบการณ์ / สั้นเกิน›
+**v1 — rubric หยาบ (8-10/5-7/0-4) + ไม่ตั้ง temperature**
+- prompt: ให้คะแนน 3 แกนตรงๆ ไม่มี anchor ว่าอะไรคือ 8 vs 9, ไม่ล็อก temperature
+- ปัญหาที่เจอ (ก่อนแก้จริงในรอบที่ 10): คะแนนมีโอกาสแกว่งรันซ้ำได้ไม่เท่าเดิม เพราะไม่ deterministic — อ่านบทความ HackerRank ATS แล้วเห็นว่าเราเสี่ยงปัญหาเดียวกัน
 
-**v2 — แก้อะไร & เพราะอะไร**
-- เปลี่ยน: ‹แก้ prompt ตรงไหน›
-- ผลที่เปลี่ยนไป: ‹ดีขึ้น/แย่ลงตรงไหน — ของจริง›
-- ปัญหาที่ยังเหลือ: ‹...›
+**v2 — เพิ่ม temperature 0 + anchored rubric ละเอียดต่อช่วงคะแนน**
+- เปลี่ยน: ล็อก `temperature: 0` (deterministic), เขียน rubric บอกชัดว่า 9-10 ต้องเห็น "demonstrated depth" ไม่ใช่แค่ "listed", 5-6 คือมีประมาณครึ่งของ must-have
+- ผลที่เปลี่ยนไป: คะแนนนิ่งขึ้น ไม่แกว่งเรื่อง phrasing เดิม — ทดสอบ CV จริงข้างต้นได้ Skills Fit 3/10 ทุกครั้งที่รันซ้ำ (ไม่ใช่ 3 บ้าง 6 บ้าง)
+- ปัญหาที่ยังเหลือ: band (STRONG/CONSIDER/WEAK) ตอนนั้นยังให้ AI ตัดสินเอง ไม่ใช่คำนวณจากกฎ
 
-**v3 (final) — ทำไมถึงหยุดที่ตรงนี้**
-- เปลี่ยน: ‹เช่น เพิ่ม "Never invent experience" → กันแต่งประสบการณ์›
-- output สุดท้าย: ‹structured + useful ตรงไหน›
-- ‹ข้อสังเกตของตัวเอง — สิ่งที่ไม่คาดคิด / ที่ AI พลาด / ที่ต้องคุมเพิ่ม›
+**v3 (final) — แยก band ออกเป็นสูตรของเรา + บังคับ evidence-grounded reasoning**
+- เปลี่ยน: เพิ่ม "Ground EVERY reasoning sentence in concrete evidence" + "Never invent experience the CV doesn't show — absence of evidence lowers the score, not raises it", ย้าย band ไปคำนวณใน `deriveRecommendation()` แทนให้ AI เดา (รอบที่ 11)
+- output สุดท้าย: กับ CV จริงที่เทส — reasoning อ้างตรงว่า CV มีคำว่า "Python", "AI Agents", "API" ในลิสต์ skill แต่ **ไม่มีหลักฐานโปรเจกต์ที่ใช้ LLM/RAG/LangChain/n8n เลย** → ให้ Skills Fit 3/10 ไม่ใช่ให้ผ่านเพราะเห็น keyword คุ้นตา. Experience Fit 4/10 ชมว่ามี 7+ ปีจริงแต่ระบุชัดว่าเป็นสาย "logistics data analytics" ไม่ใช่ automation engineering — ไม่เหมาโบนัสจากแค่จำนวนปี. Culture Fit 5/10 ให้เครดิต cross-team signal จริงจาก CV แต่บอกตรงว่าไม่มี signal เฉพาะสาย engineering
+- ข้อสังเกตของตัวเอง: สิ่งที่ประทับใจคือ AI ไม่ "หาทางให้ผ่าน" จากการเห็นคำใกล้เคียง (data/API) แต่แยกออกจากสิ่งที่ JD ต้องการจริง (LLM orchestration) ได้ถูกต้อง — พิสูจน์ว่า anchored rubric + "never invent" ทำงานตามที่ตั้งใจกับเคสที่ไม่ตรงสายชัดเจน ไม่ใช่แค่ทฤษฎีในรอบที่ 10
 
-**edge case ที่เจอจริง:** ‹เช่น CV ภาษาไทยล้วน / CV ว่าง / JD กับ CV คนละสาย — Claude รับมือยังไง›
+**edge case ที่เจอจริง:** CV กับ JD คนละสายชัดเจน (Data Analyst vs AI Engineer) — Claude ไม่ inflate คะแนน, แยก skill ที่ "มีคำ" กับ "demonstrated" ได้, prescreenQuestions เจาะ gap ตรงจุด (ถามตรงๆ ว่าเคยสร้าง LLM agent ใช้งานจริงหรือยัง เคยใช้ LangChain/n8n ไหม) ไม่ใช่คำถามทั่วไปแบบ "เล่าตัวเองหน่อย"
 
 ---
 
@@ -264,3 +259,28 @@ Module 1 มี AI 2 จุด (ใน `src/modules/scraper/ai.ts`):
 **ทำไมสำคัญกับตำแหน่ง:** AI Workflow Engineer ต้องคุม **cost ของ pipeline** ไม่ใช่จับ Opus ยัดทุกที่. การ map "ความยากงาน → model tier" คือ skill ตรงตำแหน่ง. ผู้ใช้ช่วยจับจุดนี้ได้ดี.
 
 **หมายเหตุ provider:** ทั้งระบบผูกกับ Claude (tool-use + structured output). เปลี่ยนไป GPT = รื้อ integration ใหม่หมด เสี่ยงสูงตอนใกล้ส่ง — ไม่ทำ. (Codex/GPT ใช้เป็นเครื่องมือ *เขียนโค้ด* ได้ คนละเรื่องกับ model ในตัวระบบ.)
+
+## รอบที่ 15 — bug จริง: upload CV พังเงียบเพราะ Server Action body limit (1 ก.ค. 2026)
+
+**อาการที่เจอ:** กด "ประเมินด้วย AI" หลังอัปโหลด PDF จริง (มีรูปถ่าย + formatting) แล้วขึ้น error กำกวม "การประเมินใช้เวลานานเกินไปหรือเกิดข้อผิดพลาดที่เซิร์ฟเวอร์" ทุกครั้ง — ดูจาก UI อย่างเดียวเหมือนเป็น timeout ของ Claude API แต่ไม่ใช่.
+
+**หาสาเหตุจริง (ไล่จาก client → action → Claude):** โค้ด `screenResume()`/`extractPdfText()`/`structured()` ไม่มีปัญหา logic เลย — ตัวที่พังคือ **Next.js Server Action มี default body size limit 1MB** (ไม่ได้ตั้งใน `next.config.ts` มาแต่แรก). PDF จริงพอแปลง base64 (เพิ่มขนาด ~33%) เกิน 1MB ง่ายมาก → request ถูก reject **ก่อน** ถึง `runScreening()` เลย ฝั่ง client เห็นแค่ fetch เจ๊งเฉยๆ ตกไปที่ catch-all message ใน `screener-flow.tsx` ที่เขียนไว้ดักเคส timeout — ข้อความเลย "โกหก" สาเหตุจริงโดยไม่ตั้งใจ.
+
+**แก้:**
+1. `next.config.ts` → `experimental.serverActions.bodySizeLimit: "10mb"`.
+2. เพิ่ม client-side size guard **ทุกจุดที่ upload ไฟล์แบบ base64** ไม่ใช่แค่จุดที่เจอ bug — ไล่หาด้วย grep ทั้ง repo เจอ 3 จุด: `screener-flow.tsx` (CV เดี่ยว, cap 7MB), `pdf-import.tsx` (Module 1 รับหลายไฟล์พร้อมกัน — เสี่ยงสุดเพราะไม่มี guard เลยมาก่อน, cap 5MB/ไฟล์ + 7MB รวม), `csv-import.tsx` (เสี่ยงต่ำเพราะส่งเป็น parsed text ไม่ใช่ base64 แต่ใส่กันไว้ 5MB).
+
+**บทเรียน:** error message ที่ catch-all เขียนไว้ "เผื่อกรณี X" จะกลายเป็นกับดักถ้าไปดักสาเหตุอื่นที่ไม่ใช่ X ด้วย — เห็น error ต้องไล่ดูโค้ดจริงว่า throw จากไหน ไม่ใช่เชื่อข้อความหน้าจอเป๊ะๆ. และเวลาเจอ bug จากจุดเดียว ให้เช็คว่ามี "จุดคล้ายกัน" ที่ pattern เดียวกันหลบอยู่ที่อื่นในโค้ดไหม (ในเคสนี้เจอ pdf-import.tsx ที่เสี่ยงกว่าจุดที่ถูก report อีก).
+
+### ทดสอบจริงหลังแก้ — Module 2 CV จริง vs JD ไม่ตรงสาย (1 ก.ค. 2026)
+
+**เทสด้วย:** CV จริงของผู้ใช้เอง (Nattawut Panjandee — Data Analyst, Supply Chain & Operations, ประสบการณ์ 7+ ปี ที่ Kerry Express / JD Central / CJ Express) เทียบกับ JD **"Senior AI Workflow & Automation Engineer"** (ต้องการ LLM orchestration, RAG, n8n/LangChain, event-driven integration) — จงใจเลือก JD ที่ไม่ตรงสายเพื่อดูว่า AI inflate คะแนนให้คนไม่เข้าเกณฑ์ไหม.
+
+**ผลที่ได้ (ตรงตามคาด ไม่มี hallucination):**
+- Skills Fit **3/10** — reasoning ชี้ตรงว่า CV มีคำว่า "Python", "AI Agents", "API" ในลิสต์ skill แต่ **ไม่มีหลักฐานโปรเจกต์จริงที่ใช้ LLM/RAG/LangChain/n8n เลย** — แยก "listed" กับ "demonstrated" ได้ตามที่ rubric รอบที่ 10 ตั้งใจไว้
+- Experience Fit **4/10** — ชม 7+ ปีประสบการณ์จริง แต่ระบุชัดว่าเป็นสาย "logistics data analytics" ไม่ใช่ "backend/platform/automation engineering" — ไม่เหมาโบนัสให้จากแค่จำนวนปี
+- Culture Fit **5/10** — ให้เครดิตหลักฐาน cross-team จริงจาก CV (ทำงานข้าม Warehouse/Supply Chain/Provider) แต่บอกตรงว่าไม่มี signal เฉพาะสาย engineering (ไม่มี mentorship/OSS)
+- band = **"ค่าเฉลี่ยไม่ตรง"** (ไม่ inflate ให้ผ่าน), confidence ปานกลาง
+- prescreenQuestions **เจาะ gap ตรงจุด** ไม่ใช่คำถามทั่วไป — ถามตรงๆ ว่าเคยสร้าง LLM agent ที่ใช้งานจริงหรือยัง, เคยใช้ LangChain/n8n ไหม, ทำไมถึงเปลี่ยนสายมา AI/automation
+
+**สิ่งที่ยืนยันจากการทดสอบนี้:** rubric anchored + "never invent experience" (รอบที่ 10) ทำงานตามที่ตั้งใจกับเคสจริงที่ไม่ตรงสายชัดเจน — AI ไม่พยายาม "หาทางให้ผ่าน" จากการมีคำ keyword ปนอยู่ในสายงานที่ใกล้เคียง (data/API) แต่แยกออกจากสายที่ JD ต้องการจริงๆ (LLM orchestration) ได้ถูกต้อง.
