@@ -99,9 +99,11 @@ export async function webSearchCandidates(
       "Submit up to 15 results — more real, distinct candidates is better than fewer.",
     ].filter(Boolean).join("\n"),
     tools: [
-      // 20260209: dynamic filtering — better relevance per search, which matters more now
-      // that we're running more searches and asking for more results per call.
-      { type: "web_search_20260209", name: "web_search", max_uses: 4 } as Anthropic.Messages.ToolUnion,
+      // Stick with the proven 20250305 variant — tried the newer 20260209 tool type
+      // live and it silently returned zero candidates on every run (caught as a
+      // graceful sourceError, not a crash, so it took a live retest to catch). Not
+      // worth chasing why on a deadline; this one is confirmed working.
+      { type: "web_search_20250305", name: "web_search", max_uses: 4 } as Anthropic.Messages.ToolUnion,
       SUBMIT_TOOL as unknown as Anthropic.Messages.Tool,
     ],
     messages: [
