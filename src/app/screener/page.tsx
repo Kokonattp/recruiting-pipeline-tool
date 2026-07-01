@@ -6,6 +6,10 @@ import { ScreenerFlow } from "@/modules/screener/screener-flow";
 import { ScreenerIcon } from "@/components/module-icons";
 
 export const metadata = { title: "Resume Screener" };
+// Screening a CV can take longer than Vercel's default function timeout,
+// silently killing the Server Action mid-call — same reasoning as the
+// sourcing-stream route's maxDuration.
+export const maxDuration = 60;
 
 const meta = NAV_ITEMS.find((i) => i.href === "/screener")!;
 

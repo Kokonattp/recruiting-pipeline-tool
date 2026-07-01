@@ -59,12 +59,19 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
 
   async function onGeneratePlan() {
     setBusy(true);
-    const r = await generateQueryPlan({ jdText, sources });
-    const data = unwrap(r);
-    setBusy(false);
-    if (data) {
-      setPlan(data);
-      setStep("plan");
+    try {
+      const r = await generateQueryPlan({ jdText, sources });
+      const data = unwrap(r);
+      if (data) {
+        setPlan(data);
+        setStep("plan");
+      }
+    } catch {
+      // Server Action threw before resolving (e.g. function timeout) — without this,
+      // busy never resets and the button spins forever with no feedback.
+      setError("สร้างคำค้นหาไม่สำเร็จ (เซิร์ฟเวอร์ใช้เวลานานเกินไปหรือผิดพลาด) ลองอีกครั้ง");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -81,63 +88,69 @@ export function SourcingFlow({ jobs }: { jobs: JobDescription[] }) {
     setIsRanking(false);
     setTally([]);
 
-    const res = await fetch("/api/sourcing-stream", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jdText, plan, facebookGroups }),
-    });
+    try {
+      const res = await fetch("/api/sourcing-stream", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jdText, plan, facebookGroups }),
+      });
 
-    if (!res.ok || !res.body) {
-      setError("เชื่อมต่อ sourcing stream ไม่ได้");
-      setBusy(false);
-      return;
-    }
-
-    const reader = res.body.getReader();
-    const dec = new TextDecoder();
-    let buf = "";
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const parts = buf.split("\n\n");
-      buf = parts.pop() ?? "";
-      for (const part of parts) {
-        const line = part.trim();
-        if (!line.startsWith("data:")) continue;
-        try {
-          const ev = JSON.parse(line.slice(5).trim()) as {
-            type: string;
-            source?: string;
-            candidates?: RawCandidate[];
-            shortlist?: RankResult["shortlist"];
-            message?: string;
-          };
-          if (ev.type === "raw" && ev.candidates) {
-            setRawCandidates((prev) => [...prev, ...ev.candidates!]);
-            setTally((prev) => {
-              const existing = prev.find((t) => t.name === ev.source);
-              if (existing) return prev.map((t) => t.name === ev.source ? { ...t, found: t.found + ev.candidates!.length } : t);
-              return [...prev, { name: ev.source ?? "Unknown", found: ev.candidates!.length, ok: true }];
-            });
-          } else if (ev.type === "sourceError") {
-            const detail = (ev as { detail?: string }).detail;
-            setTally((prev) => [...prev, { name: (ev.source ?? "Unknown") + (detail ? ` (${detail})` : ""), found: 0, ok: false }]);
-          } else if (ev.type === "ranking") {
-            setIsRanking(true);
-          } else if (ev.type === "ranked" && ev.shortlist) {
-            setResult({ shortlist: ev.shortlist });
-            setStep("shortlist");
-          } else if (ev.type === "error") {
-            setError(ev.message ?? "ผิดพลาด");
-          }
-        } catch { /* malformed chunk */ }
+      if (!res.ok || !res.body) {
+        setError("เชื่อมต่อ sourcing stream ไม่ได้");
+        return;
       }
+
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const parts = buf.split("\n\n");
+        buf = parts.pop() ?? "";
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data:")) continue;
+          try {
+            const ev = JSON.parse(line.slice(5).trim()) as {
+              type: string;
+              source?: string;
+              candidates?: RawCandidate[];
+              shortlist?: RankResult["shortlist"];
+              message?: string;
+            };
+            if (ev.type === "raw" && ev.candidates) {
+              setRawCandidates((prev) => [...prev, ...ev.candidates!]);
+              setTally((prev) => {
+                const existing = prev.find((t) => t.name === ev.source);
+                if (existing) return prev.map((t) => t.name === ev.source ? { ...t, found: t.found + ev.candidates!.length } : t);
+                return [...prev, { name: ev.source ?? "Unknown", found: ev.candidates!.length, ok: true }];
+              });
+            } else if (ev.type === "sourceError") {
+              const detail = (ev as { detail?: string }).detail;
+              setTally((prev) => [...prev, { name: (ev.source ?? "Unknown") + (detail ? ` (${detail})` : ""), found: 0, ok: false }]);
+            } else if (ev.type === "ranking") {
+              setIsRanking(true);
+            } else if (ev.type === "ranked" && ev.shortlist) {
+              setResult({ shortlist: ev.shortlist });
+              setStep("shortlist");
+            } else if (ev.type === "error") {
+              setError(ev.message ?? "ผิดพลาด");
+            }
+          } catch { /* malformed chunk */ }
+        }
+      }
+    } catch {
+      // fetch/stream threw (network drop, server crash mid-stream) — without this,
+      // busy never resets and the search spinner hangs forever with no feedback.
+      setError("การเชื่อมต่อขาดหายระหว่างค้นหา ลองอีกครั้ง");
+    } finally {
+      setBusy(false);
+      setIsRanking(false);
     }
-    setBusy(false);
-    setIsRanking(false);
   }
 
   async function onApprove(selected: RankResult["shortlist"]): Promise<string | null> {
@@ -536,10 +549,15 @@ function ShortlistBody({
   async function doApprove() {
     setApproving(true);
     setErr(null);
-    const error = await onApprove(result.shortlist);
-    setApproving(false);
-    if (error) setErr(error);
-    else setApproved(true);
+    try {
+      const error = await onApprove(result.shortlist);
+      if (error) setErr(error);
+      else setApproved(true);
+    } catch {
+      setErr("อนุมัติไม่สำเร็จ (เซิร์ฟเวอร์ผิดพลาด) ลองอีกครั้ง");
+    } finally {
+      setApproving(false);
+    }
   }
 
   return (

@@ -52,13 +52,20 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
     setBusy(true);
     setError(null);
     setResult(null);
-    const r = await importPdfsAndRank({ jdText, pdfs: files });
-    setBusy(false);
-    if (r.ok) {
-      setResult(r.data);
-      setSelected(new Set(r.data.shortlist.map((_, i) => i)));
-    } else {
-      setError(r.error);
+    try {
+      const r = await importPdfsAndRank({ jdText, pdfs: files });
+      if (r.ok) {
+        setResult(r.data);
+        setSelected(new Set(r.data.shortlist.map((_, i) => i)));
+      } else {
+        setError(r.error);
+      }
+    } catch {
+      // Server Action threw before resolving (e.g. function timeout on a large batch
+      // of PDFs) — without this, busy never resets and the button spins forever.
+      setError("จัดอันดับไม่สำเร็จ (เซิร์ฟเวอร์ใช้เวลานานเกินไปหรือผิดพลาด) ลองไฟล์น้อยลงหรือลองอีกครั้ง");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -75,10 +82,15 @@ export function PdfImport({ jobs }: { jobs: JobDescription[] }) {
     if (!jobId) { setError("เลือกตำแหน่งก่อน"); return; }
     setApproving(true);
     const chosen = result.shortlist.filter((_, i) => selected.has(i));
-    const r = await approveCandidates({ jobId, selected: chosen });
-    setApproving(false);
-    if (!r.ok) setError(r.error);
-    else setApproveMsg(`เพิ่ม ${chosen.length} คนเข้า Tracker เรียบร้อย ✓`);
+    try {
+      const r = await approveCandidates({ jobId, selected: chosen });
+      if (!r.ok) setError(r.error);
+      else setApproveMsg(`เพิ่ม ${chosen.length} คนเข้า Tracker เรียบร้อย ✓`);
+    } catch {
+      setError("อนุมัติไม่สำเร็จ (เซิร์ฟเวอร์ผิดพลาด) ลองอีกครั้ง");
+    } finally {
+      setApproving(false);
+    }
   }
 
   return (

@@ -38,10 +38,15 @@ export function CsvImport({ jobs }: { jobs: JobDescription[] }) {
   async function onRank() {
     setBusy(true);
     setError(null);
-    const r = await importCsvAndRank({ jdText, rows });
-    setBusy(false);
-    if (r.ok) setResult(r.data);
-    else setError(r.error);
+    try {
+      const r = await importCsvAndRank({ jdText, rows });
+      if (r.ok) setResult(r.data);
+      else setError(r.error);
+    } catch {
+      setError("จัดอันดับไม่สำเร็จ (เซิร์ฟเวอร์ใช้เวลานานเกินไปหรือผิดพลาด) ลองอีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

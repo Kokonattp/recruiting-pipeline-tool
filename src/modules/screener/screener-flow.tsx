@@ -64,18 +64,26 @@ export function ScreenerFlow({
   async function onScreen() {
     setBusy(true);
     setError(null);
-    const r = await runScreening({
-      jdText,
-      cvText: pdfBase64 ? undefined : cvText,
-      cvPdfBase64: pdfBase64 ?? undefined,
-      applicationId, // when set (from a Tracker card), the score saves to that candidate
-    });
-    setBusy(false);
-    if (r.ok) {
-      setResult(r.screening);
-      setRecommendation(r.recommendation);
+    try {
+      const r = await runScreening({
+        jdText,
+        cvText: pdfBase64 ? undefined : cvText,
+        cvPdfBase64: pdfBase64 ?? undefined,
+        applicationId, // when set (from a Tracker card), the score saves to that candidate
+      });
+      if (r.ok) {
+        setResult(r.screening);
+        setRecommendation(r.recommendation);
+      } else {
+        setError(r.error);
+      }
+    } catch {
+      // Server Action threw before returning ScreenResult (e.g. function timeout) —
+      // without this, busy never resets and the spinner hangs forever with no feedback.
+      setError("การประเมินใช้เวลานานเกินไปหรือเกิดข้อผิดพลาดที่เซิร์ฟเวอร์ ลองอีกครั้ง");
+    } finally {
+      setBusy(false);
     }
-    else setError(r.error);
   }
 
   const hasCv = !!pdfBase64 || cvText.trim().length >= 40;
