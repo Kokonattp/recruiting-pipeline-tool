@@ -30,7 +30,7 @@ const ScreenInput = z
   );
 
 export type ScreenResult =
-  | { ok: true; screening: Screening; recommendation: Recommendation; model: string }
+  | { ok: true; screening: Screening; recommendation: Recommendation; model: string; saved: boolean }
   | { ok: false; error: string };
 
 export async function runScreening(input: {
@@ -61,6 +61,7 @@ export async function runScreening(input: {
     console.log(`[screener] screenResume took ${Date.now() - t0}ms (model: ${model})`);
 
     // Persist only when tied to an application (upsert: one screening per application).
+    let saved = false;
     if (parsed.data.applicationId) {
       const { error } = await supabaseAdmin()
         .from("screening_results")
@@ -81,10 +82,11 @@ export async function runScreening(input: {
           { onConflict: "application_id" },
         );
       if (error) return { ok: false, error: error.message };
+      saved = true;
       revalidatePath("/tracker");
     }
 
-    return { ok: true, screening, recommendation, model };
+    return { ok: true, screening, recommendation, model, saved };
   } catch (e) {
     if (e instanceof Error && e.message.includes("ANTHROPIC_API_KEY")) {
       return { ok: false, error: "ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY" };

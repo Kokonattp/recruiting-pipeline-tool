@@ -40,6 +40,7 @@ export function ScreenerFlow({
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [result, setResult] = useState<Screening | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [savedFor, setSavedFor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -71,6 +72,7 @@ export function ScreenerFlow({
   async function onScreen() {
     setBusy(true);
     setError(null);
+    setSavedFor(null);
     try {
       const r = await runScreening({
         jdText,
@@ -81,6 +83,9 @@ export function ScreenerFlow({
       if (r.ok) {
         setResult(r.screening);
         setRecommendation(r.recommendation);
+        if (r.saved) {
+          setSavedFor(candidates.find((c) => c.applicationId === applicationId)?.name ?? null);
+        }
       } else {
         setError(r.error);
       }
@@ -223,7 +228,16 @@ export function ScreenerFlow({
       )}
 
       {result && !busy && (
-        <div className="border-t border-border pt-6">
+        <div className="border-t border-border pt-6 space-y-4">
+          {savedFor ? (
+            <div className="rounded-[var(--radius-card)] border border-[var(--success)] bg-success-soft px-4 py-3 text-sm font-medium text-ink">
+              ✓ บันทึกผลเข้าโปรไฟล์ {savedFor} เรียบร้อย — ดูได้ที่ Tracker
+            </div>
+          ) : (
+            <div className="rounded-[var(--radius-card)] border border-border bg-surface-2 px-4 py-3 text-sm text-ink-2">
+              ℹ️ นี่คือโหมดทดสอบ — ผลนี้ยังไม่ถูกบันทึก เลือกผู้สมัครด้านบนแล้วประเมินใหม่ถ้าต้องการบันทึกเข้าโปรไฟล์
+            </div>
+          )}
           <ScoreCard screening={result} recommendation={recommendation ?? "CONSIDER"} jobTitle={jobs.find((j) => j.id === jobId)?.title} />
         </div>
       )}
